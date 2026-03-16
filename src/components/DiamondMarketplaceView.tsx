@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useStore } from "@/contexts/StoreContext";
 const labs = ["All", "natural", "lab-grown"];
 const certs = ["All", "IGI", "GIA"];
+const CARAT_SLIDER_MIN = 0;
+const CARAT_SLIDER_MAX = 50;
 const preferredShapeOrder = ["round", "oval", "emerald", "pear", "radiant", "marquise", "cushion lg", "cushion sq", "princess", "heart", "asscher", "cmb", "lg-radiant", "lg-cmb", "sqem", "octagone"];
 
 const shapeIconByKey: Record<string, { normal: string; active: string }> = {
@@ -150,8 +152,8 @@ const DiamondMarketplaceView = () => {
     if (!diamonds.length) return;
 
     if (!hasInitializedBounds.current) {
-      setCaratMin(rangeBounds.caratMin);
-      setCaratMax(rangeBounds.caratMax);
+      setCaratMin(CARAT_SLIDER_MIN);
+      setCaratMax(CARAT_SLIDER_MAX);
       setPriceMax(rangeBounds.priceMax);
       setRatioMax(rangeBounds.ratioMax);
       setDepthMax(rangeBounds.depthMax);
@@ -161,8 +163,6 @@ const DiamondMarketplaceView = () => {
     }
 
     // Keep filters within updated dataset bounds without forcing a full reset.
-    setCaratMin((prev) => clamp(prev, rangeBounds.caratMin, rangeBounds.caratMax));
-    setCaratMax((prev) => clamp(prev, rangeBounds.caratMin, rangeBounds.caratMax));
     setPriceMax((prev) => clamp(prev, 0, rangeBounds.priceMax));
     setRatioMax((prev) => clamp(prev, 0, rangeBounds.ratioMax));
     setDepthMax((prev) => clamp(prev, 0, rangeBounds.depthMax));
@@ -179,14 +179,17 @@ const DiamondMarketplaceView = () => {
     setFluorescence("All");
     setLab("All");
     setCert("All");
-    setCaratMin(rangeBounds.caratMin);
-    setCaratMax(rangeBounds.caratMax);
+    setCaratMin(CARAT_SLIDER_MIN);
+    setCaratMax(CARAT_SLIDER_MAX);
     setPriceMax(rangeBounds.priceMax);
     setRatioMax(rangeBounds.ratioMax);
     setDepthMax(rangeBounds.depthMax);
     setTableMax(rangeBounds.tableMax);
     setSortBy("best");
   };
+
+  const caratSliderMinValue = clamp(caratMin, CARAT_SLIDER_MIN, CARAT_SLIDER_MAX);
+  const caratSliderMaxValue = clamp(caratMax, CARAT_SLIDER_MIN, CARAT_SLIDER_MAX);
 
   const shapes = useMemo(() => {
     const keySet = new Set(diamonds.map((d) => canonicalShapeKey(d.shape)));
@@ -349,11 +352,22 @@ const DiamondMarketplaceView = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
           <label className="text-sm text-muted-foreground">Carat Min: {caratMin.toFixed(2)}
             <input
-              type="range"
-              min={rangeBounds.caratMin}
-              max={rangeBounds.caratMax}
+              type="number"
               step="0.01"
               value={caratMin}
+              onChange={(e) => {
+                const next = Number(e.target.value);
+                if (!Number.isFinite(next)) return;
+                setCaratMin(next);
+              }}
+              className="mb-2 h-9 w-full rounded border px-2 text-sm"
+            />
+            <input
+              type="range"
+              min={CARAT_SLIDER_MIN}
+              max={CARAT_SLIDER_MAX}
+              step="0.01"
+              value={caratSliderMinValue}
               onChange={(e) => {
                 const next = Number(e.target.value);
                 setCaratMin(next);
@@ -364,11 +378,22 @@ const DiamondMarketplaceView = () => {
           </label>
           <label className="text-sm text-muted-foreground">Carat Max: {caratMax.toFixed(2)}
             <input
-              type="range"
-              min={rangeBounds.caratMin}
-              max={rangeBounds.caratMax}
+              type="number"
               step="0.01"
               value={caratMax}
+              onChange={(e) => {
+                const next = Number(e.target.value);
+                if (!Number.isFinite(next)) return;
+                setCaratMax(next);
+              }}
+              className="mb-2 h-9 w-full rounded border px-2 text-sm"
+            />
+            <input
+              type="range"
+              min={CARAT_SLIDER_MIN}
+              max={CARAT_SLIDER_MAX}
+              step="0.01"
+              value={caratSliderMaxValue}
               onChange={(e) => {
                 const next = Number(e.target.value);
                 setCaratMax(next);
