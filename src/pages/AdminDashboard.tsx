@@ -1,7 +1,29 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Gem, Package, ShoppingBag, Users } from "lucide-react";
 import SiteLayout from "@/components/SiteLayout";
-import { mockDiamonds, mockJewelry } from "@/data/mockCatalog";
+
+type AdminStatsResponse = {
+  stats: {
+    totalDiamonds: number;
+    naturalDiamonds: number;
+    labDiamonds: number;
+    inventoryValue: number;
+    importsLast24h: number;
+    failedRowsLast24h: number;
+  };
+  recentImports: {
+    id: number;
+    source: string;
+    totalRows: number;
+    createdRows: number;
+    updatedRows: number;
+    failedRows: number;
+    status: string;
+    errorMessage?: string;
+    createdAt: string;
+  }[];
+};
 
 const tiles = [
   { title: "Product Manager", desc: "Manage jewelry and diamonds", to: "/admin", icon: Package },
@@ -10,17 +32,42 @@ const tiles = [
   { title: "Customers", desc: "View customer profiles", to: "/admin", icon: Users },
 ];
 
-const recentActivity = [
-  "Diamond import queue checked",
-  "Inventory counts synchronized",
-  "Order monitor refreshed",
-  "Certificate verification logs reviewed",
-];
-
 const AdminDashboard = () => {
-  const totalDiamonds = mockDiamonds.length;
-  const totalJewelry = mockJewelry.length;
-  const inventoryValue = mockDiamonds.reduce((sum, item) => sum + item.price, 0);
+  const [stats, setStats] = useState<AdminStatsResponse["stats"]>({
+    totalDiamonds: 0,
+    naturalDiamonds: 0,
+    labDiamonds: 0,
+    inventoryValue: 0,
+    importsLast24h: 0,
+    failedRowsLast24h: 0,
+  });
+  const [recentImports, setRecentImports] = useState<AdminStatsResponse["recentImports"]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadStats = async () => {
+      try {
+        const response = await fetch("/api/admin-stats");
+        if (!response.ok || !active) return;
+        const payload = (await response.json()) as AdminStatsResponse;
+        if (!payload?.stats) return;
+        setStats(payload.stats);
+        setRecentImports(Array.isArray(payload.recentImports) ? payload.recentImports : []);
+      } catch {
+        // Keep zero-state UI when stats endpoint is unavailable.
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    void loadStats();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <SiteLayout>
@@ -36,19 +83,22 @@ const AdminDashboard = () => {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <div className="rounded-[12px] border border-border p-5 bg-secondary/30">
             <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground mb-2">Loose Diamonds</p>
-            <p className="font-heading text-3xl">{totalDiamonds}</p>
+            <p className="font-heading text-3xl">{stats.totalDiamonds.toLocaleString()}</p>
           </div>
           <div className="rounded-[12px] border border-border p-5 bg-secondary/30">
-            <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground mb-2">Jewelry SKUs</p>
-            <p className="font-heading text-3xl">{totalJewelry}</p>
+            <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground mb-2">Natural vs Lab</p>
+            <p className="font-heading text-2xl">{stats.naturalDiamonds} / {stats.labDiamonds}</p>
           </div>
           <div className="rounded-[12px] border border-border p-5 bg-secondary/30">
             <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground mb-2">Inventory Value</p>
-            <p className="font-heading text-3xl">${inventoryValue.toLocaleString()}</p>
+            <p className="font-heading text-3xl">${Math.round(stats.inventoryValue).toLocaleString()}</p>
           </div>
           <div className="rounded-[12px] border border-border p-5 bg-secondary/30">
-            <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground mb-2">Import Status</p>
-            <p className="font-heading text-3xl">Ready</p>
+            <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground mb-2">Imports (24h)</p>
+            <p className="font-heading text-3xl">{stats.importsLast24h}</p>
+            <p className={`text-xs mt-1 ${stats.failedRowsLast24h > 0 ? "text-destructive" : "text-muted-foreground"}`}>
+              Failed rows: {stats.failedRowsLast24h}
+            </p>
           </div>
         </div>
 
@@ -63,10 +113,14 @@ const AdminDashboard = () => {
         </div>
 
         <div className="rounded-[12px] border border-border p-5 bg-background">
-          <h2 className="font-heading text-xl mb-3">Recent Activity</h2>
+          <h2 className="font-heading text-xl mb-3">Recent Import Activity</h2>
+          {loading ? <p className="text-sm text-muted-foreground">Loading import activity...</p> : null}
+          {!loading && recentImports.length === 0 ? <p className="text-sm text-muted-foreground">No import logs yet.</p> : null}
           <ul className="space-y-2 text-sm text-muted-foreground">
-            {recentActivity.map((entry) => (
-              <li key={entry}>• {entry}</li>
+            {recentImports.map((entry) => (
+              <li key={entry.id}>
+                • {new Date(entry.createdAt).toLocaleString()} | {entry.source} | total {entry.totalRows}, created {entry.createdRows}, updated {entry.updatedRows}, failed {entry.failedRows}
+              </li>
             ))}
           </ul>
         </div>

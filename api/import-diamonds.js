@@ -1,11 +1,11 @@
-import { ensureDiamondsTable, sql } from "./_lib/db.js";
+import { createImportLog, ensureCoreTables, sql } from "./_lib/db.js";
 
 const normalizeLab = (value) => (value === "lab-grown" ? "lab-grown" : "natural");
 const normalizeCert = (value) => (String(value).toUpperCase().includes("GIA") ? "GIA" : "IGI");
 
 export default async function handler(req, res) {
   try {
-    await ensureDiamondsTable();
+    await ensureCoreTables();
 
     if (req.method !== "POST") {
       return res.status(405).json({ message: "Method not allowed" });
@@ -13,6 +13,7 @@ export default async function handler(req, res) {
 
     const payload = req.body;
     const diamonds = Array.isArray(payload?.diamonds) ? payload.diamonds : [];
+    const importSource = payload?.source ? String(payload.source) : "admin-upload";
 
     if (!diamonds.length) {
       return res.status(400).json({ message: "No diamonds provided" });
@@ -82,6 +83,16 @@ export default async function handler(req, res) {
       else created += 1;
     }
 
+    await createImportLog({
+      source: importSource,
+      totalRows: diamonds.length,
+      createdRows: created,
+      updatedRows: updated,
+      failedRows: 0,
+      status: "success",
+      errorMessage: null,
+    });
+
     return res.status(200).json({
       message: "Import completed",
       total: diamonds.length,
@@ -89,6 +100,20 @@ export default async function handler(req, res) {
       updated,
     });
   } catch (error) {
+    const payload = req.body;
+    const diamonds = Array.isArray(payload?.diamonds) ? payload.diamonds : [];
+    const importSource = payload?.source ? String(payload.source) : "admin-upload";
+
+    await createImportLog({
+      source: importSource,
+      totalRows: diamonds.length,
+      createdRows: 0,
+      updatedRows: 0,
+      failedRows: diamonds.length,
+      status: "failed",
+      errorMessage: error instanceof Error ? error.message : "Unknown error",
+    });
+
     return res.status(500).json({
       message: "Failed to import diamonds",
       error: error instanceof Error ? error.message : "Unknown error",

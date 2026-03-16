@@ -96,7 +96,7 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ diamonds: chunk }),
+          body: JSON.stringify({ diamonds: chunk, source: "admin-excel-upload" }),
         });
 
         if (!response.ok) {
