@@ -8,19 +8,55 @@ const labs = ["All", "natural", "lab-grown"];
 const certs = ["All", "IGI", "GIA"];
 const preferredShapeOrder = ["Round", "Oval", "Emerald", "Pear", "Radiant", "Marquise", "Cushion LG", "Cushion SQ", "Princess", "Heart", "Asscher"];
 
-const shapeIndexByName: Record<string, number> = {
-  round: 2,
-  oval: 3,
-  emerald: 4,
-  pear: 5,
-  radiant: 6,
-  marquise: 7,
-  cushion: 8,
-  "cushion lg": 8,
-  "cushion sq": 9,
-  princess: 10,
-  heart: 11,
-  asscher: 12,
+const shapeIconByKey: Record<string, { normal: string; active: string }> = {
+  round: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/2.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/2_Click.png",
+  },
+  oval: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/3.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/3_Click.png",
+  },
+  emerald: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/4.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/4_Click.png",
+  },
+  pear: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/5.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/5_Click.png",
+  },
+  radiant: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/6.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/6_Click.png",
+  },
+  marquise: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/7.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/7_Click.png",
+  },
+  cushion: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/8.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/8_Click.png",
+  },
+  "cushion lg": {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/8.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/8_Click.png",
+  },
+  "cushion sq": {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/9.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/9_Click.png",
+  },
+  princess: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/11.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/11_Click.png",
+  },
+  heart: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/13.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/13_Click.png",
+  },
+  asscher: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/26.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/26_Click.png",
+  },
 };
 
 const normalizeShapeKey = (shape: string) => shape.trim().toLowerCase().replace(/\./g, "").replace(/\s+/g, " ");
@@ -33,9 +69,9 @@ const displayShapeLabel = (shape: string) => {
 
 const kiraShapeIconSrc = (shape: string, active: boolean) => {
   const key = normalizeShapeKey(shape);
-  const index = shapeIndexByName[key] ?? 2;
-  const suffix = active ? "_Click" : "";
-  return `https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/${index}${suffix}.png`;
+  const icon = shapeIconByKey[key];
+  if (!icon) return null;
+  return active ? icon.active : icon.normal;
 };
 
 const DiamondMarketplaceView = () => {
@@ -154,12 +190,23 @@ const DiamondMarketplaceView = () => {
                     {option === "All" ? (
                       <div className="flex h-12 w-12 items-center justify-center rounded-full border border-current text-xs">All</div>
                     ) : (
-                      <img
-                        src={kiraShapeIconSrc(option, active)}
-                        alt={`${option} shape`}
-                        className="h-14 w-14 object-contain"
-                        loading="lazy"
-                      />
+                      (() => {
+                        const iconSrc = kiraShapeIconSrc(option, active);
+                        if (!iconSrc) {
+                          return <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#8fd5ef] text-[10px] text-[#4e6074]">{displayShapeLabel(option).slice(0, 2)}</div>;
+                        }
+
+                        return (
+                          <div className="h-14 w-14 overflow-hidden">
+                            <img
+                              src={iconSrc}
+                              alt={`${option} shape`}
+                              className="h-14 w-14 object-contain [clip-path:inset(0_0_24%_0)]"
+                              loading="lazy"
+                            />
+                          </div>
+                        );
+                      })()
                     )}
                   </div>
                   <span
