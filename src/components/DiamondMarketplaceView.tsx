@@ -74,6 +74,8 @@ const kiraShapeIconSrc = (shape: string, active: boolean) => {
   return active ? icon.active : icon.normal;
 };
 
+const hasKiraIcon = (shape: string) => Boolean(shapeIconByKey[normalizeShapeKey(shape)]);
+
 const DiamondMarketplaceView = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [view, setView] = useState<"table" | "grid">("table");
@@ -201,7 +203,7 @@ const DiamondMarketplaceView = () => {
                             <img
                               src={iconSrc}
                               alt={`${option} shape`}
-                              className="block h-14 w-14 object-cover object-top [clip-path:inset(0_0_34%_0)]"
+                              className="block h-14 w-14 object-contain"
                               loading="lazy"
                             />
                           </div>
@@ -209,15 +211,17 @@ const DiamondMarketplaceView = () => {
                       })()
                     )}
                   </div>
-                  <span
-                    className={`inline-block rounded-full border px-3 py-1 ${
-                      active
-                        ? "border-[#3048a4] bg-[#3048a4] text-white"
-                        : "border-[#7ed7ff] bg-transparent text-[#4e6074]"
-                    }`}
-                  >
-                    {option === "All" ? "ALL" : displayShapeLabel(option)}
-                  </span>
+                  {option === "All" || !hasKiraIcon(option) ? (
+                    <span
+                      className={`inline-block rounded-full border px-3 py-1 ${
+                        active
+                          ? "border-[#3048a4] bg-[#3048a4] text-white"
+                          : "border-[#7ed7ff] bg-transparent text-[#4e6074]"
+                      }`}
+                    >
+                      {option === "All" ? "ALL" : displayShapeLabel(option)}
+                    </span>
+                  ) : null}
                 </button>
               );
             })}
