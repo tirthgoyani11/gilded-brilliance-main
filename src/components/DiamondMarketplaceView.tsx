@@ -201,7 +201,7 @@ const DiamondMarketplaceView = () => {
                             <img
                               src={iconSrc}
                               alt={`${option} shape`}
-                              className="h-14 w-14 object-contain [clip-path:inset(0_0_24%_0)]"
+                              className="block h-14 w-14 object-cover object-top [clip-path:inset(0_0_34%_0)]"
                               loading="lazy"
                             />
                           </div>
