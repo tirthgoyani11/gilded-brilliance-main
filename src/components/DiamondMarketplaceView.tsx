@@ -183,7 +183,7 @@ const DiamondMarketplaceView = () => {
                   key={option}
                   type="button"
                   onClick={() => setShape(option)}
-                  className={`group min-w-[94px] bg-transparent px-2 pb-1 pt-2 text-[12px] font-semibold uppercase tracking-[0.04em] transition ${
+                  className={`group min-w-[100px] bg-transparent px-2 pb-1 pt-2 text-[12px] font-semibold uppercase tracking-[0.04em] transition ${
                     active ? "text-[#ffffff]" : "text-[#4e6074] hover:text-[#1f8ab7]"
                   }`}
                   aria-pressed={active}
@@ -199,11 +199,11 @@ const DiamondMarketplaceView = () => {
                         }
 
                         return (
-                          <div className="h-14 w-14 overflow-hidden">
+                          <div className="h-16 w-16 overflow-hidden">
                             <img
                               src={iconSrc}
                               alt={`${option} shape`}
-                              className="block h-14 w-14 object-contain"
+                              className="block h-16 w-16 object-contain"
                               loading="lazy"
                             />
                           </div>
