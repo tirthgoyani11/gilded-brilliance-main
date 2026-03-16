@@ -37,7 +37,7 @@ const HeroSection = () => {
             transition={{ ...luxuryTransition, delay: 0.4 }}
             className="font-heading text-4xl md:text-5xl lg:text-6xl text-background leading-[1.1] mb-6"
           >
-            Timeless Brilliance, Crafted for Generations.
+            Brilliance Beyond Time
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}

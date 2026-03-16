@@ -32,3 +32,18 @@ export interface JewelryItem {
   price: number;
   imageUrl: string;
 }
+
+export interface CartItem {
+  id: string;
+  title: string;
+  type: "diamond" | "jewelry";
+  price: number;
+  quantity: number;
+  imageUrl: string;
+}
+
+export interface RingBuilderSelection {
+  diamondStoneId?: string;
+  setting?: "Solitaire" | "Halo" | "Pave" | "Three Stone";
+  metal?: "Silver" | "White Gold" | "Yellow Gold" | "Rose Gold";
+}

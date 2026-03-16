@@ -1,0 +1,138 @@
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { Check, Scale, SlidersHorizontal } from "lucide-react";
+import { mockDiamonds } from "@/data/mockCatalog";
+import { certificateLink, currency } from "@/lib/diamond-utils";
+import { Button } from "@/components/ui/button";
+import { useStore } from "@/contexts/StoreContext";
+
+const shapes = ["All", ...new Set(mockDiamonds.map((d) => d.shape))];
+const colors = ["All", ...new Set(mockDiamonds.map((d) => d.color))];
+const clarities = ["All", ...new Set(mockDiamonds.map((d) => d.clarity))];
+const cuts = ["All", ...new Set(mockDiamonds.map((d) => d.cut))];
+const certs = ["All", "IGI", "GIA"];
+
+const DiamondMarketplaceView = () => {
+  const [view, setView] = useState<"table" | "grid">("table");
+  const [shape, setShape] = useState("All");
+  const [color, setColor] = useState("All");
+  const [clarity, setClarity] = useState("All");
+  const [cut, setCut] = useState("All");
+  const [cert, setCert] = useState("All");
+  const [caratMin, setCaratMin] = useState(0.5);
+  const [caratMax, setCaratMax] = useState(3.5);
+  const [priceMax, setPriceMax] = useState(10000);
+  const { toggleCompare, isCompared } = useStore();
+
+  const filtered = useMemo(
+    () =>
+      mockDiamonds.filter((d) => {
+        if (shape !== "All" && d.shape !== shape) return false;
+        if (color !== "All" && d.color !== color) return false;
+        if (clarity !== "All" && d.clarity !== clarity) return false;
+        if (cut !== "All" && d.cut !== cut) return false;
+        if (cert !== "All" && d.certLab !== cert) return false;
+        if (d.carat < caratMin || d.carat > caratMax) return false;
+        if (d.price > priceMax) return false;
+        return true;
+      }),
+    [shape, color, clarity, cut, cert, caratMin, caratMax, priceMax],
+  );
+
+  return (
+    <div className="container mx-auto px-6 lg:px-12 py-10">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p className="font-accent italic text-primary">Professional Diamond Search</p>
+          <h1 className="font-heading text-3xl lg:text-4xl">Loose Diamonds</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant={view === "table" ? "luxury" : "outline"} onClick={() => setView("table")}>Table View</Button>
+          <Button variant={view === "grid" ? "luxury" : "outline"} onClick={() => setView("grid")}>Grid View</Button>
+        </div>
+      </div>
+
+      <div className="rounded-[12px] border border-border bg-secondary/40 p-5 mb-8">
+        <div className="flex items-center gap-2 mb-4 text-sm uppercase tracking-[0.1em]">
+          <SlidersHorizontal className="w-4 h-4 text-primary" /> Filters
+        </div>
+        <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+          <select className="h-10 px-3 rounded border" value={shape} onChange={(e) => setShape(e.target.value)}>{shapes.map((v) => <option key={v}>{v}</option>)}</select>
+          <select className="h-10 px-3 rounded border" value={color} onChange={(e) => setColor(e.target.value)}>{colors.map((v) => <option key={v}>{v}</option>)}</select>
+          <select className="h-10 px-3 rounded border" value={clarity} onChange={(e) => setClarity(e.target.value)}>{clarities.map((v) => <option key={v}>{v}</option>)}</select>
+          <select className="h-10 px-3 rounded border" value={cut} onChange={(e) => setCut(e.target.value)}>{cuts.map((v) => <option key={v}>{v}</option>)}</select>
+          <select className="h-10 px-3 rounded border" value={cert} onChange={(e) => setCert(e.target.value)}>{certs.map((v) => <option key={v}>{v}</option>)}</select>
+          <input className="h-10 px-3 rounded border" type="number" value={priceMax} min={1000} step={500} onChange={(e) => setPriceMax(Number(e.target.value))} placeholder="Max Price" />
+        </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          <label className="text-sm text-muted-foreground">Carat Min: {caratMin.toFixed(2)}
+            <input type="range" min="0.5" max="3.5" step="0.01" value={caratMin} onChange={(e) => setCaratMin(Number(e.target.value))} className="w-full" />
+          </label>
+          <label className="text-sm text-muted-foreground">Carat Max: {caratMax.toFixed(2)}
+            <input type="range" min="0.5" max="3.5" step="0.01" value={caratMax} onChange={(e) => setCaratMax(Number(e.target.value))} className="w-full" />
+          </label>
+        </div>
+      </div>
+
+      {view === "table" ? (
+        <div className="overflow-auto rounded-[12px] border border-border">
+          <table className="w-full bg-background">
+            <thead>
+              <tr className="border-b border-border text-left text-xs uppercase tracking-[0.15em] text-muted-foreground">
+                <th className="p-3">Shape</th>
+                <th className="p-3">Carat</th>
+                <th className="p-3">Color</th>
+                <th className="p-3">Clarity</th>
+                <th className="p-3">Cut</th>
+                <th className="p-3">Price</th>
+                <th className="p-3">Certificate</th>
+                <th className="p-3">View</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((d) => (
+                <tr key={d.stoneId} className="border-b border-border hover:bg-secondary/40">
+                  <td className="p-3">{d.shape}</td>
+                  <td className="p-3">{d.carat.toFixed(2)}</td>
+                  <td className="p-3">{d.color}</td>
+                  <td className="p-3">{d.clarity}</td>
+                  <td className="p-3">{d.cut}</td>
+                  <td className="p-3 font-medium">{currency(d.price)}</td>
+                  <td className="p-3"><a href={certificateLink(d)} target="_blank" rel="noreferrer" className="text-primary underline">{d.certLab}</a></td>
+                  <td className="p-3 flex items-center gap-2">
+                    <Link to={`/diamond/${d.stoneId}`} className="text-primary underline">Open</Link>
+                    <Button size="sm" variant={isCompared(d.stoneId) ? "secondary" : "outline"} onClick={() => toggleCompare(d)}>
+                      {isCompared(d.stoneId) ? <Check className="w-3 h-3" /> : <Scale className="w-3 h-3" />} Compare
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filtered.map((d) => (
+            <article key={d.stoneId} className="rounded-[12px] border border-border bg-background shadow-luxury overflow-hidden group">
+              <img src={d.imageUrl} alt={d.stoneId} className="w-full aspect-[4/3] object-cover" />
+              <div className="p-4">
+                <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground mb-1">{d.stoneId}</p>
+                <h3 className="font-heading text-lg mb-2">{d.shape} {d.carat.toFixed(2)}ct</h3>
+                <p className="text-sm text-muted-foreground mb-3">{d.color} • {d.clarity} • {d.cut}</p>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium">{currency(d.price)}</span>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant={isCompared(d.stoneId) ? "secondary" : "outline"} onClick={() => toggleCompare(d)}>Compare</Button>
+                    <Button asChild size="sm" variant="luxury"><Link to={`/diamond/${d.stoneId}`}>View</Link></Button>
+                  </div>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default DiamondMarketplaceView;

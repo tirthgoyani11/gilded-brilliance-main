@@ -6,6 +6,7 @@ import BestSellers from "@/components/BestSellers";
 import EducationSection from "@/components/EducationSection";
 import BrandStory from "@/components/BrandStory";
 import Footer from "@/components/Footer";
+import TrustSection from "@/components/TrustSection";
 
 const Index = () => {
   return (
@@ -17,6 +18,7 @@ const Index = () => {
         <DiamondSearchPreview />
         <BestSellers />
         <EducationSection />
+        <TrustSection />
         <BrandStory />
       </main>
       <Footer />
