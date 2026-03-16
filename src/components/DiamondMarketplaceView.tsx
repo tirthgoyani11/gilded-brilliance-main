@@ -4,45 +4,38 @@ import { Check, Scale, SlidersHorizontal, X } from "lucide-react";
 import { certificateLink, currency } from "@/lib/diamond-utils";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/contexts/StoreContext";
-import shapeSprite from "@/assets/diamond-shape-icons.jpg";
 const labs = ["All", "natural", "lab-grown"];
 const certs = ["All", "IGI", "GIA"];
-const preferredShapeOrder = ["Round", "Oval", "Emerald", "Pear", "Radiant", "Marquise", "Cushion", "Princess", "Heart", "Asscher"];
+const preferredShapeOrder = ["Round", "Oval", "Emerald", "Pear", "Radiant", "Marquise", "Cushion LG", "Cushion SQ", "Princess", "Heart", "Asscher"];
 
-type SpriteSlot = { col: number; row: number };
-
-const spriteSlots: Record<string, SpriteSlot> = {
-  Round: { col: 2, row: 0 },
-  Oval: { col: 0, row: 3 },
-  Emerald: { col: 0, row: 1 },
-  Pear: { col: 2, row: 1 },
-  Radiant: { col: 0, row: 0 },
-  Marquise: { col: 0, row: 3 },
-  Cushion: { col: 0, row: 0 },
-  Princess: { col: 2, row: 2 },
-  Heart: { col: 2, row: 3 },
-  Asscher: { col: 2, row: 2 },
+const shapeIndexByName: Record<string, number> = {
+  round: 2,
+  oval: 3,
+  emerald: 4,
+  pear: 5,
+  radiant: 6,
+  marquise: 7,
+  cushion: 8,
+  "cushion lg": 8,
+  "cushion sq": 9,
+  princess: 10,
+  heart: 11,
+  asscher: 12,
 };
 
-const ShapeIcon = ({ shape, active }: { shape: string; active: boolean }) => {
-  const slot = spriteSlots[shape] ?? { col: 0, row: 0 };
-  const col = active ? slot.col + 1 : slot.col;
-  const row = slot.row;
-  const x = `${(col / 3) * 100}%`;
-  const y = `${(row / 3) * 100}%`;
+const normalizeShapeKey = (shape: string) => shape.trim().toLowerCase().replace(/\./g, "").replace(/\s+/g, " ");
+const displayShapeLabel = (shape: string) => {
+  const key = normalizeShapeKey(shape);
+  if (key === "cushion lg") return "CUSHION LG.";
+  if (key === "cushion sq") return "CUSHION SQ.";
+  return shape.toUpperCase();
+};
 
-  return (
-    <div
-      className="h-14 w-14"
-      style={{
-        backgroundImage: `url(${shapeSprite})`,
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "400% 400%",
-        backgroundPosition: `${x} ${y}`,
-      }}
-      aria-hidden
-    />
-  );
+const kiraShapeIconSrc = (shape: string, active: boolean) => {
+  const key = normalizeShapeKey(shape);
+  const index = shapeIndexByName[key] ?? 2;
+  const suffix = active ? "_Click" : "";
+  return `https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/${index}${suffix}.png`;
 };
 
 const DiamondMarketplaceView = () => {
@@ -68,8 +61,8 @@ const DiamondMarketplaceView = () => {
 
   const shapes = useMemo(() => {
     const fromData = [...new Set(diamonds.map((d) => d.shape))];
-    const ordered = preferredShapeOrder.filter((name) => fromData.some((s) => s.toLowerCase() === name.toLowerCase()));
-    const custom = fromData.filter((name) => !preferredShapeOrder.some((p) => p.toLowerCase() === name.toLowerCase()));
+    const ordered = preferredShapeOrder.filter((name) => fromData.some((s) => normalizeShapeKey(s) === normalizeShapeKey(name)));
+    const custom = fromData.filter((name) => !preferredShapeOrder.some((p) => normalizeShapeKey(p) === normalizeShapeKey(name)));
     return ["All", ...ordered, ...custom];
   }, [diamonds]);
   const colors = ["All", ...new Set(diamonds.map((d) => d.color))];
@@ -138,8 +131,12 @@ const DiamondMarketplaceView = () => {
           <SlidersHorizontal className="w-4 h-4 text-primary" /> Filters
         </div>
 
-        <div className="mb-6 rounded-[14px] border border-[#8fd5ef]/70 bg-white p-4">
-          <div className="mb-3 text-center text-xs uppercase tracking-[0.2em] text-[#2b4b66]">Shape</div>
+        <div className="mb-6 rounded-[16px] border border-[#8fd5ef] bg-white p-4">
+          <div className="mb-3 flex items-center gap-3 text-[#1f4f83]">
+            <span className="h-px flex-1 bg-[#8fd5ef]" />
+            <span className="text-xs uppercase tracking-[0.22em]">Shape</span>
+            <span className="h-px flex-1 bg-[#8fd5ef]" />
+          </div>
           <div className="flex flex-wrap justify-center gap-3">
             {shapes.map((option) => {
               const active = shape === option;
@@ -148,8 +145,8 @@ const DiamondMarketplaceView = () => {
                   key={option}
                   type="button"
                   onClick={() => setShape(option)}
-                  className={`group min-w-[90px] bg-transparent px-2 pb-1 pt-2 text-[12px] font-semibold uppercase tracking-[0.04em] transition ${
-                    active ? "text-[#1f8ab7]" : "text-[#567089] hover:text-[#1f8ab7]"
+                  className={`group min-w-[94px] bg-transparent px-2 pb-1 pt-2 text-[12px] font-semibold uppercase tracking-[0.04em] transition ${
+                    active ? "text-[#ffffff]" : "text-[#4e6074] hover:text-[#1f8ab7]"
                   }`}
                   aria-pressed={active}
                 >
@@ -157,10 +154,23 @@ const DiamondMarketplaceView = () => {
                     {option === "All" ? (
                       <div className="flex h-12 w-12 items-center justify-center rounded-full border border-current text-xs">All</div>
                     ) : (
-                      <ShapeIcon shape={option} active={active} />
+                      <img
+                        src={kiraShapeIconSrc(option, active)}
+                        alt={`${option} shape`}
+                        className="h-14 w-14 object-contain"
+                        loading="lazy"
+                      />
                     )}
                   </div>
-                  <span className={`inline-block rounded-full px-3 py-1 ${active ? "text-[#1f8ab7]" : "text-[#567089]"}`}>{option}</span>
+                  <span
+                    className={`inline-block rounded-full border px-3 py-1 ${
+                      active
+                        ? "border-[#3048a4] bg-[#3048a4] text-white"
+                        : "border-[#7ed7ff] bg-transparent text-[#4e6074]"
+                    }`}
+                  >
+                    {option === "All" ? "ALL" : displayShapeLabel(option)}
+                  </span>
                 </button>
               );
             })}
