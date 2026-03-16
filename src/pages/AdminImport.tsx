@@ -10,6 +10,7 @@ type ImportRow = {
   imagePath: string;
   type: string;
   branch: string;
+  certLab?: string;
   stoneId: string;
   shape: string;
   carats: number;
@@ -67,29 +68,40 @@ const safeNumber = (value: unknown) => {
   return Number.isFinite(n) ? n : 0;
 };
 
+const pick = (row: Record<string, unknown>, keys: string[]) => {
+  for (const key of keys) {
+    const value = row[key];
+    if (value !== undefined && String(value).trim() !== "") {
+      return value;
+    }
+  }
+  return "";
+};
+
 const mapRow = (row: Record<string, unknown>): ImportRow => ({
-  imagePath: String(row["Image path"] ?? "").trim(),
-  type: String(row["Type"] ?? "").trim(),
-  branch: String(row["Branch"] ?? "").trim(),
-  stoneId: String(row["Stone ID"] ?? "").trim(),
-  shape: String(row["Shape"] ?? "").trim(),
-  carats: safeNumber(row["Carats"]),
-  color: String(row["Color"] ?? "").trim(),
-  clarity: String(row["Clarity"] ?? "").trim(),
-  cut: String(row["Cut"] ?? "").trim(),
-  polish: String(row["Polish"] ?? "").trim(),
-  symmetry: String(row["Symmetry"] ?? "").trim(),
-  price: safeNumber(row["Price"]),
-  certNumber: String(row["Certificate number"] ?? "").trim(),
-  length: safeNumber(row["Length"]),
-  width: safeNumber(row["Width"]),
-  height: safeNumber(row["Height"]),
-  tablePct: safeNumber(row["Table %"]),
-  depthPct: safeNumber(row["Depth %"]),
-  girdlePct: safeNumber(row["Girdle %"]),
-  ratio: safeNumber(row["Ratio"]),
-  certificateLink: String(row["Certificate link"] ?? "").trim() || undefined,
-  videoLink: String(row["Video link"] ?? "").trim() || undefined,
+  imagePath: String(pick(row, ["Image path", "Image", "Image URL", "Image Link"]) ?? "").trim(),
+  type: String(pick(row, ["Type", "Diamond Type", "Lab"]) ?? "").trim(),
+  branch: String(pick(row, ["Branch", "Location"]) ?? "").trim(),
+  certLab: String(pick(row, ["Cert Lab", "Lab", "0.00"]) ?? "").trim() || undefined,
+  stoneId: String(pick(row, ["Stone ID", "Stone Id", "StoneID"]) ?? "").trim(),
+  shape: String(pick(row, ["Shape"]) ?? "").trim(),
+  carats: safeNumber(pick(row, ["Carats", "Carat", "Weight"])),
+  color: String(pick(row, ["Color", "Colour"]) ?? "").trim(),
+  clarity: String(pick(row, ["Clarity"]) ?? "").trim(),
+  cut: String(pick(row, ["Cut", "Cut Grade"]) ?? "").trim(),
+  polish: String(pick(row, ["Polish", "Pol"]) ?? "").trim(),
+  symmetry: String(pick(row, ["Symmetry", "Sym"]) ?? "").trim(),
+  price: safeNumber(pick(row, ["Price", "Amount", "Rate"])),
+  certNumber: String(pick(row, ["Certificate number", "Cert. No", "Cert No", "Certificate No"]) ?? "").trim(),
+  length: safeNumber(pick(row, ["Length"])),
+  width: safeNumber(pick(row, ["Width"])),
+  height: safeNumber(pick(row, ["Height"])),
+  tablePct: safeNumber(pick(row, ["Table %", "Table [%]", "Table"])),
+  depthPct: safeNumber(pick(row, ["Depth %", "Depth [%]", "Depth"])),
+  girdlePct: safeNumber(pick(row, ["Girdle %", "Girdle"])),
+  ratio: safeNumber(pick(row, ["Ratio"])),
+  certificateLink: String(pick(row, ["Certificate link", "Certi Link", "Cert Link"]) ?? "").trim() || undefined,
+  videoLink: String(pick(row, ["Video link", "Video Link", "Video", "V360 Link"]) ?? "").trim() || undefined,
 });
 
 const AdminImport = () => {
@@ -145,12 +157,10 @@ const AdminImport = () => {
     if (!row.shape) errors.push("Shape is required");
     if (!row.color) errors.push("Color is required");
     if (!row.clarity) errors.push("Clarity is required");
-    if (!row.cut) errors.push("Cut is required");
     if (!row.polish) errors.push("Polish is required");
     if (!row.symmetry) errors.push("Symmetry is required");
     if (!row.certNumber) errors.push("Certificate number is required");
     if (row.carats <= 0) errors.push("Carats must be greater than 0");
-    if (row.price <= 0) errors.push("Price must be greater than 0");
     if (row.depthPct <= 0) errors.push("Depth % must be greater than 0");
     if (row.tablePct <= 0) errors.push("Table % must be greater than 0");
 
@@ -186,9 +196,11 @@ const AdminImport = () => {
 
   const importValidRows = () => {
     const validDiamonds: Diamond[] = validationSummary.valid.map(({ row }) => {
-      const certLab = row.certNumber.toUpperCase().startsWith("GIA") ? "GIA" : "IGI";
-      const labType = row.type === "lab-grown" ? "lab-grown" : "natural";
+      const certLab = row.certLab?.toUpperCase().includes("GIA") || row.certNumber.toUpperCase().startsWith("GIA") ? "GIA" : "IGI";
+      const rowType = row.type.toUpperCase();
+      const labType = rowType.includes("CVD") || rowType.includes("HPHT") || rowType.includes("LAB") ? "lab-grown" : "natural";
       const imageUrl = row.imagePath || mockDiamonds[0].imageUrl;
+      const normalizedCut = row.cut || "N/A";
 
       return {
         stoneId: row.stoneId,
@@ -197,11 +209,11 @@ const AdminImport = () => {
         carat: row.carats,
         color: row.color,
         clarity: row.clarity,
-        cut: row.cut,
+        cut: normalizedCut,
         polish: row.polish,
         symmetry: row.symmetry,
         fluorescence: "None",
-        price: row.price,
+        price: row.price > 0 ? row.price : 0,
         ratio: row.ratio || 1,
         depthPct: row.depthPct,
         tablePct: row.tablePct,
