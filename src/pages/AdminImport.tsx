@@ -2,36 +2,170 @@ import { useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 import SiteLayout from "@/components/SiteLayout";
 import { mockDiamonds } from "@/data/mockCatalog";
+import { Button } from "@/components/ui/button";
 
 type ImportRow = {
+  imagePath: string;
+  type: string;
+  branch: string;
   stoneId: string;
   shape: string;
   carats: number;
   color: string;
   clarity: string;
   cut: string;
+  polish: string;
+  symmetry: string;
   price: number;
   certNumber: string;
+  length: number;
+  width: number;
+  height: number;
+  tablePct: number;
+  depthPct: number;
+  girdlePct: number;
+  ratio: number;
+  certificateLink?: string;
   videoLink?: string;
 };
 
+type RowResult = {
+  rowNumber: number;
+  row: ImportRow;
+  errors: string[];
+};
+
+const csvHeaders = [
+  "Image path",
+  "Type",
+  "Branch",
+  "Stone ID",
+  "Shape",
+  "Carats",
+  "Color",
+  "Clarity",
+  "Cut",
+  "Polish",
+  "Symmetry",
+  "Price",
+  "Certificate number",
+  "Length",
+  "Width",
+  "Height",
+  "Table %",
+  "Depth %",
+  "Girdle %",
+  "Ratio",
+  "Certificate link",
+  "Video link",
+];
+
+const safeNumber = (value: unknown) => {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+};
+
 const mapRow = (row: Record<string, unknown>): ImportRow => ({
+  imagePath: String(row["Image path"] ?? "").trim(),
+  type: String(row["Type"] ?? "").trim(),
+  branch: String(row["Branch"] ?? "").trim(),
   stoneId: String(row["Stone ID"] ?? "").trim(),
   shape: String(row["Shape"] ?? "").trim(),
-  carats: Number(row["Carats"] ?? 0),
+  carats: safeNumber(row["Carats"]),
   color: String(row["Color"] ?? "").trim(),
   clarity: String(row["Clarity"] ?? "").trim(),
   cut: String(row["Cut"] ?? "").trim(),
-  price: Number(row["Price"] ?? 0),
+  polish: String(row["Polish"] ?? "").trim(),
+  symmetry: String(row["Symmetry"] ?? "").trim(),
+  price: safeNumber(row["Price"]),
   certNumber: String(row["Certificate number"] ?? "").trim(),
+  length: safeNumber(row["Length"]),
+  width: safeNumber(row["Width"]),
+  height: safeNumber(row["Height"]),
+  tablePct: safeNumber(row["Table %"]),
+  depthPct: safeNumber(row["Depth %"]),
+  girdlePct: safeNumber(row["Girdle %"]),
+  ratio: safeNumber(row["Ratio"]),
+  certificateLink: String(row["Certificate link"] ?? "").trim() || undefined,
   videoLink: String(row["Video link"] ?? "").trim() || undefined,
 });
 
 const AdminImport = () => {
-  const [rows, setRows] = useState<ImportRow[]>([]);
-  const [errors, setErrors] = useState<string[]>([]);
+  const [results, setResults] = useState<RowResult[]>([]);
+  const [importedCount, setImportedCount] = useState(0);
 
   const existingIds = useMemo(() => new Set(mockDiamonds.map((d) => d.stoneId)), []);
+
+  const validationSummary = useMemo(() => {
+    const valid = results.filter((item) => item.errors.length === 0);
+    const invalid = results.filter((item) => item.errors.length > 0);
+    return { valid, invalid };
+  }, [results]);
+
+  const buildTemplate = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      csvHeaders,
+      [
+        "https://cdn.example.com/diamond-001.jpg",
+        "natural",
+        "NY",
+        "VMR-2001",
+        "Round",
+        1.1,
+        "F",
+        "VS1",
+        "Excellent",
+        "Excellent",
+        "Excellent",
+        6200,
+        "IGI-VMR2001",
+        6.7,
+        6.6,
+        4.1,
+        58,
+        62.1,
+        3.2,
+        1.02,
+        "https://www.igi.org/verify-your-report/?r=IGI-VMR2001",
+        "https://cdn.example.com/video-001.mp4",
+      ],
+    ]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "diamonds");
+    XLSX.writeFile(wb, "vmora_diamond_import_template.xlsx");
+  };
+
+  const validateRow = (row: ImportRow, rowNumber: number, localIds: Set<string>) => {
+    const errors: string[] = [];
+
+    if (!row.stoneId) errors.push("Stone ID is required");
+    if (!row.shape) errors.push("Shape is required");
+    if (!row.color) errors.push("Color is required");
+    if (!row.clarity) errors.push("Clarity is required");
+    if (!row.cut) errors.push("Cut is required");
+    if (!row.polish) errors.push("Polish is required");
+    if (!row.symmetry) errors.push("Symmetry is required");
+    if (!row.certNumber) errors.push("Certificate number is required");
+    if (row.carats <= 0) errors.push("Carats must be greater than 0");
+    if (row.price <= 0) errors.push("Price must be greater than 0");
+    if (row.depthPct <= 0) errors.push("Depth % must be greater than 0");
+    if (row.tablePct <= 0) errors.push("Table % must be greater than 0");
+
+    if (existingIds.has(row.stoneId)) {
+      errors.push(`Duplicate stone ID against inventory (${row.stoneId})`);
+    }
+    if (localIds.has(row.stoneId)) {
+      errors.push(`Duplicate stone ID in upload (${row.stoneId})`);
+    }
+
+    localIds.add(row.stoneId);
+
+    return {
+      rowNumber,
+      row,
+      errors,
+    };
+  };
 
   const onFile = async (file: File) => {
     const buffer = await file.arrayBuffer();
@@ -40,31 +174,28 @@ const AdminImport = () => {
     const json = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: "" });
     const parsed = json.map(mapRow);
 
-    const local = new Set<string>();
-    const validationErrors: string[] = [];
+    const localIds = new Set<string>();
+    const nextResults = parsed.map((row, idx) => validateRow(row, idx + 2, localIds));
 
-    parsed.forEach((row, idx) => {
-      if (!row.stoneId || !row.shape || !row.color || !row.clarity || !row.cut || !row.certNumber) {
-        validationErrors.push(`Row ${idx + 2}: missing required fields`);
-      }
-      if (existingIds.has(row.stoneId)) {
-        validationErrors.push(`Row ${idx + 2}: duplicate stone ID against inventory (${row.stoneId})`);
-      }
-      if (local.has(row.stoneId)) {
-        validationErrors.push(`Row ${idx + 2}: duplicate stone ID in upload (${row.stoneId})`);
-      }
-      local.add(row.stoneId);
-    });
+    setResults(nextResults);
+    setImportedCount(0);
+  };
 
-    setRows(parsed);
-    setErrors(validationErrors);
+  const importValidRows = () => {
+    const count = validationSummary.valid.length;
+    setImportedCount(count);
   };
 
   return (
     <SiteLayout>
       <section className="container mx-auto px-6 lg:px-12 py-10 space-y-6">
-        <h1 className="font-heading text-3xl">Excel Diamond Import</h1>
-        <p className="text-muted-foreground">Upload Excel, parse with SheetJS, validate rows, and block duplicate stone IDs.</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="font-heading text-3xl">Excel Diamond Import</h1>
+            <p className="text-muted-foreground">Upload Excel, parse with SheetJS, validate rows, prevent duplicate Stone IDs, and stage import.</p>
+          </div>
+          <Button variant="luxury-outline" onClick={buildTemplate}>Download Template</Button>
+        </div>
 
         <label className="block rounded-[12px] border-2 border-dashed border-border p-8 text-center bg-secondary/30 cursor-pointer">
           <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
@@ -74,19 +205,37 @@ const AdminImport = () => {
         <div className="grid lg:grid-cols-2 gap-6">
           <div className="rounded-[12px] border border-border p-5">
             <h2 className="font-heading text-xl mb-3">Validation</h2>
-            <p className="text-sm text-muted-foreground mb-2">Rows parsed: {rows.length}</p>
-            <p className="text-sm text-muted-foreground mb-3">Errors: {errors.length}</p>
-            <ul className="space-y-1 text-sm">
-              {errors.slice(0, 12).map((err) => <li key={err} className="text-destructive">• {err}</li>)}
+            <p className="text-sm text-muted-foreground mb-2">Rows parsed: {results.length}</p>
+            <p className="text-sm text-muted-foreground mb-2">Valid rows: {validationSummary.valid.length}</p>
+            <p className="text-sm text-muted-foreground mb-3">Invalid rows: {validationSummary.invalid.length}</p>
+            <ul className="space-y-1 text-sm max-h-[240px] overflow-auto">
+              {validationSummary.invalid.slice(0, 12).map((item) => (
+                <li key={`${item.rowNumber}-${item.row.stoneId}`} className="text-destructive">
+                  • Row {item.rowNumber}: {item.errors.join(", ")}
+                </li>
+              ))}
             </ul>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <Button onClick={importValidRows} disabled={validationSummary.valid.length === 0}>
+                Import Valid Rows
+              </Button>
+              {importedCount > 0 ? (
+                <p className="text-sm text-primary">Imported {importedCount} row(s) successfully (simulated).</p>
+              ) : null}
+            </div>
           </div>
 
           <div className="rounded-[12px] border border-border p-5">
             <h2 className="font-heading text-xl mb-3">Preview</h2>
             <div className="space-y-2 text-sm max-h-[280px] overflow-auto">
-              {rows.slice(0, 10).map((row) => (
-                <div key={`${row.stoneId}-${row.certNumber}`} className="p-2 rounded bg-secondary/40">
-                  {row.stoneId} • {row.shape} • {row.carats}ct • {row.color}/{row.clarity}
+              {results.slice(0, 10).map(({ row, rowNumber, errors }) => (
+                <div key={`${rowNumber}-${row.stoneId}-${row.certNumber}`} className="p-2 rounded bg-secondary/40">
+                  <p>
+                    Row {rowNumber}: {row.stoneId} • {row.shape} • {row.carats}ct • {row.color}/{row.clarity} • ${row.price}
+                  </p>
+                  <p className={`text-xs ${errors.length ? "text-destructive" : "text-primary"}`}>
+                    {errors.length ? `Invalid: ${errors.join(", ")}` : "Valid"}
+                  </p>
                 </div>
               ))}
             </div>
