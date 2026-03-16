@@ -45,6 +45,21 @@ const ShapeIcon = ({ shape, active }: { shape: string; active: boolean }) => {
   );
 };
 
+const RoundIcon = ({ active }: { active: boolean }) => {
+  const ringStroke = active ? "#2a7ec6" : "#66d6ff";
+  const facetStroke = active ? "#2f67b6" : "#61cfff";
+  const inner = active ? "#9ad9ff" : "#08131f";
+
+  return (
+    <svg viewBox="0 0 48 48" className="h-12 w-12" aria-hidden>
+      <circle cx="24" cy="24" r="21" fill={inner} stroke={ringStroke} strokeWidth="2" />
+      <circle cx="24" cy="24" r="9" fill={active ? "#7ebfe8" : "#020811"} stroke={ringStroke} strokeWidth="1.5" />
+      <path d="M24 3 L30 8 L37 11 L42 18 L45 24 L42 30 L37 37 L30 40 L24 45 L18 40 L11 37 L6 30 L3 24 L6 18 L11 11 L18 8 Z" fill="none" stroke={facetStroke} strokeWidth="1.5" />
+      <path d="M24 3 L24 15 M45 24 L33 24 M24 45 L24 33 M3 24 L15 24 M11 11 L18 18 M37 11 L30 18 M37 37 L30 30 M11 37 L18 30" fill="none" stroke={facetStroke} strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+};
+
 const DiamondMarketplaceView = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [view, setView] = useState<"table" | "grid">("table");
@@ -143,13 +158,18 @@ const DiamondMarketplaceView = () => {
           <div className="flex flex-wrap justify-center gap-3">
             {shapes.map((option) => {
               const active = shape === option;
+              const isRound = option.toLowerCase() === "round";
               return (
                 <button
                   key={option}
                   type="button"
                   onClick={() => setShape(option)}
                   className={`group min-w-[84px] rounded-full border px-2 pb-1 pt-2 text-[12px] font-semibold uppercase tracking-[0.04em] transition ${
-                    active
+                    isRound
+                      ? active
+                        ? "border-[#3f5fbf] bg-[#3856b7] text-white"
+                        : "border-[#4dc8ff] bg-[#03070f] text-[#78d5ff]"
+                      : active
                       ? "border-[#1f8ab7] bg-[#e8f8ff] text-[#1f8ab7]"
                       : "border-[#9adbf1] bg-[#f5fcff] text-[#567089] hover:border-[#57bfe5] hover:text-[#1f8ab7]"
                   }`}
@@ -158,11 +178,13 @@ const DiamondMarketplaceView = () => {
                   <div className="mb-1 flex justify-center">
                     {option === "All" ? (
                       <div className="flex h-12 w-12 items-center justify-center rounded-full border border-current text-xs">All</div>
+                    ) : isRound ? (
+                      <RoundIcon active={active} />
                     ) : (
                       <ShapeIcon shape={option} active={active} />
                     )}
                   </div>
-                  <span>{option}</span>
+                  <span className={isRound ? `inline-block rounded-full border px-3 py-1 ${active ? "border-transparent bg-[#2c469a] text-white" : "border-[#4dc8ff] bg-[#050a12] text-[#7ad9ff]"}` : ""}>{option}</span>
                 </button>
               );
             })}
