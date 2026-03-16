@@ -108,6 +108,7 @@ const AdminImport = () => {
   const { diamonds, importDiamonds } = useStore();
   const [results, setResults] = useState<RowResult[]>([]);
   const [importedCount, setImportedCount] = useState(0);
+  const [importDetails, setImportDetails] = useState<{ created: number; updated: number } | null>(null);
 
   const existingIds = useMemo(() => new Set(diamonds.map((d) => d.stoneId)), [diamonds]);
 
@@ -192,9 +193,10 @@ const AdminImport = () => {
 
     setResults(nextResults);
     setImportedCount(0);
+    setImportDetails(null);
   };
 
-  const importValidRows = () => {
+  const importValidRows = async () => {
     const validDiamonds: Diamond[] = validationSummary.valid.map(({ row }) => {
       const certLab = row.certLab?.toUpperCase().includes("GIA") || row.certNumber.toUpperCase().startsWith("GIA") ? "GIA" : "IGI";
       const rowType = row.type.toUpperCase();
@@ -227,8 +229,9 @@ const AdminImport = () => {
       };
     });
 
-    importDiamonds(validDiamonds);
-    setImportedCount(validDiamonds.length);
+    const result = await importDiamonds(validDiamonds);
+    setImportedCount(result.total);
+    setImportDetails({ created: result.created, updated: result.updated });
   };
 
   return (
@@ -237,7 +240,7 @@ const AdminImport = () => {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="font-heading text-3xl">Excel Diamond Import</h1>
-            <p className="text-muted-foreground">Upload Excel, parse with SheetJS, validate rows, prevent duplicate Stone IDs, and stage import.</p>
+            <p className="text-muted-foreground">Upload Excel, parse with SheetJS, validate rows, prevent duplicate Stone IDs, and import directly into VMORA inventory.</p>
           </div>
           <Button variant="luxury-outline" onClick={buildTemplate}>Download Template</Button>
         </div>
@@ -265,7 +268,10 @@ const AdminImport = () => {
                 Import Valid Rows
               </Button>
               {importedCount > 0 ? (
-                <p className="text-sm text-primary">Imported {importedCount} row(s) successfully (simulated).</p>
+                <p className="text-sm text-primary">
+                  Imported {importedCount} row(s) successfully.
+                  {importDetails ? ` Created: ${importDetails.created}, Updated: ${importDetails.updated}.` : ""}
+                </p>
               ) : null}
             </div>
           </div>

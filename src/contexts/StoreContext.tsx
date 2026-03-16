@@ -1,6 +1,25 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { CartItem, Diamond, RingBuilderSelection } from "@/types/diamond";
 import { mockDiamonds } from "@/data/mockCatalog";
+
+const STORAGE_KEYS = {
+  diamonds: "vmora_store_diamonds",
+  cart: "vmora_store_cart",
+  wishlist: "vmora_store_wishlist",
+  compare: "vmora_store_compare",
+  ringBuilder: "vmora_store_ring_builder",
+};
+
+const readStorage = <T,>(key: string, fallback: T): T => {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+};
 
 interface StoreContextValue {
   diamonds: Diamond[];
@@ -8,7 +27,7 @@ interface StoreContextValue {
   wishlist: string[];
   compare: Diamond[];
   ringBuilder: RingBuilderSelection;
-  importDiamonds: (items: Diamond[]) => void;
+  importDiamonds: (items: Diamond[]) => Promise<{ total: number; created: number; updated: number }>;
   addToCart: (item: Omit<CartItem, "quantity">) => void;
   removeFromCart: (id: string) => void;
   clearCart: () => void;
@@ -22,21 +41,93 @@ interface StoreContextValue {
 const StoreContext = createContext<StoreContextValue | undefined>(undefined);
 
 export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
-  const [diamonds, setDiamonds] = useState<Diamond[]>(mockDiamonds);
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [wishlist, setWishlist] = useState<string[]>([]);
-  const [compare, setCompare] = useState<Diamond[]>([]);
-  const [ringBuilder, setRingBuilderState] = useState<RingBuilderSelection>({});
+  const [diamonds, setDiamonds] = useState<Diamond[]>(() => readStorage(STORAGE_KEYS.diamonds, mockDiamonds));
+  const [cart, setCart] = useState<CartItem[]>(() => readStorage(STORAGE_KEYS.cart, []));
+  const [wishlist, setWishlist] = useState<string[]>(() => readStorage(STORAGE_KEYS.wishlist, []));
+  const [compare, setCompare] = useState<Diamond[]>(() => readStorage(STORAGE_KEYS.compare, []));
+  const [ringBuilder, setRingBuilderState] = useState<RingBuilderSelection>(() => readStorage(STORAGE_KEYS.ringBuilder, {}));
 
-  const importDiamonds = (items: Diamond[]) => {
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEYS.diamonds, JSON.stringify(diamonds));
+  }, [diamonds]);
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEYS.cart, JSON.stringify(cart));
+  }, [cart]);
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEYS.wishlist, JSON.stringify(wishlist));
+  }, [wishlist]);
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEYS.compare, JSON.stringify(compare));
+  }, [compare]);
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEYS.ringBuilder, JSON.stringify(ringBuilder));
+  }, [ringBuilder]);
+
+  const importDiamonds = async (items: Diamond[]) => {
+    let created = 0;
+    let updated = 0;
+
     setDiamonds((prev) => {
       const map = new Map(prev.map((item) => [item.stoneId, item]));
       items.forEach((item) => {
+        if (map.has(item.stoneId)) updated += 1;
+        else created += 1;
         map.set(item.stoneId, item);
       });
       return [...map.values()];
     });
+
+    try {
+      const response = await fetch("/api/import-diamonds", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ diamonds: items }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        return {
+          total: Number(result.total ?? items.length),
+          created: Number(result.created ?? created),
+          updated: Number(result.updated ?? updated),
+        };
+      }
+    } catch {
+      // Keep local import as fallback when API is unavailable.
+    }
+
+    return { total: items.length, created, updated };
   };
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchDiamonds = async () => {
+      try {
+        const response = await fetch("/api/diamonds");
+        if (!response.ok) return;
+        const payload = await response.json();
+        if (!active) return;
+        if (Array.isArray(payload?.diamonds) && payload.diamonds.length > 0) {
+          setDiamonds(payload.diamonds as Diamond[]);
+        }
+      } catch {
+        // Fallback to local state when API is unavailable.
+      }
+    };
+
+    void fetchDiamonds();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const addToCart = (item: Omit<CartItem, "quantity">) => {
     setCart((prev) => {
