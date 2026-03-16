@@ -67,17 +67,23 @@ const Navbar = () => {
               <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground">
                 <Search className="w-4 h-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground">
+              <Button asChild variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground">
+                <Link to="/wishlist">
                 <Heart className="w-4 h-4" />
+                </Link>
               </Button>
-              <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground">
+              <Button asChild variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground">
+                <Link to="/account">
                 <User className="w-4 h-4" />
+                </Link>
               </Button>
-              <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground relative">
+              <Button asChild variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground relative">
+                <Link to="/cart">
                 <ShoppingBag className="w-4 h-4" />
                 <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
                   0
                 </span>
+                </Link>
               </Button>
             </div>
           </div>
