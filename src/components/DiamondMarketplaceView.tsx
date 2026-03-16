@@ -6,6 +6,42 @@ import { Button } from "@/components/ui/button";
 import { useStore } from "@/contexts/StoreContext";
 const labs = ["All", "natural", "lab-grown"];
 const certs = ["All", "IGI", "GIA"];
+const preferredShapeOrder = ["Round", "Oval", "Emerald", "Pear", "Radiant", "Marquise", "Cushion", "Princess", "Heart", "Asscher"];
+
+const ShapeIcon = ({ shape, active }: { shape: string; active: boolean }) => {
+  const stroke = active ? "#1f8ab7" : "#74c8ea";
+  const norm = shape.replace(/\s+/g, "").toUpperCase();
+
+  const facetLines = (
+    <>
+      <line x1="24" y1="8" x2="24" y2="40" />
+      <line x1="8" y1="24" x2="40" y2="24" />
+      <line x1="12" y1="12" x2="36" y2="36" />
+      <line x1="36" y1="12" x2="12" y2="36" />
+    </>
+  );
+
+  const shapeNode = (() => {
+    if (norm === "ROUND") return <circle cx="24" cy="24" r="16" />;
+    if (norm === "OVAL") return <ellipse cx="24" cy="24" rx="13" ry="17" />;
+    if (norm === "EMERALD") return <rect x="12" y="10" width="24" height="28" rx="2" />;
+    if (norm === "PEAR") return <path d="M24 8 C31 15, 34 21, 34 27 C34 35, 29 40, 24 40 C19 40, 14 35, 14 27 C14 21, 17 15, 24 8 Z" />;
+    if (norm === "RADIANT") return <polygon points="16,10 32,10 38,24 32,38 16,38 10,24" />;
+    if (norm === "MARQUISE") return <path d="M24 8 C31 8, 37 16, 37 24 C37 32, 31 40, 24 40 C17 40, 11 32, 11 24 C11 16, 17 8, 24 8 Z" />;
+    if (norm.startsWith("CUSHION")) return <rect x="11" y="11" width="26" height="26" rx="7" />;
+    if (norm === "PRINCESS") return <rect x="12" y="12" width="24" height="24" rx="1" />;
+    if (norm === "HEART") return <path d="M24 39 C18 33, 10 28, 10 20 C10 15, 14 11, 19 11 C22 11, 24 13, 24 15 C24 13, 26 11, 29 11 C34 11, 38 15, 38 20 C38 28, 30 33, 24 39 Z" />;
+    if (norm === "ASSCHER") return <polygon points="14,10 34,10 38,14 38,34 34,38 14,38 10,34 10,14" />;
+    return <polygon points="24,8 39,24 24,40 9,24" />;
+  })();
+
+  return (
+    <svg viewBox="0 0 48 48" className="w-12 h-12" fill="none" stroke={stroke} strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" aria-hidden>
+      {shapeNode}
+      {facetLines}
+    </svg>
+  );
+};
 
 const DiamondMarketplaceView = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -28,7 +64,12 @@ const DiamondMarketplaceView = () => {
   const [sortBy, setSortBy] = useState<"best" | "price-asc" | "price-desc" | "carat-asc" | "carat-desc">("best");
   const { diamonds, toggleCompare, isCompared } = useStore();
 
-  const shapes = ["All", ...new Set(diamonds.map((d) => d.shape))];
+  const shapes = useMemo(() => {
+    const fromData = [...new Set(diamonds.map((d) => d.shape))];
+    const ordered = preferredShapeOrder.filter((name) => fromData.some((s) => s.toLowerCase() === name.toLowerCase()));
+    const custom = fromData.filter((name) => !preferredShapeOrder.some((p) => p.toLowerCase() === name.toLowerCase()));
+    return ["All", ...ordered, ...custom];
+  }, [diamonds]);
   const colors = ["All", ...new Set(diamonds.map((d) => d.color))];
   const clarities = ["All", ...new Set(diamonds.map((d) => d.clarity))];
   const cuts = ["All", ...new Set(diamonds.map((d) => d.cut))];
@@ -94,8 +135,39 @@ const DiamondMarketplaceView = () => {
         <div className="flex items-center gap-2 mb-4 text-sm uppercase tracking-[0.1em]">
           <SlidersHorizontal className="w-4 h-4 text-primary" /> Filters
         </div>
+
+        <div className="mb-6 rounded-[14px] border border-[#8fd5ef]/70 bg-white p-4">
+          <div className="mb-3 text-center text-xs uppercase tracking-[0.2em] text-[#2b4b66]">Shape</div>
+          <div className="flex flex-wrap justify-center gap-3">
+            {shapes.map((option) => {
+              const active = shape === option;
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setShape(option)}
+                  className={`group min-w-[84px] rounded-full border px-2 pb-1 pt-2 text-[12px] font-semibold uppercase tracking-[0.04em] transition ${
+                    active
+                      ? "border-[#1f8ab7] bg-[#e8f8ff] text-[#1f8ab7]"
+                      : "border-[#9adbf1] bg-[#f5fcff] text-[#567089] hover:border-[#57bfe5] hover:text-[#1f8ab7]"
+                  }`}
+                  aria-pressed={active}
+                >
+                  <div className="mb-1 flex justify-center">
+                    {option === "All" ? (
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-current text-xs">All</div>
+                    ) : (
+                      <ShapeIcon shape={option} active={active} />
+                    )}
+                  </div>
+                  <span>{option}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
-          <select className="h-10 px-3 rounded border" value={shape} onChange={(e) => setShape(e.target.value)}>{shapes.map((v) => <option key={v}>{v}</option>)}</select>
           <select className="h-10 px-3 rounded border" value={color} onChange={(e) => setColor(e.target.value)}>{colors.map((v) => <option key={v}>{v}</option>)}</select>
           <select className="h-10 px-3 rounded border" value={clarity} onChange={(e) => setClarity(e.target.value)}>{clarities.map((v) => <option key={v}>{v}</option>)}</select>
           <select className="h-10 px-3 rounded border" value={cut} onChange={(e) => setCut(e.target.value)}>{cuts.map((v) => <option key={v}>{v}</option>)}</select>
