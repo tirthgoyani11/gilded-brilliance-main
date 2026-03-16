@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useStore } from "@/contexts/StoreContext";
 const labs = ["All", "natural", "lab-grown"];
 const certs = ["All", "IGI", "GIA"];
-const preferredShapeOrder = ["Round", "Oval", "Emerald", "Pear", "Radiant", "Marquise", "Cushion LG", "Cushion SQ", "Princess", "Heart", "Asscher"];
+const preferredShapeOrder = ["round", "oval", "emerald", "pear", "radiant", "marquise", "cushion lg", "cushion sq", "princess", "heart", "asscher", "cmb", "lg-radiant", "lg-cmb", "sqem", "octagone"];
 
 const shapeIconByKey: Record<string, { normal: string; active: string }> = {
   round: {
@@ -59,22 +59,33 @@ const shapeIconByKey: Record<string, { normal: string; active: string }> = {
   },
 };
 
-const normalizeShapeKey = (shape: string) => shape.trim().toLowerCase().replace(/\./g, "").replace(/\s+/g, " ");
-const displayShapeLabel = (shape: string) => {
+const normalizeShapeKey = (shape: string) => shape.trim().toLowerCase().replace(/\./g, "").replace(/\s+/g, " ").replace(/_/g, "-");
+const canonicalShapeKey = (shape: string) => {
   const key = normalizeShapeKey(shape);
+  if (key === "cushion") return "cushion lg";
+  if (key === "lg radiant") return "lg-radiant";
+  if (key === "lg cmb") return "lg-cmb";
+  if (key === "cushion-l g" || key === "cushion-l g") return "cushion lg";
+  return key;
+};
+
+const displayShapeLabel = (shape: string) => {
+  const key = canonicalShapeKey(shape);
   if (key === "cushion lg") return "CUSHION LG.";
   if (key === "cushion sq") return "CUSHION SQ.";
-  return shape.toUpperCase();
+  if (key === "lg-radiant") return "LG-RADIANT";
+  if (key === "lg-cmb") return "LG-CMB";
+  return key.toUpperCase();
 };
 
 const kiraShapeIconSrc = (shape: string, active: boolean) => {
-  const key = normalizeShapeKey(shape);
+  const key = canonicalShapeKey(shape);
   const icon = shapeIconByKey[key];
   if (!icon) return null;
   return active ? icon.active : icon.normal;
 };
 
-const hasKiraIcon = (shape: string) => Boolean(shapeIconByKey[normalizeShapeKey(shape)]);
+const hasKiraIcon = (shape: string) => Boolean(shapeIconByKey[canonicalShapeKey(shape)]);
 
 const DiamondMarketplaceView = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -97,11 +108,30 @@ const DiamondMarketplaceView = () => {
   const [sortBy, setSortBy] = useState<"best" | "price-asc" | "price-desc" | "carat-asc" | "carat-desc">("best");
   const { diamonds, toggleCompare, isCompared } = useStore();
 
+  const resetFilters = () => {
+    setShape("All");
+    setColor("All");
+    setClarity("All");
+    setCut("All");
+    setPolish("All");
+    setSymmetry("All");
+    setFluorescence("All");
+    setLab("All");
+    setCert("All");
+    setCaratMin(0.5);
+    setCaratMax(3.5);
+    setPriceMax(10000);
+    setRatioMax(2);
+    setDepthMax(72);
+    setTableMax(72);
+    setSortBy("best");
+  };
+
   const shapes = useMemo(() => {
-    const fromData = [...new Set(diamonds.map((d) => d.shape))];
-    const ordered = preferredShapeOrder.filter((name) => fromData.some((s) => normalizeShapeKey(s) === normalizeShapeKey(name)));
-    const custom = fromData.filter((name) => !preferredShapeOrder.some((p) => normalizeShapeKey(p) === normalizeShapeKey(name)));
-    return ["All", ...ordered, ...custom];
+    const keySet = new Set(diamonds.map((d) => canonicalShapeKey(d.shape)));
+    const ordered = preferredShapeOrder.filter((key) => keySet.has(key));
+    const custom = [...keySet].filter((key) => !preferredShapeOrder.includes(key));
+    return ["All", ...ordered.map(displayShapeLabel), ...custom.map(displayShapeLabel)];
   }, [diamonds]);
   const colors = ["All", ...new Set(diamonds.map((d) => d.color))];
   const clarities = ["All", ...new Set(diamonds.map((d) => d.clarity))];
@@ -113,7 +143,7 @@ const DiamondMarketplaceView = () => {
   const filtered = useMemo(
     () =>
       diamonds.filter((d) => {
-        if (shape !== "All" && d.shape !== shape) return false;
+        if (shape !== "All" && canonicalShapeKey(d.shape) !== canonicalShapeKey(shape)) return false;
         if (color !== "All" && d.color !== color) return false;
         if (clarity !== "All" && d.clarity !== clarity) return false;
         if (cut !== "All" && d.cut !== cut) return false;
@@ -175,27 +205,34 @@ const DiamondMarketplaceView = () => {
             <span className="text-xs uppercase tracking-[0.22em]">Shape</span>
             <span className="h-px flex-1 bg-[#8fd5ef]" />
           </div>
+          <div className="mb-3 flex items-center justify-between text-xs uppercase tracking-[0.08em] text-[#4e6074]">
+            <span>Results: {sorted.length}</span>
+            <button type="button" onClick={resetFilters} className="rounded-full border border-[#8fd5ef] px-3 py-1 hover:bg-[#edf9ff]">
+              Clear Filters
+            </button>
+          </div>
           <div className="flex flex-wrap justify-center gap-3">
             {shapes.map((option) => {
               const active = shape === option;
+              const iconReady = hasKiraIcon(option);
               return (
                 <button
                   key={option}
                   type="button"
                   onClick={() => setShape(option)}
-                  className={`group min-w-[100px] bg-transparent px-2 pb-1 pt-2 text-[12px] font-semibold uppercase tracking-[0.04em] transition ${
+                  className={`group min-w-[100px] rounded-[10px] bg-transparent px-2 pb-1 pt-2 text-[12px] font-semibold uppercase tracking-[0.04em] outline-none transition focus-visible:ring-2 focus-visible:ring-[#5ec9f1]/70 ${
                     active ? "text-[#ffffff]" : "text-[#4e6074] hover:text-[#1f8ab7]"
                   }`}
                   aria-pressed={active}
                 >
-                  <div className="mb-1 flex justify-center">
+                  <div className="mb-1 flex min-h-[64px] items-center justify-center">
                     {option === "All" ? (
                       <div className="flex h-12 w-12 items-center justify-center rounded-full border border-current text-xs">All</div>
                     ) : (
                       (() => {
                         const iconSrc = kiraShapeIconSrc(option, active);
                         if (!iconSrc) {
-                          return <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#8fd5ef] text-[10px] text-[#4e6074]">{displayShapeLabel(option).slice(0, 2)}</div>;
+                          return null;
                         }
 
                         return (
@@ -211,7 +248,7 @@ const DiamondMarketplaceView = () => {
                       })()
                     )}
                   </div>
-                  {option === "All" || !hasKiraIcon(option) ? (
+                  {option === "All" || !iconReady ? (
                     <span
                       className={`inline-block rounded-full border px-3 py-1 ${
                         active
