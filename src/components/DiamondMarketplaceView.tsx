@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Check, Scale, SlidersHorizontal, X } from "lucide-react";
 import { certificateLink, currency } from "@/lib/diamond-utils";
@@ -27,6 +27,45 @@ const displayShapeLabel = (shape: string) => {
   if (key === "lg-radiant") return "LG-RADIANT";
   if (key === "lg-cmb") return "LG-CMB";
   return key.toUpperCase();
+};
+
+const shapeGlyphStyle = (shape: string): CSSProperties => {
+  const key = canonicalShapeKey(shape);
+  const base: CSSProperties = {
+    width: 26,
+    height: 26,
+    border: "2px solid currentColor",
+    background: "transparent",
+  };
+
+  switch (key) {
+    case "round":
+      return { ...base, borderRadius: "9999px" };
+    case "oval":
+      return { ...base, borderRadius: "9999px / 70%" };
+    case "pear":
+      return { ...base, clipPath: "polygon(50% 0%, 78% 28%, 72% 70%, 50% 100%, 28% 70%, 22% 28%)", borderRadius: "9999px" };
+    case "marquise":
+      return { ...base, clipPath: "polygon(50% 0%, 88% 50%, 50% 100%, 12% 50%)", borderRadius: "9999px" };
+    case "heart":
+      return { ...base, clipPath: "path('M13 24 C2 17,0 8,6 5 C9 3,11 4,13 7 C15 4,17 3,20 5 C26 8,24 17,13 24 Z')" };
+    case "princess":
+    case "asscher":
+      return { ...base, transform: "rotate(45deg)", borderRadius: 2 };
+    case "radiant":
+    case "lg-radiant":
+      return { ...base, borderRadius: 4, transform: "rotate(45deg) scale(0.92)" };
+    case "cushion":
+    case "cushion lg":
+    case "cushion sq":
+      return { ...base, borderRadius: 8 };
+    case "emerald":
+    case "sqem":
+    case "octagone":
+      return { ...base, clipPath: "polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)" };
+    default:
+      return { ...base, borderRadius: 4 };
+  }
 };
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
@@ -227,9 +266,13 @@ const DiamondMarketplaceView = () => {
                   aria-pressed={active}
                 >
                   <div className="mb-1 flex min-h-[64px] items-center justify-center">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full border border-current text-xs">
-                      {option === "All" ? "All" : displayShapeLabel(option).slice(0, 2)}
-                    </div>
+                    {option === "All" ? (
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-current text-xs">All</div>
+                    ) : (
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-current">
+                        <span style={shapeGlyphStyle(option)} aria-hidden="true" />
+                      </div>
+                    )}
                   </div>
                   <span
                     className={`inline-block rounded-full border px-3 py-1 ${
