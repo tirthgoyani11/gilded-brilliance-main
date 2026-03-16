@@ -4,42 +4,44 @@ import { Check, Scale, SlidersHorizontal, X } from "lucide-react";
 import { certificateLink, currency } from "@/lib/diamond-utils";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/contexts/StoreContext";
+import shapeSprite from "@/assets/diamond-shape-icons.jpg";
 const labs = ["All", "natural", "lab-grown"];
 const certs = ["All", "IGI", "GIA"];
 const preferredShapeOrder = ["Round", "Oval", "Emerald", "Pear", "Radiant", "Marquise", "Cushion", "Princess", "Heart", "Asscher"];
 
+type SpriteSlot = { col: number; row: number };
+
+const spriteSlots: Record<string, SpriteSlot> = {
+  Round: { col: 2, row: 0 },
+  Oval: { col: 0, row: 3 },
+  Emerald: { col: 0, row: 1 },
+  Pear: { col: 2, row: 1 },
+  Radiant: { col: 0, row: 0 },
+  Marquise: { col: 0, row: 3 },
+  Cushion: { col: 0, row: 0 },
+  Princess: { col: 2, row: 2 },
+  Heart: { col: 2, row: 3 },
+  Asscher: { col: 2, row: 2 },
+};
+
 const ShapeIcon = ({ shape, active }: { shape: string; active: boolean }) => {
-  const stroke = active ? "#1f8ab7" : "#74c8ea";
-  const norm = shape.replace(/\s+/g, "").toUpperCase();
-
-  const facetLines = (
-    <>
-      <line x1="24" y1="8" x2="24" y2="40" />
-      <line x1="8" y1="24" x2="40" y2="24" />
-      <line x1="12" y1="12" x2="36" y2="36" />
-      <line x1="36" y1="12" x2="12" y2="36" />
-    </>
-  );
-
-  const shapeNode = (() => {
-    if (norm === "ROUND") return <circle cx="24" cy="24" r="16" />;
-    if (norm === "OVAL") return <ellipse cx="24" cy="24" rx="13" ry="17" />;
-    if (norm === "EMERALD") return <rect x="12" y="10" width="24" height="28" rx="2" />;
-    if (norm === "PEAR") return <path d="M24 8 C31 15, 34 21, 34 27 C34 35, 29 40, 24 40 C19 40, 14 35, 14 27 C14 21, 17 15, 24 8 Z" />;
-    if (norm === "RADIANT") return <polygon points="16,10 32,10 38,24 32,38 16,38 10,24" />;
-    if (norm === "MARQUISE") return <path d="M24 8 C31 8, 37 16, 37 24 C37 32, 31 40, 24 40 C17 40, 11 32, 11 24 C11 16, 17 8, 24 8 Z" />;
-    if (norm.startsWith("CUSHION")) return <rect x="11" y="11" width="26" height="26" rx="7" />;
-    if (norm === "PRINCESS") return <rect x="12" y="12" width="24" height="24" rx="1" />;
-    if (norm === "HEART") return <path d="M24 39 C18 33, 10 28, 10 20 C10 15, 14 11, 19 11 C22 11, 24 13, 24 15 C24 13, 26 11, 29 11 C34 11, 38 15, 38 20 C38 28, 30 33, 24 39 Z" />;
-    if (norm === "ASSCHER") return <polygon points="14,10 34,10 38,14 38,34 34,38 14,38 10,34 10,14" />;
-    return <polygon points="24,8 39,24 24,40 9,24" />;
-  })();
+  const slot = spriteSlots[shape] ?? { col: 0, row: 0 };
+  const col = active ? slot.col + 1 : slot.col;
+  const row = slot.row;
+  const x = `${(col / 3) * 100}%`;
+  const y = `${(row / 3) * 100}%`;
 
   return (
-    <svg viewBox="0 0 48 48" className="w-12 h-12" fill="none" stroke={stroke} strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" aria-hidden>
-      {shapeNode}
-      {facetLines}
-    </svg>
+    <div
+      className="h-12 w-12 rounded-full"
+      style={{
+        backgroundImage: `url(${shapeSprite})`,
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "400% 400%",
+        backgroundPosition: `${x} ${y}`,
+      }}
+      aria-hidden
+    />
   );
 };
 
