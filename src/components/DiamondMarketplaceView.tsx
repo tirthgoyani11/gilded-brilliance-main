@@ -33,7 +33,7 @@ const ShapeIcon = ({ shape, active }: { shape: string; active: boolean }) => {
 
   return (
     <div
-      className="h-12 w-12 rounded-full"
+      className="h-14 w-14"
       style={{
         backgroundImage: `url(${shapeSprite})`,
         backgroundRepeat: "no-repeat",
@@ -148,7 +148,7 @@ const DiamondMarketplaceView = () => {
                   key={option}
                   type="button"
                   onClick={() => setShape(option)}
-                  className={`group min-w-[84px] bg-transparent px-2 pb-1 pt-2 text-[12px] font-semibold uppercase tracking-[0.04em] transition ${
+                  className={`group min-w-[90px] bg-transparent px-2 pb-1 pt-2 text-[12px] font-semibold uppercase tracking-[0.04em] transition ${
                     active ? "text-[#1f8ab7]" : "text-[#567089] hover:text-[#1f8ab7]"
                   }`}
                   aria-pressed={active}
