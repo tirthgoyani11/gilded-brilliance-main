@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Check, Scale, SlidersHorizontal, X } from "lucide-react";
 import { certificateLink, currency } from "@/lib/diamond-utils";
@@ -91,6 +91,8 @@ const kiraShapeIconSrc = (shape: string, active: boolean) => {
 
 const hasKiraIcon = (shape: string) => Boolean(shapeIconByKey[canonicalShapeKey(shape)]);
 
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
 const DiamondMarketplaceView = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [view, setView] = useState<"table" | "grid">("table");
@@ -103,14 +105,69 @@ const DiamondMarketplaceView = () => {
   const [fluorescence, setFluorescence] = useState("All");
   const [lab, setLab] = useState("All");
   const [cert, setCert] = useState("All");
-  const [caratMin, setCaratMin] = useState(0.5);
-  const [caratMax, setCaratMax] = useState(3.5);
-  const [priceMax, setPriceMax] = useState(10000);
-  const [ratioMax, setRatioMax] = useState(2);
-  const [depthMax, setDepthMax] = useState(72);
-  const [tableMax, setTableMax] = useState(72);
+  const [caratMin, setCaratMin] = useState(0);
+  const [caratMax, setCaratMax] = useState(0);
+  const [priceMax, setPriceMax] = useState(0);
+  const [ratioMax, setRatioMax] = useState(0);
+  const [depthMax, setDepthMax] = useState(0);
+  const [tableMax, setTableMax] = useState(0);
   const [sortBy, setSortBy] = useState<"best" | "price-asc" | "price-desc" | "carat-asc" | "carat-desc">("best");
   const { diamonds, toggleCompare, isCompared } = useStore();
+
+  const hasInitializedBounds = useRef(false);
+
+  const rangeBounds = useMemo(() => {
+    const valid = diamonds.filter((d) => Number.isFinite(d.carat) && Number.isFinite(d.price));
+    if (!valid.length) {
+      return {
+        caratMin: 0,
+        caratMax: 5,
+        priceMax: 10000,
+        ratioMax: 2,
+        depthMax: 75,
+        tableMax: 80,
+      };
+    }
+
+    const caratMinValue = Math.min(...valid.map((d) => d.carat));
+    const caratMaxValue = Math.max(...valid.map((d) => d.carat));
+    const priceMaxValue = Math.max(...valid.map((d) => d.price));
+    const ratioMaxValue = Math.max(...valid.map((d) => d.ratio));
+    const depthMaxValue = Math.max(...valid.map((d) => d.depthPct));
+    const tableMaxValue = Math.max(...valid.map((d) => d.tablePct));
+
+    return {
+      caratMin: Number(caratMinValue.toFixed(2)),
+      caratMax: Number(caratMaxValue.toFixed(2)),
+      priceMax: Math.ceil(priceMaxValue),
+      ratioMax: Number(ratioMaxValue.toFixed(2)),
+      depthMax: Number(depthMaxValue.toFixed(1)),
+      tableMax: Number(tableMaxValue.toFixed(1)),
+    };
+  }, [diamonds]);
+
+  useEffect(() => {
+    if (!diamonds.length) return;
+
+    if (!hasInitializedBounds.current) {
+      setCaratMin(rangeBounds.caratMin);
+      setCaratMax(rangeBounds.caratMax);
+      setPriceMax(rangeBounds.priceMax);
+      setRatioMax(rangeBounds.ratioMax);
+      setDepthMax(rangeBounds.depthMax);
+      setTableMax(rangeBounds.tableMax);
+      hasInitializedBounds.current = true;
+      return;
+    }
+
+    // Keep filters within updated dataset bounds without forcing a full reset.
+    setCaratMin((prev) => clamp(prev, rangeBounds.caratMin, rangeBounds.caratMax));
+    setCaratMax((prev) => clamp(prev, rangeBounds.caratMin, rangeBounds.caratMax));
+    setPriceMax((prev) => clamp(prev, 0, rangeBounds.priceMax));
+    setRatioMax((prev) => clamp(prev, 0, rangeBounds.ratioMax));
+    setDepthMax((prev) => clamp(prev, 0, rangeBounds.depthMax));
+    setTableMax((prev) => clamp(prev, 0, rangeBounds.tableMax));
+  }, [diamonds.length, rangeBounds]);
 
   const resetFilters = () => {
     setShape("All");
@@ -122,12 +179,12 @@ const DiamondMarketplaceView = () => {
     setFluorescence("All");
     setLab("All");
     setCert("All");
-    setCaratMin(0.5);
-    setCaratMax(3.5);
-    setPriceMax(10000);
-    setRatioMax(2);
-    setDepthMax(72);
-    setTableMax(72);
+    setCaratMin(rangeBounds.caratMin);
+    setCaratMax(rangeBounds.caratMax);
+    setPriceMax(rangeBounds.priceMax);
+    setRatioMax(rangeBounds.ratioMax);
+    setDepthMax(rangeBounds.depthMax);
+    setTableMax(rangeBounds.tableMax);
     setSortBy("best");
   };
 
@@ -156,7 +213,9 @@ const DiamondMarketplaceView = () => {
         if (fluorescence !== "All" && d.fluorescence !== fluorescence) return false;
         if (lab !== "All" && d.type !== lab) return false;
         if (cert !== "All" && d.certLab !== cert) return false;
-        if (d.carat < caratMin || d.carat > caratMax) return false;
+        const minCarat = Math.min(caratMin, caratMax);
+        const maxCarat = Math.max(caratMin, caratMax);
+        if (d.carat < minCarat || d.carat > maxCarat) return false;
         if (d.price > priceMax) return false;
         if (d.ratio > ratioMax) return false;
         if (d.depthPct > depthMax) return false;
@@ -289,19 +348,43 @@ const DiamondMarketplaceView = () => {
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
           <label className="text-sm text-muted-foreground">Carat Min: {caratMin.toFixed(2)}
-            <input type="range" min="0.5" max="3.5" step="0.01" value={caratMin} onChange={(e) => setCaratMin(Number(e.target.value))} className="w-full" />
+            <input
+              type="range"
+              min={rangeBounds.caratMin}
+              max={rangeBounds.caratMax}
+              step="0.01"
+              value={caratMin}
+              onChange={(e) => {
+                const next = Number(e.target.value);
+                setCaratMin(next);
+                if (next > caratMax) setCaratMax(next);
+              }}
+              className="w-full"
+            />
           </label>
           <label className="text-sm text-muted-foreground">Carat Max: {caratMax.toFixed(2)}
-            <input type="range" min="0.5" max="3.5" step="0.01" value={caratMax} onChange={(e) => setCaratMax(Number(e.target.value))} className="w-full" />
+            <input
+              type="range"
+              min={rangeBounds.caratMin}
+              max={rangeBounds.caratMax}
+              step="0.01"
+              value={caratMax}
+              onChange={(e) => {
+                const next = Number(e.target.value);
+                setCaratMax(next);
+                if (next < caratMin) setCaratMin(next);
+              }}
+              className="w-full"
+            />
           </label>
           <label className="text-sm text-muted-foreground">Ratio Max: {ratioMax.toFixed(2)}
-            <input type="range" min="1" max="2" step="0.01" value={ratioMax} onChange={(e) => setRatioMax(Number(e.target.value))} className="w-full" />
+            <input type="range" min="0" max={rangeBounds.ratioMax} step="0.01" value={ratioMax} onChange={(e) => setRatioMax(Number(e.target.value))} className="w-full" />
           </label>
           <label className="text-sm text-muted-foreground">Depth Max: {depthMax.toFixed(1)}%
-            <input type="range" min="55" max="75" step="0.1" value={depthMax} onChange={(e) => setDepthMax(Number(e.target.value))} className="w-full" />
+            <input type="range" min="0" max={rangeBounds.depthMax} step="0.1" value={depthMax} onChange={(e) => setDepthMax(Number(e.target.value))} className="w-full" />
           </label>
           <label className="text-sm text-muted-foreground">Table Max: {tableMax.toFixed(1)}%
-            <input type="range" min="50" max="80" step="0.1" value={tableMax} onChange={(e) => setTableMax(Number(e.target.value))} className="w-full" />
+            <input type="range" min="0" max={rangeBounds.tableMax} step="0.1" value={tableMax} onChange={(e) => setTableMax(Number(e.target.value))} className="w-full" />
           </label>
         </div>
       </div>
