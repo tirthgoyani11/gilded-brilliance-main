@@ -24,15 +24,3 @@ export const diamondVideoOrFallback = (diamond: Diamond) =>
 
 export const diamondV360Src = (stoneId: string) =>
   `https://v360.in/diamondview.aspx?cid=vd&d=${encodeURIComponent(stoneId)}`;
-
-export const normalizedReportNo = (diamond: Diamond) => {
-  const fromCert = String(diamond.certNumber ?? "").match(/\d+/g)?.join("");
-  if (fromCert && fromCert.length > 0) return fromCert;
-  return String(diamond.stoneId ?? "").replace(/\s+/g, "");
-};
-
-export const kiraImageZoomSrc = (diamond: Diamond) => {
-  const reportNo = normalizedReportNo(diamond);
-  const stoneNo = String(diamond.stoneId ?? "").replace(/\s+/g, "");
-  return `https://diamonds.kiradiam.com/KOnline/DiaSearch/ImageZoom.jsp?ReportNo=${encodeURIComponent(reportNo)}&StoneNo=${encodeURIComponent(stoneNo)}`;
-};

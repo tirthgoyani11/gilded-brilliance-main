@@ -1,7 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import SiteLayout from "@/components/SiteLayout";
 import DiamondMediaPanel from "@/components/DiamondMediaPanel";
-import { certificateLink, currency, kiraImageZoomSrc, normalizedReportNo } from "@/lib/diamond-utils";
+import { certificateLink, currency } from "@/lib/diamond-utils";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/contexts/StoreContext";
 
@@ -21,8 +21,6 @@ const DiamondDetail = () => {
     );
   }
 
-  const reportNo = normalizedReportNo(diamond);
-  const zoomUrl = kiraImageZoomSrc(diamond);
   const perCarat = diamond.carat > 0 ? diamond.price / diamond.carat : 0;
 
   return (
@@ -41,7 +39,7 @@ const DiamondDetail = () => {
             <div className="rounded-[12px] border border-border bg-secondary/30 p-4">
               <dl className="grid grid-cols-2 gap-3 text-sm">
                 <div><dt className="text-muted-foreground">Stone ID</dt><dd>{diamond.stoneId}</dd></div>
-                <div><dt className="text-muted-foreground">Report No</dt><dd>{reportNo}</dd></div>
+                <div><dt className="text-muted-foreground">Report No</dt><dd>{diamond.certNumber}</dd></div>
                 <div><dt className="text-muted-foreground">Laboratory</dt><dd>{diamond.certLab}</dd></div>
                 <div><dt className="text-muted-foreground">Certificate</dt><dd>{diamond.certNumber}</dd></div>
               </dl>
@@ -70,9 +68,6 @@ const DiamondDetail = () => {
                 <Button variant="luxury-outline" onClick={() => setRingBuilder({ diamondStoneId: diamond.stoneId })} asChild>
                   <Link to="/ring-builder">Add to Ring</Link>
                 </Button>
-                <Button variant="outline" asChild>
-                  <a href={zoomUrl} target="_blank" rel="noreferrer">Open Kira Zoom</a>
-                </Button>
               </div>
             </div>
           </div>
@@ -84,9 +79,6 @@ const DiamondDetail = () => {
           <div className="flex flex-wrap gap-3">
             <a className="text-primary underline" href={certificateLink(diamond)} target="_blank" rel="noreferrer">
               Open {diamond.certLab} Verification
-            </a>
-            <a className="text-primary underline" href={zoomUrl} target="_blank" rel="noreferrer">
-              Open Kira Image Zoom
             </a>
           </div>
         </section>

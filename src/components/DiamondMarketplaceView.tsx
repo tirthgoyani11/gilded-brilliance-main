@@ -10,61 +10,6 @@ const CARAT_SLIDER_MIN = 0;
 const CARAT_SLIDER_MAX = 50;
 const preferredShapeOrder = ["round", "oval", "emerald", "pear", "radiant", "marquise", "cushion lg", "cushion sq", "princess", "heart", "asscher", "cmb", "lg-radiant", "lg-cmb", "sqem", "octagone"];
 
-const shapeIconByKey: Record<string, { normal: string; active: string }> = {
-  round: {
-    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/2.png",
-    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/2_Click.png",
-  },
-  oval: {
-    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/3.png",
-    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/3_Click.png",
-  },
-  emerald: {
-    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/4.png",
-    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/4_Click.png",
-  },
-  pear: {
-    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/5.png",
-    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/5_Click.png",
-  },
-  radiant: {
-    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/6.png",
-    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/6_Click.png",
-  },
-  marquise: {
-    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/7.png",
-    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/7_Click.png",
-  },
-  cushion: {
-    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/8.png",
-    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/8_Click.png",
-  },
-  "cushion lg": {
-    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/8.png",
-    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/8_Click.png",
-  },
-  "cushion sq": {
-    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/9.png",
-    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/9_Click.png",
-  },
-  princess: {
-    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/11.png",
-    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/11_Click.png",
-  },
-  heart: {
-    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/13.png",
-    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/13_Click.png",
-  },
-  asscher: {
-    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/26.png",
-    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/26_Click.png",
-  },
-  cmb: {
-    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/26.png",
-    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/26_Click.png",
-  },
-};
-
 const normalizeShapeKey = (shape: string) => shape.trim().toLowerCase().replace(/\./g, "").replace(/\s+/g, " ").replace(/_/g, "-");
 const canonicalShapeKey = (shape: string) => {
   const key = normalizeShapeKey(shape);
@@ -83,15 +28,6 @@ const displayShapeLabel = (shape: string) => {
   if (key === "lg-cmb") return "LG-CMB";
   return key.toUpperCase();
 };
-
-const kiraShapeIconSrc = (shape: string, active: boolean) => {
-  const key = canonicalShapeKey(shape);
-  const icon = shapeIconByKey[key];
-  if (!icon) return null;
-  return active ? icon.active : icon.normal;
-};
-
-const hasKiraIcon = (shape: string) => Boolean(shapeIconByKey[canonicalShapeKey(shape)]);
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
@@ -280,7 +216,6 @@ const DiamondMarketplaceView = () => {
           <div className="flex flex-wrap justify-center gap-3">
             {shapes.map((option) => {
               const active = shape === option;
-              const iconReady = hasKiraIcon(option);
               return (
                 <button
                   key={option}
@@ -292,39 +227,19 @@ const DiamondMarketplaceView = () => {
                   aria-pressed={active}
                 >
                   <div className="mb-1 flex min-h-[64px] items-center justify-center">
-                    {option === "All" ? (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-current text-xs">All</div>
-                    ) : (
-                      (() => {
-                        const iconSrc = kiraShapeIconSrc(option, active);
-                        if (!iconSrc) {
-                          return null;
-                        }
-
-                        return (
-                          <div className="h-16 w-16 overflow-hidden">
-                            <img
-                              src={iconSrc}
-                              alt={`${option} shape`}
-                              className="block h-16 w-16 object-contain"
-                              loading="lazy"
-                            />
-                          </div>
-                        );
-                      })()
-                    )}
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full border border-current text-xs">
+                      {option === "All" ? "All" : displayShapeLabel(option).slice(0, 2)}
+                    </div>
                   </div>
-                  {option === "All" || !iconReady ? (
-                    <span
-                      className={`inline-block rounded-full border px-3 py-1 ${
-                        active
-                          ? "border-[#3048a4] bg-[#3048a4] text-white"
-                          : "border-[#7ed7ff] bg-transparent text-[#4e6074]"
-                      }`}
-                    >
-                      {option === "All" ? "ALL" : displayShapeLabel(option)}
-                    </span>
-                  ) : null}
+                  <span
+                    className={`inline-block rounded-full border px-3 py-1 ${
+                      active
+                        ? "border-[#3048a4] bg-[#3048a4] text-white"
+                        : "border-[#7ed7ff] bg-transparent text-[#4e6074]"
+                    }`}
+                  >
+                    {option === "All" ? "ALL" : displayShapeLabel(option)}
+                  </span>
                 </button>
               );
             })}
