@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Heart, ShoppingBag, User, Menu, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { useStore } from "@/contexts/StoreContext";
 
 const navLinks = [
   { label: "Shop Jewelry", href: "/jewelry" },
@@ -16,6 +17,8 @@ const navLinks = [
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { cart, wishlist } = useStore();
+  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm">
@@ -69,7 +72,14 @@ const Navbar = () => {
               </Button>
               <Button asChild variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground">
                 <Link to="/wishlist">
-                <Heart className="w-4 h-4" />
+                  <span className="relative inline-flex">
+                    <Heart className="w-4 h-4" />
+                    {wishlist.length > 0 ? (
+                      <span className="absolute -top-1.5 -right-2 w-4 h-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
+                        {wishlist.length > 9 ? "9+" : wishlist.length}
+                      </span>
+                    ) : null}
+                  </span>
                 </Link>
               </Button>
               <Button asChild variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground">
@@ -79,10 +89,12 @@ const Navbar = () => {
               </Button>
               <Button asChild variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground relative">
                 <Link to="/cart">
-                <ShoppingBag className="w-4 h-4" />
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
-                  0
-                </span>
+                  <ShoppingBag className="w-4 h-4" />
+                  {cartCount > 0 ? (
+                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
+                      {cartCount > 9 ? "9+" : cartCount}
+                    </span>
+                  ) : null}
                 </Link>
               </Button>
             </div>

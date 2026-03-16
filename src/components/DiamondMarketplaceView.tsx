@@ -10,6 +10,10 @@ const shapes = ["All", ...new Set(mockDiamonds.map((d) => d.shape))];
 const colors = ["All", ...new Set(mockDiamonds.map((d) => d.color))];
 const clarities = ["All", ...new Set(mockDiamonds.map((d) => d.clarity))];
 const cuts = ["All", ...new Set(mockDiamonds.map((d) => d.cut))];
+const polishGrades = ["All", ...new Set(mockDiamonds.map((d) => d.polish))];
+const symmetryGrades = ["All", ...new Set(mockDiamonds.map((d) => d.symmetry))];
+const fluorescenceGrades = ["All", ...new Set(mockDiamonds.map((d) => d.fluorescence))];
+const labs = ["All", "natural", "lab-grown"];
 const certs = ["All", "IGI", "GIA"];
 
 const DiamondMarketplaceView = () => {
@@ -18,10 +22,18 @@ const DiamondMarketplaceView = () => {
   const [color, setColor] = useState("All");
   const [clarity, setClarity] = useState("All");
   const [cut, setCut] = useState("All");
+  const [polish, setPolish] = useState("All");
+  const [symmetry, setSymmetry] = useState("All");
+  const [fluorescence, setFluorescence] = useState("All");
+  const [lab, setLab] = useState("All");
   const [cert, setCert] = useState("All");
   const [caratMin, setCaratMin] = useState(0.5);
   const [caratMax, setCaratMax] = useState(3.5);
   const [priceMax, setPriceMax] = useState(10000);
+  const [ratioMax, setRatioMax] = useState(2);
+  const [depthMax, setDepthMax] = useState(72);
+  const [tableMax, setTableMax] = useState(72);
+  const [sortBy, setSortBy] = useState<"best" | "price-asc" | "price-desc" | "carat-asc" | "carat-desc">("best");
   const { toggleCompare, isCompared } = useStore();
 
   const filtered = useMemo(
@@ -31,13 +43,36 @@ const DiamondMarketplaceView = () => {
         if (color !== "All" && d.color !== color) return false;
         if (clarity !== "All" && d.clarity !== clarity) return false;
         if (cut !== "All" && d.cut !== cut) return false;
+        if (polish !== "All" && d.polish !== polish) return false;
+        if (symmetry !== "All" && d.symmetry !== symmetry) return false;
+        if (fluorescence !== "All" && d.fluorescence !== fluorescence) return false;
+        if (lab !== "All" && d.type !== lab) return false;
         if (cert !== "All" && d.certLab !== cert) return false;
         if (d.carat < caratMin || d.carat > caratMax) return false;
         if (d.price > priceMax) return false;
+        if (d.ratio > ratioMax) return false;
+        if (d.depthPct > depthMax) return false;
+        if (d.tablePct > tableMax) return false;
         return true;
       }),
-    [shape, color, clarity, cut, cert, caratMin, caratMax, priceMax],
+    [shape, color, clarity, cut, polish, symmetry, fluorescence, lab, cert, caratMin, caratMax, priceMax, ratioMax, depthMax, tableMax],
   );
+
+  const sorted = useMemo(() => {
+    const withScore = [...filtered];
+    switch (sortBy) {
+      case "price-asc":
+        return withScore.sort((a, b) => a.price - b.price);
+      case "price-desc":
+        return withScore.sort((a, b) => b.price - a.price);
+      case "carat-asc":
+        return withScore.sort((a, b) => a.carat - b.carat);
+      case "carat-desc":
+        return withScore.sort((a, b) => b.carat - a.carat);
+      default:
+        return withScore.sort((a, b) => a.price / a.carat - b.price / b.carat);
+    }
+  }, [filtered, sortBy]);
 
   return (
     <div className="container mx-auto px-6 lg:px-12 py-10">
@@ -61,15 +96,35 @@ const DiamondMarketplaceView = () => {
           <select className="h-10 px-3 rounded border" value={color} onChange={(e) => setColor(e.target.value)}>{colors.map((v) => <option key={v}>{v}</option>)}</select>
           <select className="h-10 px-3 rounded border" value={clarity} onChange={(e) => setClarity(e.target.value)}>{clarities.map((v) => <option key={v}>{v}</option>)}</select>
           <select className="h-10 px-3 rounded border" value={cut} onChange={(e) => setCut(e.target.value)}>{cuts.map((v) => <option key={v}>{v}</option>)}</select>
+          <select className="h-10 px-3 rounded border" value={polish} onChange={(e) => setPolish(e.target.value)}>{polishGrades.map((v) => <option key={v}>{v}</option>)}</select>
+          <select className="h-10 px-3 rounded border" value={symmetry} onChange={(e) => setSymmetry(e.target.value)}>{symmetryGrades.map((v) => <option key={v}>{v}</option>)}</select>
+          <select className="h-10 px-3 rounded border" value={fluorescence} onChange={(e) => setFluorescence(e.target.value)}>{fluorescenceGrades.map((v) => <option key={v}>{v}</option>)}</select>
+          <select className="h-10 px-3 rounded border" value={lab} onChange={(e) => setLab(e.target.value)}>{labs.map((v) => <option key={v}>{v}</option>)}</select>
           <select className="h-10 px-3 rounded border" value={cert} onChange={(e) => setCert(e.target.value)}>{certs.map((v) => <option key={v}>{v}</option>)}</select>
+          <select className="h-10 px-3 rounded border" value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)}>
+            <option value="best">Best Value</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="carat-asc">Carat: Low to High</option>
+            <option value="carat-desc">Carat: High to Low</option>
+          </select>
           <input className="h-10 px-3 rounded border" type="number" value={priceMax} min={1000} step={500} onChange={(e) => setPriceMax(Number(e.target.value))} placeholder="Max Price" />
         </div>
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
           <label className="text-sm text-muted-foreground">Carat Min: {caratMin.toFixed(2)}
             <input type="range" min="0.5" max="3.5" step="0.01" value={caratMin} onChange={(e) => setCaratMin(Number(e.target.value))} className="w-full" />
           </label>
           <label className="text-sm text-muted-foreground">Carat Max: {caratMax.toFixed(2)}
             <input type="range" min="0.5" max="3.5" step="0.01" value={caratMax} onChange={(e) => setCaratMax(Number(e.target.value))} className="w-full" />
+          </label>
+          <label className="text-sm text-muted-foreground">Ratio Max: {ratioMax.toFixed(2)}
+            <input type="range" min="1" max="2" step="0.01" value={ratioMax} onChange={(e) => setRatioMax(Number(e.target.value))} className="w-full" />
+          </label>
+          <label className="text-sm text-muted-foreground">Depth Max: {depthMax.toFixed(1)}%
+            <input type="range" min="55" max="75" step="0.1" value={depthMax} onChange={(e) => setDepthMax(Number(e.target.value))} className="w-full" />
+          </label>
+          <label className="text-sm text-muted-foreground">Table Max: {tableMax.toFixed(1)}%
+            <input type="range" min="50" max="80" step="0.1" value={tableMax} onChange={(e) => setTableMax(Number(e.target.value))} className="w-full" />
           </label>
         </div>
       </div>
@@ -90,7 +145,7 @@ const DiamondMarketplaceView = () => {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((d) => (
+              {sorted.map((d) => (
                 <tr key={d.stoneId} className="border-b border-border hover:bg-secondary/40">
                   <td className="p-3">{d.shape}</td>
                   <td className="p-3">{d.carat.toFixed(2)}</td>
@@ -112,7 +167,7 @@ const DiamondMarketplaceView = () => {
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filtered.map((d) => (
+          {sorted.map((d) => (
             <article key={d.stoneId} className="rounded-[12px] border border-border bg-background shadow-luxury overflow-hidden group">
               <img src={d.imageUrl} alt={d.stoneId} className="w-full aspect-[4/3] object-cover" />
               <div className="p-4">
