@@ -1,4 +1,5 @@
 import { createImportLog, ensureCoreTables, sql } from "./_lib/db.js";
+import { requireAdmin } from "./_lib/admin-auth.js";
 
 const normalizeLab = (value) => (value === "lab-grown" ? "lab-grown" : "natural");
 const normalizeCert = (value) => (String(value).toUpperCase().includes("GIA") ? "GIA" : "IGI");
@@ -9,6 +10,10 @@ export default async function handler(req, res) {
 
     if (req.method !== "POST") {
       return res.status(405).json({ message: "Method not allowed" });
+    }
+
+    if (!requireAdmin(req, res)) {
+      return;
     }
 
     const payload = req.body;

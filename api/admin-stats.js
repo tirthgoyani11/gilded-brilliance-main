@@ -1,4 +1,5 @@
 import { ensureCoreTables, sql } from "./_lib/db.js";
+import { requireAdmin } from "./_lib/admin-auth.js";
 
 const toImportLog = (row) => ({
   id: Number(row.id),
@@ -18,6 +19,10 @@ export default async function handler(req, res) {
 
     if (req.method !== "GET") {
       return res.status(405).json({ message: "Method not allowed" });
+    }
+
+    if (!requireAdmin(req, res)) {
+      return;
     }
 
     const [diamondCountRow] = await sql`SELECT COUNT(*)::int AS total FROM diamonds;`;

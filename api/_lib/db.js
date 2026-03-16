@@ -62,9 +62,41 @@ export async function ensureImportLogsTable() {
   await sql`CREATE INDEX IF NOT EXISTS idx_import_logs_status ON import_logs(status);`;
 }
 
+export async function ensureCmsContentTable() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS cms_content (
+      content_key TEXT PRIMARY KEY,
+      payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `;
+}
+
+export async function ensureJewelryTable() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS jewelry_items (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      category TEXT NOT NULL,
+      metal TEXT NOT NULL,
+      price DOUBLE PRECISION NOT NULL,
+      image_url TEXT NOT NULL,
+      description TEXT,
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `;
+
+  await sql`CREATE INDEX IF NOT EXISTS idx_jewelry_items_category ON jewelry_items(category);`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_jewelry_items_active ON jewelry_items(is_active);`;
+}
+
 export async function ensureCoreTables() {
   await ensureDiamondsTable();
   await ensureImportLogsTable();
+  await ensureCmsContentTable();
+  await ensureJewelryTable();
 }
 
 export async function createImportLog({ source, totalRows, createdRows, updatedRows, failedRows, status, errorMessage }) {

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Gem, Package, ShoppingBag, Users } from "lucide-react";
 import SiteLayout from "@/components/SiteLayout";
+import { adminFetch, getAdminToken, setAdminToken } from "@/lib/admin";
 
 type AdminStatsResponse = {
   stats: {
@@ -26,10 +27,10 @@ type AdminStatsResponse = {
 };
 
 const tiles = [
-  { title: "Product Manager", desc: "Manage jewelry and diamonds", to: "/admin", icon: Package },
+  { title: "Product Manager", desc: "Manage jewelry and diamonds", to: "/admin/content", icon: Package },
   { title: "Inventory", desc: "Track stock and availability", to: "/admin", icon: Gem },
   { title: "Orders", desc: "Monitor order lifecycle", to: "/admin", icon: ShoppingBag },
-  { title: "Customers", desc: "View customer profiles", to: "/admin", icon: Users },
+  { title: "CMS", desc: "Manage blog, about, education", to: "/admin/content", icon: Users },
 ];
 
 const AdminDashboard = () => {
@@ -43,31 +44,45 @@ const AdminDashboard = () => {
   });
   const [recentImports, setRecentImports] = useState<AdminStatsResponse["recentImports"]>([]);
   const [loading, setLoading] = useState(true);
+  const [adminToken, setAdminTokenState] = useState("");
+  const [status, setStatus] = useState("");
 
   useEffect(() => {
-    let active = true;
-
-    const loadStats = async () => {
-      try {
-        const response = await fetch("/api/admin-stats");
-        if (!response.ok || !active) return;
-        const payload = (await response.json()) as AdminStatsResponse;
-        if (!payload?.stats) return;
-        setStats(payload.stats);
-        setRecentImports(Array.isArray(payload.recentImports) ? payload.recentImports : []);
-      } catch {
-        // Keep zero-state UI when stats endpoint is unavailable.
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-
-    void loadStats();
-
-    return () => {
-      active = false;
-    };
+    setAdminTokenState(getAdminToken());
   }, []);
+
+  const loadStats = async () => {
+    setLoading(true);
+    setStatus("");
+
+    if (!adminToken.trim()) {
+      setLoading(false);
+      setStatus("Enter admin token to load dashboard stats.");
+      return;
+    }
+
+    try {
+      const response = await adminFetch("/api/admin-stats");
+      if (!response.ok) {
+        if (response.status === 401) {
+          setStatus("Unauthorized: check your admin token.");
+        }
+        return;
+      }
+      const payload = (await response.json()) as AdminStatsResponse;
+      if (!payload?.stats) return;
+      setStats(payload.stats);
+      setRecentImports(Array.isArray(payload.recentImports) ? payload.recentImports : []);
+    } catch {
+      setStatus("Failed to load admin stats.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadStats();
+  }, [adminToken]);
 
   return (
     <SiteLayout>
@@ -77,7 +92,36 @@ const AdminDashboard = () => {
             <h1 className="font-heading text-3xl">Admin Dashboard</h1>
             <p className="text-muted-foreground">Operations control center for VMORA.</p>
           </div>
-          <Link to="/admin/import" className="px-4 py-2 rounded bg-foreground text-background text-sm uppercase tracking-[0.12em]">Excel Import</Link>
+          <div className="flex items-center gap-2">
+            <Link to="/admin/import" className="px-4 py-2 rounded bg-foreground text-background text-sm uppercase tracking-[0.12em]">Excel Import</Link>
+            <Link to="/admin/content" className="px-4 py-2 rounded border border-border text-sm uppercase tracking-[0.12em]">Content Manager</Link>
+          </div>
+        </div>
+
+        <div className="rounded-[12px] border border-border p-5 bg-secondary/20 space-y-2">
+          <p className="text-sm text-muted-foreground">Admin token is required for protected dashboard APIs.</p>
+          <div className="flex flex-wrap gap-2 items-center">
+            <input
+              value={adminToken}
+              onChange={(e) => setAdminTokenState(e.target.value)}
+              placeholder="Admin token"
+              className="h-10 min-w-[280px] px-3 rounded border border-border bg-background"
+            />
+            <button
+              onClick={() => {
+                setAdminToken(adminToken);
+                setStatus("Admin token saved.");
+              }}
+              className="h-10 px-4 rounded border border-border text-sm"
+              type="button"
+            >
+              Save Token
+            </button>
+            <button onClick={() => void loadStats()} className="h-10 px-4 rounded border border-border text-sm" type="button">
+              Reload
+            </button>
+          </div>
+          {status ? <p className="text-sm text-primary">{status}</p> : null}
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">

@@ -2,6 +2,27 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { CartItem, Diamond, RingBuilderSelection } from "@/types/diamond";
 import { mockDiamonds } from "@/data/mockCatalog";
 
+type ImportProgress = {
+  totalChunks: number;
+  completedChunks: number;
+  persisted: number;
+  failed: number;
+};
+
+type ImportOptions = {
+  adminToken?: string;
+  onProgress?: (progress: ImportProgress) => void;
+};
+
+type ImportResult = {
+  total: number;
+  created: number;
+  updated: number;
+  persisted: number;
+  failed: number;
+  failedItems: Diamond[];
+};
+
 const STORAGE_KEYS = {
   diamonds: "vmora_store_diamonds",
   cart: "vmora_store_cart",
@@ -27,7 +48,7 @@ interface StoreContextValue {
   wishlist: string[];
   compare: Diamond[];
   ringBuilder: RingBuilderSelection;
-  importDiamonds: (items: Diamond[]) => Promise<{ total: number; created: number; updated: number; persisted: number; failed: number }>;
+  importDiamonds: (items: Diamond[], options?: ImportOptions) => Promise<ImportResult>;
   addToCart: (item: Omit<CartItem, "quantity">) => void;
   removeFromCart: (id: string) => void;
   clearCart: () => void;
@@ -67,11 +88,12 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
     window.localStorage.setItem(STORAGE_KEYS.ringBuilder, JSON.stringify(ringBuilder));
   }, [ringBuilder]);
 
-  const importDiamonds = async (items: Diamond[]) => {
+  const importDiamonds = async (items: Diamond[], options?: ImportOptions): Promise<ImportResult> => {
     let created = 0;
     let updated = 0;
     let persisted = 0;
     let failed = 0;
+    const failedItems: Diamond[] = [];
 
     setDiamonds((prev) => {
       const map = new Map(prev.map((item) => [item.stoneId, item]));
@@ -89,29 +111,52 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
       chunks.push(items.slice(i, i + chunkSize));
     }
 
+    const totalChunks = chunks.length;
+    let completedChunks = 0;
+
+    const notifyProgress = () => {
+      options?.onProgress?.({
+        totalChunks,
+        completedChunks,
+        persisted,
+        failed,
+      });
+    };
+
+    notifyProgress();
+
     for (const chunk of chunks) {
       try {
         const response = await fetch("/api/import-diamonds", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            ...(options?.adminToken ? { "x-admin-token": options.adminToken } : {}),
           },
           body: JSON.stringify({ diamonds: chunk, source: "admin-excel-upload" }),
         });
 
         if (!response.ok) {
           failed += chunk.length;
+          failedItems.push(...chunk);
+          completedChunks += 1;
+          notifyProgress();
           continue;
         }
 
         const result = await response.json();
         persisted += Number(result.total ?? chunk.length);
+        completedChunks += 1;
+        notifyProgress();
       } catch {
         failed += chunk.length;
+        failedItems.push(...chunk);
+        completedChunks += 1;
+        notifyProgress();
       }
     }
 
-    return { total: items.length, created, updated, persisted, failed };
+    return { total: items.length, created, updated, persisted, failed, failedItems };
   };
 
   useEffect(() => {

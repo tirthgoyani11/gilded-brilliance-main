@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 import SiteLayout from "@/components/SiteLayout";
 import { mockDiamonds } from "@/data/mockCatalog";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/contexts/StoreContext";
+import { getAdminToken, setAdminToken } from "@/lib/admin";
 import type { Diamond } from "@/types/diamond";
 
 type ImportRow = {
@@ -110,6 +111,14 @@ const AdminImport = () => {
   const [importedCount, setImportedCount] = useState(0);
   const [importDetails, setImportDetails] = useState<{ created: number; updated: number } | null>(null);
   const [persistDetails, setPersistDetails] = useState<{ persisted: number; failed: number } | null>(null);
+  const [failedRetryItems, setFailedRetryItems] = useState<Diamond[]>([]);
+  const [adminToken, setAdminTokenState] = useState("");
+  const [progress, setProgress] = useState({ totalChunks: 0, completedChunks: 0, persisted: 0, failed: 0 });
+  const [status, setStatus] = useState("");
+
+  useEffect(() => {
+    setAdminTokenState(getAdminToken());
+  }, []);
 
   const existingIds = useMemo(() => new Set(diamonds.map((d) => d.stoneId)), [diamonds]);
 
@@ -196,6 +205,35 @@ const AdminImport = () => {
     setImportedCount(0);
     setImportDetails(null);
     setPersistDetails(null);
+    setFailedRetryItems([]);
+    setProgress({ totalChunks: 0, completedChunks: 0, persisted: 0, failed: 0 });
+    setStatus("");
+  };
+
+  const runImport = async (items: Diamond[]) => {
+    if (!adminToken.trim()) {
+      setStatus("Enter and save admin token before importing.");
+      return;
+    }
+
+    setAdminToken(adminToken);
+    setStatus("");
+
+    const result = await importDiamonds(items, {
+      adminToken: adminToken.trim(),
+      onProgress: (next) => setProgress(next),
+    });
+
+    setImportedCount(result.total);
+    setImportDetails({ created: result.created, updated: result.updated });
+    setPersistDetails({ persisted: result.persisted, failed: result.failed });
+    setFailedRetryItems(result.failedItems);
+
+    if (result.failed > 0) {
+      setStatus("Some chunks failed. Use Retry Failed Chunks.");
+    } else {
+      setStatus("Import completed with full Neon persistence.");
+    }
   };
 
   const importValidRows = async () => {
@@ -231,10 +269,15 @@ const AdminImport = () => {
       };
     });
 
-    const result = await importDiamonds(validDiamonds);
-    setImportedCount(result.total);
-    setImportDetails({ created: result.created, updated: result.updated });
-    setPersistDetails({ persisted: result.persisted, failed: result.failed });
+    await runImport(validDiamonds);
+  };
+
+  const retryFailed = async () => {
+    if (failedRetryItems.length === 0) {
+      setStatus("No failed chunks to retry.");
+      return;
+    }
+    await runImport(failedRetryItems);
   };
 
   return (
@@ -246,6 +289,21 @@ const AdminImport = () => {
             <p className="text-muted-foreground">Upload Excel, parse with SheetJS, validate rows, prevent duplicate Stone IDs, and import directly into VMORA inventory.</p>
           </div>
           <Button variant="luxury-outline" onClick={buildTemplate}>Download Template</Button>
+        </div>
+
+        <div className="rounded-[12px] border border-border p-5 bg-secondary/20 space-y-3">
+          <h2 className="font-heading text-xl">Admin Access</h2>
+          <p className="text-sm text-muted-foreground">Set admin token to authorize import API requests.</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              value={adminToken}
+              onChange={(e) => setAdminTokenState(e.target.value)}
+              placeholder="Admin token"
+              className="h-10 min-w-[280px] px-3 rounded border border-border bg-background"
+            />
+            <Button variant="outline" onClick={() => { setAdminToken(adminToken); setStatus("Admin token saved."); }}>Save Token</Button>
+          </div>
+          {status ? <p className="text-sm text-primary">{status}</p> : null}
         </div>
 
         <label className="block rounded-[12px] border-2 border-dashed border-border p-8 text-center bg-secondary/30 cursor-pointer">
@@ -270,6 +328,9 @@ const AdminImport = () => {
               <Button onClick={importValidRows} disabled={validationSummary.valid.length === 0}>
                 Import Valid Rows
               </Button>
+              <Button variant="outline" onClick={retryFailed} disabled={failedRetryItems.length === 0}>
+                Retry Failed Chunks ({failedRetryItems.length})
+              </Button>
               {importedCount > 0 ? (
                 <p className="text-sm text-primary">
                   Imported {importedCount} row(s) successfully.
@@ -279,6 +340,11 @@ const AdminImport = () => {
               {persistDetails ? (
                 <p className={`text-sm ${persistDetails.failed > 0 ? "text-destructive" : "text-primary"}`}>
                   Neon persistence: {persistDetails.persisted} row(s) saved, {persistDetails.failed} row(s) failed.
+                </p>
+              ) : null}
+              {progress.totalChunks > 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Chunk progress: {progress.completedChunks}/{progress.totalChunks} | persisted {progress.persisted} | failed {progress.failed}
                 </p>
               ) : null}
             </div>

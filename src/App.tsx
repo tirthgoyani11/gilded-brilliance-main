@@ -21,6 +21,7 @@ const Checkout = lazy(() => import("./pages/Checkout.tsx"));
 const Account = lazy(() => import("./pages/Account.tsx"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard.tsx"));
 const AdminImport = lazy(() => import("./pages/AdminImport.tsx"));
+const AdminContent = lazy(() => import("./pages/AdminContent.tsx"));
 const Compare = lazy(() => import("./pages/Compare.tsx"));
 
 const queryClient = new QueryClient();
@@ -49,6 +50,7 @@ const App = () => (
               <Route path="/account" element={<Account />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/import" element={<AdminImport />} />
+              <Route path="/admin/content" element={<AdminContent />} />
               <Route path="/compare" element={<Compare />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
