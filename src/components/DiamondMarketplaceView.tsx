@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Check, Scale, SlidersHorizontal, X } from "lucide-react";
 import { certificateLink, currency } from "@/lib/diamond-utils";
@@ -9,6 +9,61 @@ const certs = ["All", "IGI", "GIA"];
 const CARAT_SLIDER_MIN = 0;
 const CARAT_SLIDER_MAX = 50;
 const preferredShapeOrder = ["round", "oval", "emerald", "pear", "radiant", "marquise", "cushion lg", "cushion sq", "princess", "heart", "asscher", "cmb", "lg-radiant", "lg-cmb", "sqem", "octagone"];
+
+const shapeIconByKey: Record<string, { normal: string; active: string }> = {
+  round: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/2.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/2_Click.png",
+  },
+  oval: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/3.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/3_Click.png",
+  },
+  emerald: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/4.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/4_Click.png",
+  },
+  pear: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/5.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/5_Click.png",
+  },
+  radiant: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/6.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/6_Click.png",
+  },
+  marquise: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/7.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/7_Click.png",
+  },
+  cushion: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/8.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/8_Click.png",
+  },
+  "cushion lg": {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/8.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/8_Click.png",
+  },
+  "cushion sq": {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/9.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/9_Click.png",
+  },
+  princess: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/11.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/11_Click.png",
+  },
+  heart: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/13.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/13_Click.png",
+  },
+  asscher: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/26.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/26_Click.png",
+  },
+  cmb: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/26.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/26_Click.png",
+  },
+};
 
 const normalizeShapeKey = (shape: string) => shape.trim().toLowerCase().replace(/\./g, "").replace(/\s+/g, " ").replace(/_/g, "-");
 const canonicalShapeKey = (shape: string) => {
@@ -29,44 +84,14 @@ const displayShapeLabel = (shape: string) => {
   return key.toUpperCase();
 };
 
-const shapeGlyphStyle = (shape: string): CSSProperties => {
+const kiraShapeIconSrc = (shape: string, active: boolean) => {
   const key = canonicalShapeKey(shape);
-  const base: CSSProperties = {
-    width: 26,
-    height: 26,
-    border: "2px solid currentColor",
-    background: "transparent",
-  };
-
-  switch (key) {
-    case "round":
-      return { ...base, borderRadius: "9999px" };
-    case "oval":
-      return { ...base, borderRadius: "9999px / 70%" };
-    case "pear":
-      return { ...base, clipPath: "polygon(50% 0%, 78% 28%, 72% 70%, 50% 100%, 28% 70%, 22% 28%)", borderRadius: "9999px" };
-    case "marquise":
-      return { ...base, clipPath: "polygon(50% 0%, 88% 50%, 50% 100%, 12% 50%)", borderRadius: "9999px" };
-    case "heart":
-      return { ...base, clipPath: "path('M13 24 C2 17,0 8,6 5 C9 3,11 4,13 7 C15 4,17 3,20 5 C26 8,24 17,13 24 Z')" };
-    case "princess":
-    case "asscher":
-      return { ...base, transform: "rotate(45deg)", borderRadius: 2 };
-    case "radiant":
-    case "lg-radiant":
-      return { ...base, borderRadius: 4, transform: "rotate(45deg) scale(0.92)" };
-    case "cushion":
-    case "cushion lg":
-    case "cushion sq":
-      return { ...base, borderRadius: 8 };
-    case "emerald":
-    case "sqem":
-    case "octagone":
-      return { ...base, clipPath: "polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)" };
-    default:
-      return { ...base, borderRadius: 4 };
-  }
+  const icon = shapeIconByKey[key];
+  if (!icon) return null;
+  return active ? icon.active : icon.normal;
 };
+
+const hasKiraIcon = (shape: string) => Boolean(shapeIconByKey[canonicalShapeKey(shape)]);
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
@@ -255,6 +280,7 @@ const DiamondMarketplaceView = () => {
           <div className="flex flex-wrap justify-center gap-3">
             {shapes.map((option) => {
               const active = shape === option;
+              const iconReady = hasKiraIcon(option);
               return (
                 <button
                   key={option}
@@ -269,20 +295,36 @@ const DiamondMarketplaceView = () => {
                     {option === "All" ? (
                       <div className="flex h-12 w-12 items-center justify-center rounded-full border border-current text-xs">All</div>
                     ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-current">
-                        <span style={shapeGlyphStyle(option)} aria-hidden="true" />
-                      </div>
+                      (() => {
+                        const iconSrc = kiraShapeIconSrc(option, active);
+                        if (!iconSrc) {
+                          return null;
+                        }
+
+                        return (
+                          <div className="h-16 w-16 overflow-hidden">
+                            <img
+                              src={iconSrc}
+                              alt={`${option} shape`}
+                              className="block h-16 w-16 object-contain"
+                              loading="lazy"
+                            />
+                          </div>
+                        );
+                      })()
                     )}
                   </div>
-                  <span
-                    className={`inline-block rounded-full border px-3 py-1 ${
-                      active
-                        ? "border-[#3048a4] bg-[#3048a4] text-white"
-                        : "border-[#7ed7ff] bg-transparent text-[#4e6074]"
-                    }`}
-                  >
-                    {option === "All" ? "ALL" : displayShapeLabel(option)}
-                  </span>
+                  {option === "All" || !iconReady ? (
+                    <span
+                      className={`inline-block rounded-full border px-3 py-1 ${
+                        active
+                          ? "border-[#3048a4] bg-[#3048a4] text-white"
+                          : "border-[#7ed7ff] bg-transparent text-[#4e6074]"
+                      }`}
+                    >
+                      {option === "All" ? "ALL" : displayShapeLabel(option)}
+                    </span>
+                  ) : null}
                 </button>
               );
             })}
