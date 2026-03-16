@@ -57,6 +57,10 @@ const shapeIconByKey: Record<string, { normal: string; active: string }> = {
     normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/26.png",
     active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/26_Click.png",
   },
+  cmb: {
+    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/26.png",
+    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/26_Click.png",
+  },
 };
 
 const normalizeShapeKey = (shape: string) => shape.trim().toLowerCase().replace(/\./g, "").replace(/\s+/g, " ").replace(/_/g, "-");
