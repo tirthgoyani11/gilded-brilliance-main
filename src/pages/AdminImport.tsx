@@ -109,6 +109,7 @@ const AdminImport = () => {
   const [results, setResults] = useState<RowResult[]>([]);
   const [importedCount, setImportedCount] = useState(0);
   const [importDetails, setImportDetails] = useState<{ created: number; updated: number } | null>(null);
+  const [persistDetails, setPersistDetails] = useState<{ persisted: number; failed: number } | null>(null);
 
   const existingIds = useMemo(() => new Set(diamonds.map((d) => d.stoneId)), [diamonds]);
 
@@ -194,6 +195,7 @@ const AdminImport = () => {
     setResults(nextResults);
     setImportedCount(0);
     setImportDetails(null);
+    setPersistDetails(null);
   };
 
   const importValidRows = async () => {
@@ -232,6 +234,7 @@ const AdminImport = () => {
     const result = await importDiamonds(validDiamonds);
     setImportedCount(result.total);
     setImportDetails({ created: result.created, updated: result.updated });
+    setPersistDetails({ persisted: result.persisted, failed: result.failed });
   };
 
   return (
@@ -271,6 +274,11 @@ const AdminImport = () => {
                 <p className="text-sm text-primary">
                   Imported {importedCount} row(s) successfully.
                   {importDetails ? ` Created: ${importDetails.created}, Updated: ${importDetails.updated}.` : ""}
+                </p>
+              ) : null}
+              {persistDetails ? (
+                <p className={`text-sm ${persistDetails.failed > 0 ? "text-destructive" : "text-primary"}`}>
+                  Neon persistence: {persistDetails.persisted} row(s) saved, {persistDetails.failed} row(s) failed.
                 </p>
               ) : null}
             </div>

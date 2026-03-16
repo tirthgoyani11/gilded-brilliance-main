@@ -27,7 +27,7 @@ interface StoreContextValue {
   wishlist: string[];
   compare: Diamond[];
   ringBuilder: RingBuilderSelection;
-  importDiamonds: (items: Diamond[]) => Promise<{ total: number; created: number; updated: number }>;
+  importDiamonds: (items: Diamond[]) => Promise<{ total: number; created: number; updated: number; persisted: number; failed: number }>;
   addToCart: (item: Omit<CartItem, "quantity">) => void;
   removeFromCart: (id: string) => void;
   clearCart: () => void;
@@ -70,6 +70,8 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
   const importDiamonds = async (items: Diamond[]) => {
     let created = 0;
     let updated = 0;
+    let persisted = 0;
+    let failed = 0;
 
     setDiamonds((prev) => {
       const map = new Map(prev.map((item) => [item.stoneId, item]));
@@ -81,28 +83,35 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
       return [...map.values()];
     });
 
-    try {
-      const response = await fetch("/api/import-diamonds", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ diamonds: items }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        return {
-          total: Number(result.total ?? items.length),
-          created: Number(result.created ?? created),
-          updated: Number(result.updated ?? updated),
-        };
-      }
-    } catch {
-      // Keep local import as fallback when API is unavailable.
+    const chunkSize = 100;
+    const chunks: Diamond[][] = [];
+    for (let i = 0; i < items.length; i += chunkSize) {
+      chunks.push(items.slice(i, i + chunkSize));
     }
 
-    return { total: items.length, created, updated };
+    for (const chunk of chunks) {
+      try {
+        const response = await fetch("/api/import-diamonds", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ diamonds: chunk }),
+        });
+
+        if (!response.ok) {
+          failed += chunk.length;
+          continue;
+        }
+
+        const result = await response.json();
+        persisted += Number(result.total ?? chunk.length);
+      } catch {
+        failed += chunk.length;
+      }
+    }
+
+    return { total: items.length, created, updated, persisted, failed };
   };
 
   useEffect(() => {
