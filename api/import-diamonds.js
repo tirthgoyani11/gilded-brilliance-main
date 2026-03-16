@@ -3,6 +3,7 @@ import { requireAdmin } from "./_lib/admin-auth.js";
 
 const normalizeLab = (value) => (value === "lab-grown" ? "lab-grown" : "natural");
 const normalizeCert = (value) => (String(value).toUpperCase().includes("GIA") ? "GIA" : "IGI");
+const stoneImageUrl = (stoneId) => `https://v3601514.v360.in/imaged/${encodeURIComponent(stoneId)}/still.jpg`;
 
 export default async function handler(req, res) {
   try {
@@ -28,7 +29,12 @@ export default async function handler(req, res) {
     let updated = 0;
 
     for (const d of diamonds) {
-      const exists = await sql`SELECT stone_id FROM diamonds WHERE stone_id = ${d.stoneId} LIMIT 1;`;
+      const normalizedStoneId = String(d.stoneId || "").trim();
+      if (!normalizedStoneId) {
+        continue;
+      }
+
+      const exists = await sql`SELECT stone_id FROM diamonds WHERE stone_id = ${normalizedStoneId} LIMIT 1;`;
 
       await sql`
         INSERT INTO diamonds (
@@ -36,7 +42,7 @@ export default async function handler(req, res) {
           fluorescence, price, ratio, depth_pct, table_pct, measurements, cert_lab,
           cert_number, cert_link, image_url, video_url, v360_stone_id, updated_at
         ) VALUES (
-          ${String(d.stoneId)},
+          ${normalizedStoneId},
           ${normalizeLab(d.type)},
           ${String(d.shape)},
           ${Number(d.carat) || 0},
@@ -54,9 +60,9 @@ export default async function handler(req, res) {
           ${normalizeCert(d.certLab || d.certNumber || "")},
           ${String(d.certNumber)},
           ${d.certLink ? String(d.certLink) : null},
-          ${String(d.imageUrl || "")},
+          ${stoneImageUrl(normalizedStoneId)},
           ${d.videoUrl ? String(d.videoUrl) : null},
-          ${d.v360StoneId ? String(d.v360StoneId) : null},
+          ${normalizedStoneId},
           NOW()
         )
         ON CONFLICT (stone_id)

@@ -2,14 +2,17 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { CartItem, Diamond, RingBuilderSelection } from "@/types/diamond";
 import { mockDiamonds } from "@/data/mockCatalog";
 
-const DIAMOND_COVER_IMAGE = "https://v3601514.v360.in/imaged/CD198-40/still.jpg";
-const DIAMOND_COVER_STONE_ID = "CD198-40";
+const diamondStillImage = (stoneId: string) => `https://v3601514.v360.in/imaged/${encodeURIComponent(stoneId)}/still.jpg`;
 
-const normalizeDiamondMedia = (diamond: Diamond): Diamond => ({
-  ...diamond,
-  imageUrl: DIAMOND_COVER_IMAGE,
-  v360StoneId: DIAMOND_COVER_STONE_ID,
-});
+const normalizeDiamondMedia = (diamond: Diamond): Diamond => {
+  const normalizedStoneId = String(diamond.stoneId || "").trim() || "CD198-40";
+  return {
+    ...diamond,
+    stoneId: normalizedStoneId,
+    imageUrl: diamondStillImage(normalizedStoneId),
+    v360StoneId: normalizedStoneId,
+  };
+};
 
 type ImportProgress = {
   totalChunks: number;
