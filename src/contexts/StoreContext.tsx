@@ -2,6 +2,15 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { CartItem, Diamond, RingBuilderSelection } from "@/types/diamond";
 import { mockDiamonds } from "@/data/mockCatalog";
 
+const DIAMOND_COVER_IMAGE = "https://v3601514.v360.in/imaged/CD198-40/still.jpg";
+const DIAMOND_COVER_STONE_ID = "CD198-40";
+
+const normalizeDiamondMedia = (diamond: Diamond): Diamond => ({
+  ...diamond,
+  imageUrl: DIAMOND_COVER_IMAGE,
+  v360StoneId: DIAMOND_COVER_STONE_ID,
+});
+
 type ImportProgress = {
   totalChunks: number;
   completedChunks: number;
@@ -62,7 +71,10 @@ interface StoreContextValue {
 const StoreContext = createContext<StoreContextValue | undefined>(undefined);
 
 export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
-  const [diamonds, setDiamonds] = useState<Diamond[]>(() => readStorage(STORAGE_KEYS.diamonds, mockDiamonds));
+  const [diamonds, setDiamonds] = useState<Diamond[]>(() => {
+    const stored = readStorage(STORAGE_KEYS.diamonds, mockDiamonds);
+    return stored.map(normalizeDiamondMedia);
+  });
   const [cart, setCart] = useState<CartItem[]>(() => readStorage(STORAGE_KEYS.cart, []));
   const [wishlist, setWishlist] = useState<string[]>(() => readStorage(STORAGE_KEYS.wishlist, []));
   const [compare, setCompare] = useState<Diamond[]>(() => readStorage(STORAGE_KEYS.compare, []));
@@ -98,9 +110,10 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
     setDiamonds((prev) => {
       const map = new Map(prev.map((item) => [item.stoneId, item]));
       items.forEach((item) => {
+        const normalized = normalizeDiamondMedia(item);
         if (map.has(item.stoneId)) updated += 1;
         else created += 1;
-        map.set(item.stoneId, item);
+        map.set(item.stoneId, normalized);
       });
       return [...map.values()];
     });
@@ -169,7 +182,7 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
         const payload = await response.json();
         if (!active) return;
         if (Array.isArray(payload?.diamonds) && payload.diamonds.length > 0) {
-          setDiamonds(payload.diamonds as Diamond[]);
+          setDiamonds((payload.diamonds as Diamond[]).map(normalizeDiamondMedia));
         }
       } catch {
         // Fallback to local state when API is unavailable.
