@@ -1,22 +1,14 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Check, Scale, SlidersHorizontal } from "lucide-react";
-import { mockDiamonds } from "@/data/mockCatalog";
+import { Check, Scale, SlidersHorizontal, X } from "lucide-react";
 import { certificateLink, currency } from "@/lib/diamond-utils";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/contexts/StoreContext";
-
-const shapes = ["All", ...new Set(mockDiamonds.map((d) => d.shape))];
-const colors = ["All", ...new Set(mockDiamonds.map((d) => d.color))];
-const clarities = ["All", ...new Set(mockDiamonds.map((d) => d.clarity))];
-const cuts = ["All", ...new Set(mockDiamonds.map((d) => d.cut))];
-const polishGrades = ["All", ...new Set(mockDiamonds.map((d) => d.polish))];
-const symmetryGrades = ["All", ...new Set(mockDiamonds.map((d) => d.symmetry))];
-const fluorescenceGrades = ["All", ...new Set(mockDiamonds.map((d) => d.fluorescence))];
 const labs = ["All", "natural", "lab-grown"];
 const certs = ["All", "IGI", "GIA"];
 
 const DiamondMarketplaceView = () => {
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [view, setView] = useState<"table" | "grid">("table");
   const [shape, setShape] = useState("All");
   const [color, setColor] = useState("All");
@@ -34,11 +26,19 @@ const DiamondMarketplaceView = () => {
   const [depthMax, setDepthMax] = useState(72);
   const [tableMax, setTableMax] = useState(72);
   const [sortBy, setSortBy] = useState<"best" | "price-asc" | "price-desc" | "carat-asc" | "carat-desc">("best");
-  const { toggleCompare, isCompared } = useStore();
+  const { diamonds, toggleCompare, isCompared } = useStore();
+
+  const shapes = ["All", ...new Set(diamonds.map((d) => d.shape))];
+  const colors = ["All", ...new Set(diamonds.map((d) => d.color))];
+  const clarities = ["All", ...new Set(diamonds.map((d) => d.clarity))];
+  const cuts = ["All", ...new Set(diamonds.map((d) => d.cut))];
+  const polishGrades = ["All", ...new Set(diamonds.map((d) => d.polish))];
+  const symmetryGrades = ["All", ...new Set(diamonds.map((d) => d.symmetry))];
+  const fluorescenceGrades = ["All", ...new Set(diamonds.map((d) => d.fluorescence))];
 
   const filtered = useMemo(
     () =>
-      mockDiamonds.filter((d) => {
+      diamonds.filter((d) => {
         if (shape !== "All" && d.shape !== shape) return false;
         if (color !== "All" && d.color !== color) return false;
         if (clarity !== "All" && d.clarity !== clarity) return false;
@@ -82,12 +82,15 @@ const DiamondMarketplaceView = () => {
           <h1 className="font-heading text-3xl lg:text-4xl">Loose Diamonds</h1>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" className="md:hidden" onClick={() => setMobileFiltersOpen((prev) => !prev)}>
+            {mobileFiltersOpen ? <X className="w-4 h-4" /> : <SlidersHorizontal className="w-4 h-4" />} Filters
+          </Button>
           <Button variant={view === "table" ? "luxury" : "outline"} onClick={() => setView("table")}>Table View</Button>
           <Button variant={view === "grid" ? "luxury" : "outline"} onClick={() => setView("grid")}>Grid View</Button>
         </div>
       </div>
 
-      <div className="rounded-[12px] border border-border bg-secondary/40 p-5 mb-8">
+      <div className={`rounded-[12px] border border-border bg-secondary/40 p-5 mb-8 ${mobileFiltersOpen ? "block" : "hidden md:block"}`}>
         <div className="flex items-center gap-2 mb-4 text-sm uppercase tracking-[0.1em]">
           <SlidersHorizontal className="w-4 h-4 text-primary" /> Filters
         </div>

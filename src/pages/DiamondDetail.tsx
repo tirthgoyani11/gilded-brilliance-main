@@ -1,15 +1,14 @@
 import { Link, useParams } from "react-router-dom";
 import SiteLayout from "@/components/SiteLayout";
 import DiamondMediaPanel from "@/components/DiamondMediaPanel";
-import { mockDiamonds } from "@/data/mockCatalog";
 import { certificateLink, currency } from "@/lib/diamond-utils";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/contexts/StoreContext";
 
 const DiamondDetail = () => {
   const { stoneId = "" } = useParams();
-  const diamond = mockDiamonds.find((d) => d.stoneId === stoneId);
-  const { addToCart, setRingBuilder } = useStore();
+  const { diamonds, addToCart, setRingBuilder } = useStore();
+  const diamond = diamonds.find((d) => d.stoneId === stoneId);
 
   if (!diamond) {
     return (
@@ -24,7 +23,7 @@ const DiamondDetail = () => {
 
   return (
     <SiteLayout>
-      <div className="container mx-auto px-6 lg:px-12 py-10 space-y-8">
+      <div className="container mx-auto px-6 lg:px-12 py-10 space-y-8 pb-28 md:pb-10">
         <div className="grid lg:grid-cols-2 gap-8">
           <DiamondMediaPanel diamond={diamond} />
 
@@ -67,6 +66,18 @@ const DiamondDetail = () => {
             Open {diamond.certLab} Verification
           </a>
         </section>
+      </div>
+
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur border-t border-border p-3">
+        <div className="container mx-auto flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">{diamond.shape} {diamond.carat.toFixed(2)}ct</p>
+            <p className="font-medium">{currency(diamond.price)}</p>
+          </div>
+          <Button size="sm" variant="luxury" onClick={() => addToCart({ id: `diamond-${diamond.stoneId}`, title: `${diamond.shape} ${diamond.carat}ct`, type: "diamond", price: diamond.price, imageUrl: diamond.imageUrl })}>
+            Add to Cart
+          </Button>
+        </div>
       </div>
     </SiteLayout>
   );

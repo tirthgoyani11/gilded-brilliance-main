@@ -3,6 +3,8 @@ import * as XLSX from "xlsx";
 import SiteLayout from "@/components/SiteLayout";
 import { mockDiamonds } from "@/data/mockCatalog";
 import { Button } from "@/components/ui/button";
+import { useStore } from "@/contexts/StoreContext";
+import type { Diamond } from "@/types/diamond";
 
 type ImportRow = {
   imagePath: string;
@@ -91,10 +93,11 @@ const mapRow = (row: Record<string, unknown>): ImportRow => ({
 });
 
 const AdminImport = () => {
+  const { diamonds, importDiamonds } = useStore();
   const [results, setResults] = useState<RowResult[]>([]);
   const [importedCount, setImportedCount] = useState(0);
 
-  const existingIds = useMemo(() => new Set(mockDiamonds.map((d) => d.stoneId)), []);
+  const existingIds = useMemo(() => new Set(diamonds.map((d) => d.stoneId)), [diamonds]);
 
   const validationSummary = useMemo(() => {
     const valid = results.filter((item) => item.errors.length === 0);
@@ -182,8 +185,38 @@ const AdminImport = () => {
   };
 
   const importValidRows = () => {
-    const count = validationSummary.valid.length;
-    setImportedCount(count);
+    const validDiamonds: Diamond[] = validationSummary.valid.map(({ row }) => {
+      const certLab = row.certNumber.toUpperCase().startsWith("GIA") ? "GIA" : "IGI";
+      const labType = row.type === "lab-grown" ? "lab-grown" : "natural";
+      const imageUrl = row.imagePath || mockDiamonds[0].imageUrl;
+
+      return {
+        stoneId: row.stoneId,
+        type: labType,
+        shape: row.shape,
+        carat: row.carats,
+        color: row.color,
+        clarity: row.clarity,
+        cut: row.cut,
+        polish: row.polish,
+        symmetry: row.symmetry,
+        fluorescence: "None",
+        price: row.price,
+        ratio: row.ratio || 1,
+        depthPct: row.depthPct,
+        tablePct: row.tablePct,
+        measurements: `${row.length} x ${row.width} x ${row.height}`,
+        certLab,
+        certNumber: row.certNumber,
+        certLink: row.certificateLink,
+        imageUrl,
+        videoUrl: row.videoLink,
+        v360StoneId: row.stoneId,
+      };
+    });
+
+    importDiamonds(validDiamonds);
+    setImportedCount(validDiamonds.length);
   };
 
   return (

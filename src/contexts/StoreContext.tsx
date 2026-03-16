@@ -1,11 +1,14 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import type { CartItem, Diamond, RingBuilderSelection } from "@/types/diamond";
+import { mockDiamonds } from "@/data/mockCatalog";
 
 interface StoreContextValue {
+  diamonds: Diamond[];
   cart: CartItem[];
   wishlist: string[];
   compare: Diamond[];
   ringBuilder: RingBuilderSelection;
+  importDiamonds: (items: Diamond[]) => void;
   addToCart: (item: Omit<CartItem, "quantity">) => void;
   removeFromCart: (id: string) => void;
   clearCart: () => void;
@@ -19,10 +22,21 @@ interface StoreContextValue {
 const StoreContext = createContext<StoreContextValue | undefined>(undefined);
 
 export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
+  const [diamonds, setDiamonds] = useState<Diamond[]>(mockDiamonds);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [compare, setCompare] = useState<Diamond[]>([]);
   const [ringBuilder, setRingBuilderState] = useState<RingBuilderSelection>({});
+
+  const importDiamonds = (items: Diamond[]) => {
+    setDiamonds((prev) => {
+      const map = new Map(prev.map((item) => [item.stoneId, item]));
+      items.forEach((item) => {
+        map.set(item.stoneId, item);
+      });
+      return [...map.values()];
+    });
+  };
 
   const addToCart = (item: Omit<CartItem, "quantity">) => {
     setCart((prev) => {
@@ -67,9 +81,11 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
   const value = useMemo(
     () => ({
       cart,
+      diamonds,
       wishlist,
       compare,
       ringBuilder,
+      importDiamonds,
       addToCart,
       removeFromCart,
       clearCart,
@@ -79,7 +95,7 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
       isCompared,
       setRingBuilder,
     }),
-    [cart, wishlist, compare, ringBuilder],
+    [cart, diamonds, wishlist, compare, ringBuilder],
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
