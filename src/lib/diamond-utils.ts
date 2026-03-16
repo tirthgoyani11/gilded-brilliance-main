@@ -9,7 +9,11 @@ export const certificateLink = (diamond: Diamond) => {
   }
 
   if (diamond.certLab === "IGI") {
-    return `https://www.igi.org/verify-your-report/?r=${encodeURIComponent(diamond.certNumber)}`;
+    const compactReport = String(diamond.certNumber ?? "")
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "");
+    const igiReport = compactReport.startsWith("LG") ? compactReport : `LG${compactReport}`;
+    return `https://api.igi.org/viewpdf.php?r=${encodeURIComponent(igiReport)}`;
   }
 
   return `https://www.gia.edu/report-check?reportno=${encodeURIComponent(diamond.certNumber)}`;
