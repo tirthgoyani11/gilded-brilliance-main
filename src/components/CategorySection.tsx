@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import ringImg from "@/assets/product-ring.jpg";
 import earringsImg from "@/assets/product-earrings.jpg";
 import necklaceImg from "@/assets/product-necklace.jpg";
@@ -6,15 +7,15 @@ import braceletImg from "@/assets/product-bracelet.jpg";
 import looseDiamondsImg from "@/assets/product-loose-diamonds.jpg";
 
 const categories = [
-  { name: "Rings", image: ringImg },
-  { name: "Earrings", image: earringsImg },
-  { name: "Necklaces", image: necklaceImg },
-  { name: "Bracelets", image: braceletImg },
-  { name: "Loose Diamonds", image: looseDiamondsImg },
+  { name: "Rings", image: ringImg, href: "/jewelry" },
+  { name: "Earrings", image: earringsImg, href: "/jewelry" },
+  { name: "Necklaces", image: necklaceImg, href: "/jewelry" },
+  { name: "Bracelets", image: braceletImg, href: "/jewelry" },
+  { name: "Loose Diamonds", image: looseDiamondsImg, href: "/diamonds" },
 ];
 
 const cardVariants = {
-  hidden: { opacity: 0, y: 10 },
+  hidden: { opacity: 0, y: 15 },
   visible: { opacity: 1, y: 0 },
 };
 
@@ -23,11 +24,18 @@ const CategorySection = () => {
     <section className="py-24 lg:py-32 bg-background">
       <div className="container mx-auto px-6 lg:px-12">
         <div className="text-center mb-16">
-          <p className="font-accent italic text-primary text-sm mb-3">Curated Collections</p>
-          <h2 className="font-heading text-3xl lg:text-4xl text-foreground">Shop by Category</h2>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <span className="font-accent italic text-primary text-sm mb-3 block">Curated Collections</span>
+            <h2 className="font-heading text-3xl lg:text-4xl text-foreground">Shop by Category</h2>
+          </motion.div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 lg:gap-6">
           {categories.map((cat, i) => (
             <motion.div
               key={cat.name}
@@ -35,21 +43,31 @@ const CategorySection = () => {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
-              transition={{ duration: 0.6, ease: [0.2, 0, 0, 1], delay: i * 0.1 }}
-              className="group cursor-pointer"
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: i * 0.08 }}
             >
-              <div className="relative aspect-square rounded-[12px] overflow-hidden shadow-luxury luxury-transition group-hover:shadow-luxury-hover">
-                <img
-                  src={cat.image}
-                  alt={cat.name}
-                  className="w-full h-full object-cover luxury-transition group-hover:scale-105"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-foreground/50 to-transparent opacity-0 group-hover:opacity-100 luxury-transition" />
-              </div>
-              <p className="text-center mt-4 text-xs uppercase tracking-[0.15em] font-body text-foreground/80 group-hover:text-foreground luxury-transition">
-                {cat.name}
-              </p>
+              <Link to={cat.href} className="group block">
+                <div className="relative aspect-square rounded-2xl overflow-hidden shadow-luxury luxury-transition group-hover:shadow-luxury-hover">
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    className="w-full h-full object-cover luxury-transition-slow group-hover:scale-110"
+                    loading="lazy"
+                  />
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 luxury-transition" />
+                  {/* Hover label */}
+                  <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 luxury-transition">
+                    <span className="text-[10px] uppercase tracking-[0.15em] font-body text-white/90">
+                      View Collection →
+                    </span>
+                  </div>
+                  {/* Gold border on hover */}
+                  <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-[#C6A87D]/30 luxury-transition pointer-events-none" />
+                </div>
+                <p className="text-center mt-4 text-xs uppercase tracking-[0.15em] font-body text-foreground/60 group-hover:text-foreground luxury-transition">
+                  {cat.name}
+                </p>
+              </Link>
             </motion.div>
           ))}
         </div>

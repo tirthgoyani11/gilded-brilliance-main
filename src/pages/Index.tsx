@@ -7,6 +7,8 @@ import EducationSection from "@/components/EducationSection";
 import BrandStory from "@/components/BrandStory";
 import Footer from "@/components/Footer";
 import TrustSection from "@/components/TrustSection";
+import DiamondJourney from "@/components/DiamondJourney";
+import WhatsAppFloat from "@/components/WhatsAppFloat";
 
 const Index = () => {
   return (
@@ -17,11 +19,13 @@ const Index = () => {
         <CategorySection />
         <DiamondSearchPreview />
         <BestSellers />
-        <EducationSection />
         <TrustSection />
+        <DiamondJourney />
+        <EducationSection />
         <BrandStory />
       </main>
       <Footer />
+      <WhatsAppFloat />
     </div>
   );
 };

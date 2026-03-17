@@ -18,11 +18,11 @@ const buttonVariants = cva(
         "luxury-outline": "border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background uppercase tracking-[0.15em] text-xs font-body",
       },
       size: {
-        default: "h-10 px-4 py-2 rounded-[4px]",
-        sm: "h-9 rounded-[4px] px-3",
-        lg: "h-12 rounded-[4px] px-8 py-4",
-        xl: "h-14 rounded-[4px] px-10 py-4",
-        icon: "h-10 w-10 rounded-[4px]",
+        default: "h-10 px-4 py-2 rounded-xl",
+        sm: "h-9 rounded-xl px-3",
+        lg: "h-12 rounded-xl px-8 py-4",
+        xl: "h-14 rounded-xl px-10 py-4",
+        icon: "h-10 w-10 rounded-xl",
       },
     },
     defaultVariants: {
