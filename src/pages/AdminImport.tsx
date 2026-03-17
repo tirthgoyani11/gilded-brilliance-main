@@ -83,6 +83,28 @@ const pick = (row: Record<string, unknown>, keys: string[]) => {
   return "";
 };
 
+const normalizeGrade = (val: string) => {
+  const v = val.trim().toLowerCase();
+  if (v === "id") return "Ideal";
+  if (v === "ex") return "Excellent";
+  if (v === "vg") return "Very Good";
+  if (v === "gd") return "Good";
+  if (v === "f" || v === "fr") return "Fair";
+  if (v === "p" || v === "pr") return "Poor";
+  if (v === "n" || v === "non") return "None";
+  if (v === "fnt") return "Faint";
+  if (v === "med") return "Medium";
+  if (v === "stg") return "Strong";
+  if (v === "vstg") return "V Strong";
+  
+  // Also handle exact uppercase variants from user interface images
+  if (v === "8x") return "8X";
+  if (v === "3x+") return "3X+";
+  if (v === "3vg+") return "3VG+";
+  
+  return val.trim();
+};
+
 const mapRow = (row: Record<string, unknown>): ImportRow => ({
   imagePath: String(pick(row, ["Image path", "Image", "Image URL", "Image Link"]) ?? "").trim(),
   type: String(pick(row, ["Type", "Diamond Type", "Lab"]) ?? "").trim(),
@@ -93,9 +115,9 @@ const mapRow = (row: Record<string, unknown>): ImportRow => ({
   carats: safeNumber(pick(row, ["Carats", "Carat", "Weight", "Caret"])),
   color: String(pick(row, ["Color", "Colour", "Col"]) ?? "").trim(),
   clarity: String(pick(row, ["Clarity", "Cla"]) ?? "").trim(),
-  cut: String(pick(row, ["Cut", "Cut Grade"]) ?? "").trim(),
-  polish: String(pick(row, ["Polish", "Pol"]) ?? "").trim(),
-  symmetry: String(pick(row, ["Symmetry", "Sym"]) ?? "").trim(),
+  cut: normalizeGrade(String(pick(row, ["Cut", "Cut Grade"]) ?? "")),
+  polish: normalizeGrade(String(pick(row, ["Polish", "Pol"]) ?? "")),
+  symmetry: normalizeGrade(String(pick(row, ["Symmetry", "Sym"]) ?? "")),
   price: safeNumber(pick(row, ["Price", "Amount", "Rate", "Total", "Cost"])),
   certNumber: String(pick(row, ["Certificate number", "Cert. No", "Cert No", "Certificate No", "Report No"]) ?? "").trim(),
   length: safeNumber(pick(row, ["Length", "Len"])),

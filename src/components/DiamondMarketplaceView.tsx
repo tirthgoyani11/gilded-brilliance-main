@@ -108,9 +108,13 @@ const hasKiraIcon = (shape: string) => true;
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
-/* Color scale for visual guide */
+/* Scales and Ordering */
 const colorScale = ["D", "E", "F", "G", "H", "I", "J", "K", "L", "M"];
 const clarityScale = ["IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2", "SI3", "I1", "I2", "I3"];
+const cutScale = ["8X", "Ideal", "Excellent", "Very Good", "Good", "Fair", "Poor"];
+const polishScale = ["8X", "Ideal", "Excellent", "Very Good", "Good", "Fair", "Poor"];
+const symmetryScale = ["8X", "3X+", "3VG+", "Ideal", "Excellent", "Very Good", "Good", "Fair", "Poor"];
+const fluorescenceScale = ["None", "Faint", "Medium", "Strong", "V Strong"];
 
 const DiamondMarketplaceView = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -219,10 +223,14 @@ const DiamondMarketplaceView = () => {
 
   const colors = ["All", ...colorScale.filter((c) => diamonds.some((d) => d.color?.toUpperCase().includes(c)))];
   const clarities = ["All", ...clarityScale.filter((c) => diamonds.some((d) => d.clarity?.toUpperCase().includes(c)))];
-  const cuts = ["All", ...new Set(diamonds.map((d) => d.cut))];
-  const polishGrades = ["All", ...new Set(diamonds.map((d) => d.polish))];
-  const symmetryGrades = ["All", ...new Set(diamonds.map((d) => d.symmetry))];
-  const fluorescenceGrades = ["All", ...new Set(diamonds.map((d) => d.fluorescence))];
+  
+  const cuts = ["All", ...cutScale.filter((c) => diamonds.some((d) => d.cut?.toUpperCase() === c.toUpperCase() || (c === "8X" && d.cut?.toUpperCase().includes("8X")))), ...new Set(diamonds.map((d) => d.cut).filter((c) => !cutScale.some(s => s.toUpperCase() === c?.toUpperCase() || (s === "8X" && c?.toUpperCase().includes("8X")))))];
+  
+  const polishGrades = ["All", ...polishScale.filter((c) => diamonds.some((d) => d.polish?.toUpperCase() === c.toUpperCase() || (c === "8X" && d.polish?.toUpperCase().includes("8X")))), ...new Set(diamonds.map((d) => d.polish).filter((c) => !polishScale.some(s => s.toUpperCase() === c?.toUpperCase() || (s === "8X" && c?.toUpperCase().includes("8X")))))];
+  
+  const symmetryGrades = ["All", ...symmetryScale.filter((c) => diamonds.some((d) => d.symmetry?.toUpperCase() === c.toUpperCase() || (c === "8X" && d.symmetry?.toUpperCase().includes("8X")) || (c === "3X+" && d.symmetry?.toUpperCase().includes("3X+")) || (c === "3VG+" && d.symmetry?.toUpperCase().includes("3VG+")))), ...new Set(diamonds.map((d) => d.symmetry).filter((c) => !symmetryScale.some(s => s.toUpperCase() === c?.toUpperCase() || (s === "8X" && c?.toUpperCase().includes("8X")) || (s === "3X+" && c?.toUpperCase().includes("3X+")) || (s === "3VG+" && c?.toUpperCase().includes("3VG+")))))];
+  
+  const fluorescenceGrades = ["All", ...fluorescenceScale.filter((c) => diamonds.some((d) => d.fluorescence?.toUpperCase().includes(c.toUpperCase()))), ...new Set(diamonds.map((d) => d.fluorescence).filter((c) => !fluorescenceScale.some(s => c?.toUpperCase().includes(s.toUpperCase()))))];
 
   const filtered = useMemo(
     () =>
