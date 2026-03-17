@@ -11,7 +11,7 @@ const CARAT_SLIDER_MIN = 0;
 const CARAT_SLIDER_MAX = 50;
 const WHATSAPP_NUMBER = "+91XXXXXXXXXX";
 
-const preferredShapeOrder = ["round", "oval", "emerald", "pear", "radiant", "marquise", "cushion lg", "cushion sq", "princess", "heart", "asscher", "cmb", "lg-radiant", "lg-cmb", "sqem", "octagone"];
+
 
 const shapeIconByKey: Record<string, { normal: string; active: string }> = {
   round: {
@@ -58,15 +58,25 @@ const shapeIconByKey: Record<string, { normal: string; active: string }> = {
     normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/13.png",
     active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/13_Click.png",
   },
-  asscher: {
-    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/26.png",
-    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/26_Click.png",
-  },
-  cmb: {
+  other: {
     normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/26.png",
     active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/26_Click.png",
   },
 };
+
+const preferredShapeOrder = [
+  "round",
+  "oval",
+  "emerald",
+  "pear",
+  "radiant",
+  "marquise",
+  "cushion lg",
+  "cushion sq",
+  "princess",
+  "heart",
+  "other"
+];
 
 const normalizeShapeKey = (shape: string) => shape.trim().toLowerCase().replace(/\./g, "").replace(/\s+/g, " ").replace(/_/g, "-");
 const canonicalShapeKey = (shape: string) => {
@@ -88,19 +98,19 @@ const displayShapeLabel = (shape: string) => {
 };
 
 const kiraShapeIconSrc = (shape: string, active: boolean) => {
-  const key = canonicalShapeKey(shape);
-  const icon = shapeIconByKey[key];
+  const key = shape === "Other" ? "other" : canonicalShapeKey(shape);
+  const icon = shapeIconByKey[key] || shapeIconByKey["other"];
   if (!icon) return null;
   return active ? icon.active : icon.normal;
 };
 
-const hasKiraIcon = (shape: string) => Boolean(shapeIconByKey[canonicalShapeKey(shape)]);
+const hasKiraIcon = (shape: string) => true;
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 /* Color scale for visual guide */
 const colorScale = ["D", "E", "F", "G", "H", "I", "J", "K", "L", "M"];
-const clarityScale = ["FL", "IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2", "I1", "I2"];
+const clarityScale = ["IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2", "SI3", "I1", "I2", "I3"];
 
 const DiamondMarketplaceView = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -199,12 +209,16 @@ const DiamondMarketplaceView = () => {
 
   const shapes = useMemo(() => {
     const keySet = new Set(diamonds.map((d) => canonicalShapeKey(d.shape)));
-    const ordered = preferredShapeOrder.filter((key) => keySet.has(key));
-    const custom = [...keySet].filter((key) => !preferredShapeOrder.includes(key));
-    return ["All", ...ordered.map(displayShapeLabel), ...custom.map(displayShapeLabel)];
+    const coreShapes = preferredShapeOrder.filter((key) => key !== "other");
+    const ordered = coreShapes.filter((key) => keySet.has(key));
+    const custom = [...keySet].filter((key) => !coreShapes.includes(key));
+    const result = ["All", ...ordered.map(displayShapeLabel)];
+    if (custom.length > 0) result.push("Other");
+    return result;
   }, [diamonds]);
-  const colors = ["All", ...new Set(diamonds.map((d) => d.color))];
-  const clarities = ["All", ...new Set(diamonds.map((d) => d.clarity))];
+
+  const colors = ["All", ...colorScale.filter((c) => diamonds.some((d) => d.color?.toUpperCase().includes(c)))];
+  const clarities = ["All", ...clarityScale.filter((c) => diamonds.some((d) => d.clarity?.toUpperCase().includes(c)))];
   const cuts = ["All", ...new Set(diamonds.map((d) => d.cut))];
   const polishGrades = ["All", ...new Set(diamonds.map((d) => d.polish))];
   const symmetryGrades = ["All", ...new Set(diamonds.map((d) => d.symmetry))];
@@ -213,9 +227,18 @@ const DiamondMarketplaceView = () => {
   const filtered = useMemo(
     () =>
       diamonds.filter((d) => {
-        if (shape !== "All" && canonicalShapeKey(d.shape) !== canonicalShapeKey(shape)) return false;
-        if (color !== "All" && d.color !== color) return false;
-        if (clarity !== "All" && d.clarity !== clarity) return false;
+        if (shape !== "All") {
+          const coreShapes = preferredShapeOrder.filter((key) => key !== "other");
+          const isOther = shape === "Other";
+          const dKey = canonicalShapeKey(d.shape);
+          if (isOther) {
+            if (coreShapes.includes(dKey)) return false;
+          } else {
+            if (dKey !== canonicalShapeKey(shape)) return false;
+          }
+        }
+        if (color !== "All" && !d.color?.toUpperCase().includes(color)) return false;
+        if (clarity !== "All" && !d.clarity?.toUpperCase().includes(clarity)) return false;
         if (cut !== "All" && d.cut !== cut) return false;
         if (polish !== "All" && d.polish !== polish) return false;
         if (symmetry !== "All" && d.symmetry !== symmetry) return false;
@@ -302,7 +325,7 @@ const DiamondMarketplaceView = () => {
       </div>
 
       {/* Sticky Filter Panel */}
-      <div className={`sticky top-[88px] lg:top-[104px] z-30 rounded-2xl border border-border bg-background/95 backdrop-blur-sm p-5 mb-8 shadow-luxury ${mobileFiltersOpen ? "block" : "hidden md:block"}`}>
+      <div className={`sticky top-0 z-40 rounded-2xl border border-border bg-background/95 backdrop-blur-md p-5 mb-8 shadow-luxury ${mobileFiltersOpen ? "block" : "hidden md:block"}`}>
         {/* Shape Filter - Premium */}
         <div className="mb-6">
           <div className="mb-3 flex items-center justify-between">
