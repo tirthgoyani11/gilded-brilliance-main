@@ -10,6 +10,20 @@ import Footer from "@/components/Footer";
 import TrustSection from "@/components/TrustSection";
 import DiamondJourney from "@/components/DiamondJourney";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
+import { motion } from "framer-motion";
+
+const FadeInReveal = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-10%" }}
+      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 const Index = () => {
   return (
@@ -17,14 +31,30 @@ const Index = () => {
       <Navbar />
       <main>
         <HeroSection />
-        <LooseDiamondsCarousel />
-        <CategorySection />
-        <DiamondSearchPreview />
-        <BestSellers />
-        <TrustSection />
-        <DiamondJourney />
-        <EducationSection />
-        <BrandStory />
+        <FadeInReveal>
+          <LooseDiamondsCarousel />
+        </FadeInReveal>
+        <FadeInReveal>
+          <CategorySection />
+        </FadeInReveal>
+        <FadeInReveal>
+          <DiamondSearchPreview />
+        </FadeInReveal>
+        <FadeInReveal>
+          <BestSellers />
+        </FadeInReveal>
+        <FadeInReveal>
+          <TrustSection />
+        </FadeInReveal>
+        <FadeInReveal>
+          <DiamondJourney />
+        </FadeInReveal>
+        <FadeInReveal>
+          <EducationSection />
+        </FadeInReveal>
+        <FadeInReveal>
+          <BrandStory />
+        </FadeInReveal>
       </main>
       <Footer />
       <WhatsAppFloat />

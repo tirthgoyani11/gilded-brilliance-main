@@ -1,7 +1,8 @@
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, BadgeCheck, RotateCcw, Globe } from "lucide-react";
+import { useRef } from "react";
 
 const luxuryTransition = {
   duration: 1.2,
@@ -17,24 +18,96 @@ const trustBadges = [
   { icon: RotateCcw, label: "360° Diamond View" },
 ];
 
-const HeroSection = () => {
+const FloatingDiamonds = () => {
   return (
-    <section className="relative h-screen min-h-[700px] max-h-[1000px] flex items-center overflow-hidden bg-[#FAFAFA]">
-      {/* Image background with slow zoom effect */}
-      <div className="absolute inset-0 overflow-hidden bg-white">
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      {/* Diamond 1 */}
+      <motion.img
+        src="/shapes/round-Diamond.png"
+        className="absolute top-[15%] left-[10%] w-16 h-16 md:w-24 md:h-24 opacity-30 object-contain drop-shadow-2xl blur-[2px]"
+        animate={{
+          y: [0, -40, 0],
+          x: [0, 20, 0],
+          rotate: [0, 10, -10, 0],
+        }}
+        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+      />
+      {/* Diamond 2 */}
+      <motion.img
+        src="/shapes/cushion-Diamond.png"
+        className="absolute top-[60%] left-[5%] w-20 h-20 md:w-32 md:h-32 opacity-20 object-contain drop-shadow-2xl blur-[4px]"
+        animate={{
+          y: [0, -60, 0],
+          x: [0, -15, 0],
+          rotate: [0, -15, 10, 0],
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+      />
+      {/* Diamond 3 */}
+      <motion.img
+        src="/shapes/emerald-Diamond.png"
+        className="absolute top-[20%] right-[8%] w-14 h-14 md:w-20 md:h-20 opacity-40 object-contain drop-shadow-lg blur-[1px]"
+        animate={{
+          y: [0, 30, 0],
+          x: [0, -20, 0],
+          rotate: [0, 20, -5, 0],
+        }}
+        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+      />
+      {/* Diamond 4 */}
+      <motion.img
+        src="/shapes/pear-Diamond.png"
+        className="absolute bottom-[10%] right-[15%] w-24 h-24 md:w-36 md:h-36 opacity-15 object-contain drop-shadow-xl blur-[5px]"
+        animate={{
+          y: [0, -50, 0],
+          x: [0, 30, 0],
+          rotate: [0, -10, 15, 0],
+        }}
+        transition={{ duration: 22, repeat: Infinity, ease: "easeInOut", delay: 3 }}
+      />
+    </div>
+  );
+};
+
+const HeroSection = () => {
+  const containerRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end start"],
+  });
+
+  // Parallax transformations
+  const imageY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+  const imageScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
+  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
+  return (
+    <section ref={containerRef} className="relative h-screen min-h-[700px] max-h-[1000px] flex items-center overflow-hidden bg-[#FAFAFA]">
+      {/* Image background with parallax & slow zoom effect */}
+      <motion.div 
+        className="absolute inset-0 overflow-hidden bg-white"
+        style={{ y: imageY, scale: imageScale }}
+      >
         <img
           src="/hero-vmora.png"
           alt="VMORA Luxury Diamond"
-          className="w-full h-full object-cover scale-105 animate-[pulse_30s_ease-in-out_infinite_alternate]"
+          className="w-full h-full object-cover animate-[pulse_30s_ease-in-out_infinite_alternate]"
         />
         <div className="hero-video-overlay-light absolute inset-0" />
-      </div>
+      </motion.div>
+
+      {/* Floating 3D Diamonds layer */}
+      <FloatingDiamonds />
 
       {/* Sparkle overlay */}
       <div className="sparkle-overlay-light absolute inset-0 pointer-events-none" />
 
       {/* Content */}
-      <div className="relative z-10 container mx-auto px-6 lg:px-12">
+      <motion.div 
+        className="relative z-10 container mx-auto px-6 lg:px-12"
+        style={{ y: contentY, opacity: contentOpacity }}
+      >
         <div className="max-w-2xl">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -137,7 +210,7 @@ const HeroSection = () => {
             ))}
           </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Bottom gradient fade */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#FAFAFA] to-transparent" />
