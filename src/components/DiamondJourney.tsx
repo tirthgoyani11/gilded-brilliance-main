@@ -33,48 +33,76 @@ const DiamondJourney = () => {
   const stepsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    let ctx = gsap.context(() => {
+    let mm = gsap.matchMedia();
+
+    mm.add("(min-width: 768px)", () => {
+      // DESKTOP TIMELINE
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top top",
-          end: "+=3000", // Increased scroll distance for smoother, longer zoom
-          scrub: 1, // Smoothing
+          end: "+=3000",
+          scrub: 1, 
           pin: true,
         },
       });
 
-      // 1. Diamond zoom and fade up tied to the scroll (scrubbed)
-      // The zoom stops progressing right as Step 3 is revealed (timeline position 2.1)
       tl.fromTo(
         diamondRef.current,
         { scale: 0.2, opacity: 0 },
         { scale: 2.5, opacity: 1, ease: "power1.inOut", duration: 2.1 },
-        0 // Start at the very beginning of the timeline
+        0 
       );
 
-      // 2. Sequential reveal of steps spaced out across the scroll
       stepsRef.current.forEach((step, i) => {
         if (!step) return;
-        // Fade in and slide up each step
         tl.fromTo(
           step,
           { opacity: 0, y: 50 },
           { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" },
-          i * 0.8 + 0.5 // Stagger their entry along the timeline
+          i * 0.8 + 0.5 
         );
-        
-        // Parallax Depth on steps while scrolling continues
         tl.to(
           step,
           { y: -40, duration: 2, ease: "none" },
-          i * 0.8 + 1.3 // Parallax starts slightly after they fade in
+          i * 0.8 + 1.3 
         );
       });
+    });
 
-    }, sectionRef);
+    mm.add("(max-width: 767px)", () => {
+      // MOBILE TIMELINE
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top top",
+          end: "+=2000", // slightly shorter scroll space needed for mobile vertically stacked
+          scrub: 1,
+          pin: true,
+        },
+      });
 
-    return () => ctx.revert(); // Cleanup GSAP
+      // Smaller max scale for portrait screens so it doesn't break edges
+      tl.fromTo(
+        diamondRef.current,
+        { scale: 0.3, opacity: 0, yPercent: -40 }, // Start slightly higher
+        { scale: 1.4, opacity: 1, yPercent: 0, ease: "power1.inOut", duration: 2 },
+        0
+      );
+
+      // Steps just fade in staggered, no complex absolute positioning movement needed
+      stepsRef.current.forEach((step, i) => {
+        if (!step) return;
+        tl.fromTo(
+          step,
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" },
+          i * 0.6 + 0.5
+        );
+      });
+    });
+
+    return () => mm.revert(); // Cleanup matching media
   }, []);
 
   return (
@@ -102,32 +130,37 @@ const DiamondJourney = () => {
       </div>
 
       {/* Steps Container */}
-      {processSteps.map((step, i) => {
-        // Compute positioning using Tailwind
-        let positionClasses = "";
-        if (i === 0) positionClasses = "top-[25%] left-[5%] md:left-[10%] xl:left-[15%]";
-        if (i === 1) positionClasses = "top-[30%] right-[5%] md:right-[10%] xl:right-[15%] text-right";
-        if (i === 2) positionClasses = "bottom-[30%] left-[5%] md:left-[10%] xl:left-[15%]";
-        if (i === 3) positionClasses = "bottom-[20%] right-[5%] md:right-[10%] xl:right-[15%] text-right";
+      {/* 
+        On Desktop (md:), the steps are absolutely positioned into the 4 corners around the max-scaled diamond.
+        On Mobile, they are absolutely positioned into a standard vertical flow column, centered padding, so they overlay smoothly. 
+      */}
+      <div className="absolute inset-x-0 bottom-0 top-[25%] md:top-0 z-20 pointer-events-none flex flex-col md:block items-center justify-around pb-12 px-6">
+        {processSteps.map((step, i) => {
+          let desktopPositionClasses = "";
+          if (i === 0) desktopPositionClasses = "md:absolute md:top-[25%] md:left-[10%] xl:left-[15%]";
+          if (i === 1) desktopPositionClasses = "md:absolute md:top-[30%] md:right-[10%] xl:right-[15%] md:text-right";
+          if (i === 2) desktopPositionClasses = "md:absolute md:bottom-[30%] md:left-[10%] xl:left-[15%]";
+          if (i === 3) desktopPositionClasses = "md:absolute md:bottom-[20%] md:right-[10%] xl:right-[15%] md:text-right";
 
-        return (
-          <div
-            key={i}
-            className={`absolute w-[280px] md:w-[320px] text-white opacity-0 z-20 ${positionClasses}`}
-            ref={(el) => (stepsRef.current[i] = el)}
-          >
-            <span className="block font-body text-[10px] md:text-[11px] uppercase tracking-[0.25em] text-[#C6A87D] font-medium mb-3">
-              Step 0{i + 1}
-            </span>
-            <h3 className="font-heading text-2xl md:text-3xl text-white mb-2 leading-tight">
-              {step.title}
-            </h3>
-            <p className="font-body text-white/60 text-sm leading-[1.8]">
-              {step.description}
-            </p>
-          </div>
-        );
-      })}
+          return (
+            <div
+              key={i}
+              className={`w-[280px] md:w-[320px] text-white opacity-0 text-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] md:drop-shadow-none md:text-left ${desktopPositionClasses}`}
+              ref={(el) => (stepsRef.current[i] = el)}
+            >
+              <span className="block font-body text-[10px] md:text-[11px] uppercase tracking-[0.25em] text-[#C6A87D] font-medium mb-1 md:mb-3">
+                Step 0{i + 1}
+              </span>
+              <h3 className="font-heading text-xl md:text-3xl text-white mb-2 leading-tight">
+                {step.title}
+              </h3>
+              <p className="font-body text-white/80 md:text-white/60 text-xs md:text-sm leading-[1.6] md:leading-[1.8]">
+                {step.description}
+              </p>
+            </div>
+          );
+        })}
+      </div>
 
     </section>
   );

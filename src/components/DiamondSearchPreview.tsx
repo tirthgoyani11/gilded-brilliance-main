@@ -43,7 +43,7 @@ const DiamondSearchPreview = () => {
 
 
   return (
-    <section className="py-24 lg:py-32 bg-[#FAFAFA] relative border-y border-border/50">
+    <section className="py-24 lg:py-32 bg-white relative border-y border-border/50 overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(198,168,125,0.03)_0%,transparent_70%)] pointer-events-none" />
       <div className="container mx-auto px-6 lg:px-12 relative z-10">
         <div className="text-center mb-16">
