@@ -48,7 +48,7 @@ const EducationSection = () => {
           </motion.div>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           {topics.map((topic, i) => (
             <motion.div
               key={topic.title}
@@ -59,21 +59,38 @@ const EducationSection = () => {
             >
               <Link
                 to={topic.link}
-                className="group block rounded-2xl border border-border bg-background p-6 shadow-luxury luxury-transition hover:shadow-luxury-hover hover:border-primary/20 h-full"
+                className="group relative block rounded-2xl border border-border bg-background p-8 shadow-luxury luxury-transition hover:shadow-luxury-hover hover:border-[#C6A87D]/30 h-full diamond-glow"
               >
-                <div className="w-10 h-10 rounded-xl bg-primary/8 flex items-center justify-center mb-5 luxury-transition group-hover:bg-primary/15">
-                  <topic.icon className="w-5 h-5 text-primary" />
+                <div className="w-12 h-12 rounded-[14px] bg-secondary flex items-center justify-center mb-6 luxury-transition group-hover:bg-[#FFF9F0] group-hover:scale-110">
+                  <topic.icon className="w-5 h-5 text-primary group-hover:text-[#C6A87D] luxury-transition group-hover:-rotate-3" strokeWidth={1.5} />
                 </div>
-                <h3 className="font-heading text-lg mb-2 group-hover:text-primary luxury-transition">{topic.title}</h3>
-                <p className="text-[13px] text-muted-foreground leading-relaxed mb-4">{topic.description}</p>
-                <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.12em] font-body text-primary group-hover:gap-2.5 luxury-transition">
-                  Learn more
-                  <ArrowRight className="w-3 h-3" />
-                </span>
+                <h3 className="font-heading text-[1.1rem] mb-2.5 text-foreground group-hover:text-foreground luxury-transition leading-tight">{topic.title}</h3>
+                <p className="text-[13px] text-muted-foreground leading-[1.7] mb-6">{topic.description}</p>
+                
+                <div className="absolute bottom-8 left-8 right-8 flex items-center gap-2 text-[10px] uppercase tracking-[0.14em] font-bold text-[#C6A87D] group-hover:opacity-100 opacity-70 luxury-transition">
+                  <span>Learn more</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 luxury-transition" />
+                </div>
               </Link>
             </motion.div>
           ))}
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
+          className="flex justify-center"
+        >
+          <Link
+            to="/education"
+            className="px-8 py-4 rounded-xl border-2 border-border text-foreground text-xs uppercase tracking-[0.15em] font-medium hover:bg-foreground hover:text-background hover:border-foreground luxury-transition inline-flex items-center gap-3 group"
+          >
+            Explore Diamond Education
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 luxury-transition" />
+          </Link>
+        </motion.div>
       </div>
     </section>
   );

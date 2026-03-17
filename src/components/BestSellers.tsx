@@ -49,28 +49,36 @@ const BestSellers = () => {
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: i * 0.08 }}
               className="group cursor-pointer"
             >
-              <div className="relative aspect-square rounded-2xl overflow-hidden shadow-luxury luxury-transition group-hover:shadow-luxury-hover mb-4">
+              <div className="relative aspect-[4/5] rounded-2xl overflow-hidden shadow-luxury luxury-transition group-hover:shadow-luxury-hover mb-4 diamond-glow">
+                {/* Popular Choice Badge */}
+                {i === 0 && (
+                  <div className="absolute top-3 left-3 z-10 px-2.5 py-1 bg-[#FAFAFA]/90 backdrop-blur-md rounded-md border border-border shadow-sm">
+                    <span className="text-[9px] uppercase tracking-[0.15em] font-medium text-foreground">Most Loved</span>
+                  </div>
+                )}
                 <img
                   src={product.image}
                   alt={product.name}
-                  className="w-full h-full object-cover luxury-transition-slow group-hover:scale-110"
+                  className="w-full h-full object-cover brightness-[1.05] contrast-[1.02] luxury-transition-slow group-hover:scale-110"
                   loading="lazy"
                 />
                 {/* Wishlist */}
-                <button className="absolute top-3 right-3 w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 luxury-transition hover:bg-white hover:scale-110">
+                <button className="absolute top-3 right-3 w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 luxury-transition hover:bg-white hover:scale-110 z-10 shadow-sm border border-border/50">
                   <Heart className="w-3.5 h-3.5 text-foreground" />
                 </button>
+                {/* Overlay for depth */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/40 to-transparent opacity-0 group-hover:opacity-100 luxury-transition pointer-events-none" />
                 {/* Quick view */}
-                <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 luxury-transition">
-                  <button className="w-full py-2.5 bg-[#0A0A0A]/90 backdrop-blur-sm text-white text-[10px] uppercase tracking-[0.15em] font-body rounded-lg hover:bg-[#0A0A0A] luxury-transition">
+                <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 luxury-transition z-10">
+                  <button className="w-full py-3 bg-[#FAFAFA]/95 backdrop-blur-md text-foreground text-[10px] uppercase tracking-[0.15em] font-body rounded-lg hover:bg-white border border-border/50 shadow-sm luxury-transition font-medium">
                     Quick View
                   </button>
                 </div>
                 {/* Gold border on hover */}
-                <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-[#C6A87D]/20 luxury-transition pointer-events-none" />
+                <div className="absolute inset-0 rounded-2xl border-[1.5px] border-transparent group-hover:border-[#C6A87D]/30 luxury-transition pointer-events-none" />
               </div>
               <p className="text-[10px] uppercase tracking-[0.12em] font-body text-muted-foreground mb-1.5">{product.category}</p>
-              <h3 className="font-heading text-sm text-foreground mb-1">{product.name}</h3>
+              <h3 className="font-heading text-sm text-foreground mb-1.5">{product.name}</h3>
               <p className="font-body text-sm text-foreground font-medium tabular-nums">{product.price}</p>
             </motion.div>
           ))}
