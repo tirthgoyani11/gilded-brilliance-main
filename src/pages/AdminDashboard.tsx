@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Gem, Package, ShoppingBag, Users } from "lucide-react";
-import SiteLayout from "@/components/SiteLayout";
-import { adminFetch, getAdminToken, setAdminToken } from "@/lib/admin";
+import AdminLayout from "@/components/AdminLayout";
+import { adminFetch } from "@/lib/admin";
 
 type AdminStatsResponse = {
   stats: {
@@ -44,22 +44,11 @@ const AdminDashboard = () => {
   });
   const [recentImports, setRecentImports] = useState<AdminStatsResponse["recentImports"]>([]);
   const [loading, setLoading] = useState(true);
-  const [adminToken, setAdminTokenState] = useState("");
   const [status, setStatus] = useState("");
-
-  useEffect(() => {
-    setAdminTokenState(getAdminToken());
-  }, []);
 
   const loadStats = async () => {
     setLoading(true);
     setStatus("");
-
-    if (!adminToken.trim()) {
-      setLoading(false);
-      setStatus("Enter admin token to load dashboard stats.");
-      return;
-    }
 
     try {
       const response = await adminFetch("/api/admin-stats");
@@ -82,11 +71,11 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     void loadStats();
-  }, [adminToken]);
+  }, []);
 
   return (
-    <SiteLayout>
-      <section className="container mx-auto px-6 lg:px-12 py-10 space-y-8">
+    <AdminLayout>
+      <section className="space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="font-heading text-3xl">Admin Dashboard</h1>
@@ -98,31 +87,6 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="rounded-[12px] border border-border p-5 bg-secondary/20 space-y-2">
-          <p className="text-sm text-muted-foreground">Admin token is required for protected dashboard APIs.</p>
-          <div className="flex flex-wrap gap-2 items-center">
-            <input
-              value={adminToken}
-              onChange={(e) => setAdminTokenState(e.target.value)}
-              placeholder="Admin token"
-              className="h-10 min-w-[280px] px-3 rounded border border-border bg-background"
-            />
-            <button
-              onClick={() => {
-                setAdminToken(adminToken);
-                setStatus("Admin token saved.");
-              }}
-              className="h-10 px-4 rounded border border-border text-sm"
-              type="button"
-            >
-              Save Token
-            </button>
-            <button onClick={() => void loadStats()} className="h-10 px-4 rounded border border-border text-sm" type="button">
-              Reload
-            </button>
-          </div>
-          {status ? <p className="text-sm text-primary">{status}</p> : null}
-        </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <div className="rounded-[12px] border border-border p-5 bg-secondary/30">
@@ -169,7 +133,7 @@ const AdminDashboard = () => {
           </ul>
         </div>
       </section>
-    </SiteLayout>
+    </AdminLayout>
   );
 };
 

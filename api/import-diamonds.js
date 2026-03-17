@@ -27,6 +27,8 @@ export default async function handler(req, res) {
 
     let created = 0;
     let updated = 0;
+    const createdIds = [];
+    const updatedIds = [];
 
     for (const d of diamonds) {
       const normalizedStoneId = String(d.stoneId || "").trim();
@@ -90,8 +92,13 @@ export default async function handler(req, res) {
           updated_at = NOW();
       `;
 
-      if (exists.length) updated += 1;
-      else created += 1;
+      if (exists.length) {
+        updated += 1;
+        updatedIds.push(normalizedStoneId);
+      } else {
+        created += 1;
+        createdIds.push(normalizedStoneId);
+      }
     }
 
     await createImportLog({
@@ -102,6 +109,7 @@ export default async function handler(req, res) {
       failedRows: 0,
       status: "success",
       errorMessage: null,
+      details: { createdIds, updatedIds }
     });
 
     return res.status(200).json({

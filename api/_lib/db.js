@@ -54,9 +54,18 @@ export async function ensureImportLogsTable() {
       failed_rows INTEGER NOT NULL DEFAULT 0,
       status TEXT NOT NULL,
       error_message TEXT,
+      details JSONB DEFAULT '{}'::jsonb,
+      reverted_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
   `;
+
+  try {
+    await sql`ALTER TABLE import_logs ADD COLUMN IF NOT EXISTS details JSONB DEFAULT '{}'::jsonb;`;
+    await sql`ALTER TABLE import_logs ADD COLUMN IF NOT EXISTS reverted_at TIMESTAMPTZ;`;
+  } catch (err) {
+    // Ignore schema modification errors if running restricted permissions
+  }
 
   await sql`CREATE INDEX IF NOT EXISTS idx_import_logs_created_at ON import_logs(created_at DESC);`;
   await sql`CREATE INDEX IF NOT EXISTS idx_import_logs_status ON import_logs(status);`;
@@ -99,10 +108,10 @@ export async function ensureCoreTables() {
   await ensureJewelryTable();
 }
 
-export async function createImportLog({ source, totalRows, createdRows, updatedRows, failedRows, status, errorMessage }) {
+export async function createImportLog({ source, totalRows, createdRows, updatedRows, failedRows, status, errorMessage, details }) {
   await ensureImportLogsTable();
 
-  await sql`
+  const [inserted] = await sql`
     INSERT INTO import_logs (
       source,
       total_rows,
@@ -110,7 +119,8 @@ export async function createImportLog({ source, totalRows, createdRows, updatedR
       updated_rows,
       failed_rows,
       status,
-      error_message
+      error_message,
+      details
     ) VALUES (
       ${source ?? null},
       ${Number(totalRows) || 0},
@@ -118,7 +128,9 @@ export async function createImportLog({ source, totalRows, createdRows, updatedR
       ${Number(updatedRows) || 0},
       ${Number(failedRows) || 0},
       ${String(status || "success")},
-      ${errorMessage ?? null}
-    );
+      ${errorMessage ?? null},
+      ${details ? JSON.stringify(details) : '{}'}::jsonb
+    ) RETURNING id;
   `;
+  return inserted;
 }

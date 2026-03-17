@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
-import SiteLayout from "@/components/SiteLayout";
+import AdminLayout from "@/components/AdminLayout";
 import { mockDiamonds } from "@/data/mockCatalog";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/contexts/StoreContext";
-import { getAdminToken, setAdminToken } from "@/lib/admin";
+import { getAdminToken } from "@/lib/admin";
 import type { Diamond } from "@/types/diamond";
 
 type ImportRow = {
@@ -112,13 +112,11 @@ const AdminImport = () => {
   const [importDetails, setImportDetails] = useState<{ created: number; updated: number } | null>(null);
   const [persistDetails, setPersistDetails] = useState<{ persisted: number; failed: number } | null>(null);
   const [failedRetryItems, setFailedRetryItems] = useState<Diamond[]>([]);
-  const [adminToken, setAdminTokenState] = useState("");
+
   const [progress, setProgress] = useState({ totalChunks: 0, completedChunks: 0, persisted: 0, failed: 0 });
   const [status, setStatus] = useState("");
 
-  useEffect(() => {
-    setAdminTokenState(getAdminToken());
-  }, []);
+
 
   const existingIds = useMemo(() => new Set(diamonds.map((d) => d.stoneId)), [diamonds]);
 
@@ -211,16 +209,10 @@ const AdminImport = () => {
   };
 
   const runImport = async (items: Diamond[]) => {
-    if (!adminToken.trim()) {
-      setStatus("Enter and save admin token before importing.");
-      return;
-    }
-
-    setAdminToken(adminToken);
     setStatus("");
 
     const result = await importDiamonds(items, {
-      adminToken: adminToken.trim(),
+      adminToken: getAdminToken() || "",
       onProgress: (next) => setProgress(next),
     });
 
@@ -281,8 +273,8 @@ const AdminImport = () => {
   };
 
   return (
-    <SiteLayout>
-      <section className="container mx-auto px-6 lg:px-12 py-10 space-y-6">
+    <AdminLayout>
+      <section className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="font-heading text-3xl">Excel Diamond Import</h1>
@@ -291,20 +283,6 @@ const AdminImport = () => {
           <Button variant="luxury-outline" onClick={buildTemplate}>Download Template</Button>
         </div>
 
-        <div className="rounded-[12px] border border-border p-5 bg-secondary/20 space-y-3">
-          <h2 className="font-heading text-xl">Admin Access</h2>
-          <p className="text-sm text-muted-foreground">Set admin token to authorize import API requests.</p>
-          <div className="flex flex-wrap items-center gap-2">
-            <input
-              value={adminToken}
-              onChange={(e) => setAdminTokenState(e.target.value)}
-              placeholder="Admin token"
-              className="h-10 min-w-[280px] px-3 rounded border border-border bg-background"
-            />
-            <Button variant="outline" onClick={() => { setAdminToken(adminToken); setStatus("Admin token saved."); }}>Save Token</Button>
-          </div>
-          {status ? <p className="text-sm text-primary">{status}</p> : null}
-        </div>
 
         <label className="block rounded-[12px] border-2 border-dashed border-border p-8 text-center bg-secondary/30 cursor-pointer">
           <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
@@ -367,7 +345,7 @@ const AdminImport = () => {
           </div>
         </div>
       </section>
-    </SiteLayout>
+    </AdminLayout>
   );
 };
 

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import SiteLayout from "@/components/SiteLayout";
+import AdminLayout from "@/components/AdminLayout";
 import { Button } from "@/components/ui/button";
-import { adminFetch, clearAdminToken, getAdminToken, setAdminToken } from "@/lib/admin";
+import { adminFetch } from "@/lib/admin";
 
 type CmsPayload = {
   title?: string;
@@ -46,8 +46,8 @@ const defaultCms: Record<string, CmsPayload> = {
 const cmsKeys = ["about", "blog", "education", "brandStory"] as const;
 type CmsKey = (typeof cmsKeys)[number];
 
+
 const AdminContent = () => {
-  const [token, setToken] = useState("");
   const [status, setStatus] = useState("");
   const [contents, setContents] = useState<Record<string, CmsPayload>>(defaultCms);
   const [activeKey, setActiveKey] = useState<CmsKey>("about");
@@ -78,24 +78,6 @@ const AdminContent = () => {
 
   const [cmsText, setCmsText] = useState("");
 
-  useEffect(() => {
-    setToken(getAdminToken());
-  }, []);
-
-  useEffect(() => {
-    setCmsText(cmsTextarea);
-  }, [cmsTextarea]);
-
-  const saveTokenValue = () => {
-    setAdminToken(token);
-    setStatus("Admin token saved.");
-  };
-
-  const clearTokenValue = () => {
-    clearAdminToken();
-    setToken("");
-    setStatus("Admin token cleared.");
-  };
 
   const loadAll = async () => {
     setLoading(true);
@@ -266,28 +248,17 @@ const AdminContent = () => {
   };
 
   return (
-    <SiteLayout>
-      <section className="container mx-auto px-6 lg:px-12 py-10 space-y-6">
-        <div>
-          <h1 className="font-heading text-3xl">Admin Content Manager</h1>
-          <p className="text-muted-foreground">Manage website content and jewelry listings without code edits.</p>
-        </div>
-
-        <div className="rounded-[12px] border border-border p-5 bg-secondary/20 space-y-3">
-          <h2 className="font-heading text-xl">Admin Access</h2>
-          <p className="text-sm text-muted-foreground">Default token: vmora-admin-2026 (change via ADMIN_TOKEN env in production).</p>
-          <div className="flex flex-wrap gap-2 items-center">
-            <input
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              placeholder="Enter admin token"
-              className="h-10 px-3 rounded border border-border bg-background min-w-[280px]"
-            />
-            <Button onClick={saveTokenValue}>Save Token</Button>
-            <Button variant="outline" onClick={clearTokenValue}>Clear</Button>
-            <Button variant="luxury-outline" onClick={() => void loadAll()} disabled={loading}>Reload</Button>
+    <AdminLayout>
+      <section className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-heading text-3xl">Admin Content Manager</h1>
+            <p className="text-muted-foreground">Manage website content and jewelry listings.</p>
           </div>
-          {status ? <p className="text-sm text-primary">{status}</p> : null}
+          <div className="flex items-center gap-4">
+            <Button variant="outline" onClick={() => void loadAll()} disabled={loading}>Reload API Data</Button>
+            {status ? <p className="text-sm text-primary">{status}</p> : null}
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
@@ -360,7 +331,7 @@ const AdminContent = () => {
           </div>
         </div>
       </section>
-    </SiteLayout>
+    </AdminLayout>
   );
 };
 
