@@ -31,8 +31,18 @@ const topics = [
 
 const EducationSection = () => {
   return (
-    <section className="py-24 lg:py-32 bg-background">
-      <div className="container mx-auto px-6 lg:px-12">
+    <section className="py-24 lg:py-32 relative overflow-hidden bg-[#FAFAFA]">
+      {/* Marble Background Texture */}
+      <div 
+        className="absolute inset-0 opacity-40 mix-blend-multiply pointer-events-none"
+        style={{
+          backgroundImage: 'url(/marble-bg.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed'
+        }}
+      />
+      <div className="container mx-auto px-6 lg:px-12 relative z-10">
         <div className="text-center mb-14">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
