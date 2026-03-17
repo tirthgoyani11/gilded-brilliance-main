@@ -1,123 +1,134 @@
-import { motion } from "framer-motion";
-import { Gem, Scissors, BadgeCheck, Truck } from "lucide-react";
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-const steps = [
+gsap.registerPlugin(ScrollTrigger);
+
+const processSteps = [
   {
-    icon: Gem,
-    step: "01",
-    title: "Mined from Earth",
+    title: "Sourced with Integrity",
     subtitle: "Ethical Origins",
-    description: "Every diamond begins its journey deep within the earth, or in state-of-the-art facilities, sourced with strict ethical standards.",
+    description: "Every diamond begins its journey deep within the earth, sourced with strict ethical standards.",
   },
   {
-    icon: Scissors,
-    step: "02",
-    title: "Cut & Polished",
-    subtitle: "Unleashing Brilliance",
-    description: "Expert artisans masterfully cut and polish each rough stone to maximize its fire, brilliance, and scintillation.",
+    title: "Refined to Brilliance",
+    subtitle: "Expert Cutting",
+    description: "Master artisans cut and polish each rough stone to maximize its fire, brilliance, and scintillation.",
   },
   {
-    icon: BadgeCheck,
-    step: "03",
-    title: "Master Craftsmanship",
-    subtitle: "Jewelry Creation",
-    description: "Your chosen diamond is securely set into precision-crafted jewelry, designed to illuminate the stone's beauty for a lifetime.",
+    title: "Shaped by Experts",
+    subtitle: "Precision Crafting",
+    description: "Your chosen diamond is securely set into precision-crafted jewelry by our master jewelers.",
   },
   {
-    icon: Truck,
-    step: "04",
-    title: "Directly to You",
-    subtitle: "Secure Delivery",
-    description: "With no intermediaries, your bespoke piece travels straight from the jeweler to your hands — insured and discreetly packaged.",
+    title: "Delivered Without Intermediaries",
+    subtitle: "Direct to You",
+    description: "Your bespoke piece travels straight from the jeweler to your hands — insured and discreet.",
   },
 ];
 
 const DiamondJourney = () => {
+  const sectionRef = useRef<HTMLElement>(null);
+  const diamondRef = useRef<HTMLDivElement>(null);
+  const stepsRef = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    let ctx = gsap.context(() => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top top",
+          end: "+=3000", // Increased scroll distance for smoother, longer zoom
+          scrub: 1, // Smoothing
+          pin: true,
+        },
+      });
+
+      // 1. Diamond zoom and fade up tied to the scroll (scrubbed)
+      // The zoom stops progressing right as Step 3 is revealed (timeline position 2.1)
+      tl.fromTo(
+        diamondRef.current,
+        { scale: 0.2, opacity: 0 },
+        { scale: 2.5, opacity: 1, ease: "power1.inOut", duration: 2.1 },
+        0 // Start at the very beginning of the timeline
+      );
+
+      // 2. Sequential reveal of steps spaced out across the scroll
+      stepsRef.current.forEach((step, i) => {
+        if (!step) return;
+        // Fade in and slide up each step
+        tl.fromTo(
+          step,
+          { opacity: 0, y: 50 },
+          { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" },
+          i * 0.8 + 0.5 // Stagger their entry along the timeline
+        );
+        
+        // Parallax Depth on steps while scrolling continues
+        tl.to(
+          step,
+          { y: -40, duration: 2, ease: "none" },
+          i * 0.8 + 1.3 // Parallax starts slightly after they fade in
+        );
+      });
+
+    }, sectionRef);
+
+    return () => ctx.revert(); // Cleanup GSAP
+  }, []);
+
   return (
-    <section className="py-24 lg:py-32 bg-[#FAFAFA] relative overflow-hidden">
-      {/* Subtle sparkle background */}
-      <div className="sparkle-overlay-light absolute inset-0 opacity-40 pointer-events-none" />
+    <section ref={sectionRef} className="relative h-screen bg-[radial-gradient(circle,#1a1a1a,#050505)] overflow-hidden">
+      
+      {/* Background Graphic */}
+      <img src="/process-bg.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none mix-blend-screen" />
 
-      <div className="container mx-auto px-6 lg:px-12 relative z-10">
-        <div className="text-center mb-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="flex items-center justify-center mb-3"
-          >
-            <span className="inline-block h-[1px] w-12 bg-[#C6A87D] mr-4" />
-            <span className="font-accent italic text-[#C6A87D] text-sm md:text-base tracking-widest uppercase">
-              The Vmora Process
-            </span>
-            <span className="inline-block h-[1px] w-12 bg-[#C6A87D] ml-4" />
-          </motion.div>
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
-            className="font-heading text-4xl lg:text-5xl text-foreground mt-5 mb-5 tracking-tight"
-          >
-            From Earth to Elegance
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
-            className="font-body text-muted-foreground text-[15px] max-w-lg mx-auto leading-relaxed"
-          >
-            Transparency in every carat. Follow the meticulous journey your diamond takes, from its raw origin to your final masterpiece.
-          </motion.p>
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-4">
-          {steps.map((item, i) => (
-            <motion.div
-              key={item.step}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{
-                duration: 0.7,
-                ease: [0.16, 1, 0.3, 1],
-                delay: 0.15 + i * 0.12,
-              }}
-              className="relative group"
-            >
-              <div className="bg-white rounded-2xl p-8 lg:p-10 h-full shadow-luxury luxury-transition group-hover:shadow-luxury-hover border border-border/60 relative z-10 diamond-glow">
-                {/* Step number */}
-                <span className="block font-body text-[11px] uppercase tracking-[0.25em] text-[#C6A87D] font-medium mb-6">
-                  Step {item.step}
-                </span>
-
-                {/* Icon */}
-                <div className="w-12 h-12 rounded-[14px] bg-[#FFF9F0] flex items-center justify-center mb-6 luxury-transition group-hover:scale-110 group-hover:bg-[#C6A87D]/15">
-                  <item.icon className="w-5 h-5 text-[#C6A87D] luxury-transition group-hover:-rotate-6" strokeWidth={1.5} />
-                </div>
-
-                {/* Content */}
-                <h3 className="font-heading text-[1.4rem] text-foreground mb-1.5 leading-tight">
-                  {item.title}
-                </h3>
-                <p className="font-accent italic text-[#C6A87D] text-[15px] mb-4">
-                  {item.subtitle}
-                </p>
-                <p className="font-body text-muted-foreground text-[14px] leading-[1.8]">
-                  {item.description}
-                </p>
-              </div>
-
-              {/* Connector line (hidden on last item) */}
-              {i < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-[45%] -right-3 w-6 h-[2px] bg-gradient-to-r from-[#C6A87D]/50 to-transparent z-0" />
-              )}
-            </motion.div>
-          ))}
-        </div>
+      {/* Title block at the top */}
+      <div className="absolute top-[10%] left-0 right-0 text-center z-20">
+        <h2 className="font-heading text-4xl md:text-5xl text-white mb-3">From Earth to Elegance</h2>
+        <p className="font-accent italic text-[#C6A87D] text-lg tracking-widest">Transparency in every carat.</p>
       </div>
+
+      {/* Floating Center Diamond */}
+      <div 
+        ref={diamondRef} 
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 rounded-full flex items-center justify-center will-change-transform pointer-events-none"
+      >
+        <img 
+          src="/process-diamond.png" 
+          alt="VMORA Diamond" 
+          className="w-[180px] md:w-[280px]" 
+        />
+      </div>
+
+      {/* Steps Container */}
+      {processSteps.map((step, i) => {
+        // Compute positioning using Tailwind
+        let positionClasses = "";
+        if (i === 0) positionClasses = "top-[25%] left-[5%] md:left-[10%] xl:left-[15%]";
+        if (i === 1) positionClasses = "top-[30%] right-[5%] md:right-[10%] xl:right-[15%] text-right";
+        if (i === 2) positionClasses = "bottom-[30%] left-[5%] md:left-[10%] xl:left-[15%]";
+        if (i === 3) positionClasses = "bottom-[20%] right-[5%] md:right-[10%] xl:right-[15%] text-right";
+
+        return (
+          <div
+            key={i}
+            className={`absolute w-[280px] md:w-[320px] text-white opacity-0 z-20 ${positionClasses}`}
+            ref={(el) => (stepsRef.current[i] = el)}
+          >
+            <span className="block font-body text-[10px] md:text-[11px] uppercase tracking-[0.25em] text-[#C6A87D] font-medium mb-3">
+              Step 0{i + 1}
+            </span>
+            <h3 className="font-heading text-2xl md:text-3xl text-white mb-2 leading-tight">
+              {step.title}
+            </h3>
+            <p className="font-body text-white/60 text-sm leading-[1.8]">
+              {step.description}
+            </p>
+          </div>
+        );
+      })}
+
     </section>
   );
 };

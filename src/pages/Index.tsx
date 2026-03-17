@@ -46,9 +46,7 @@ const Index = () => {
         <FadeInReveal>
           <TrustSection />
         </FadeInReveal>
-        <FadeInReveal>
-          <DiamondJourney />
-        </FadeInReveal>
+        <DiamondJourney />
         <FadeInReveal>
           <EducationSection />
         </FadeInReveal>
