@@ -20,17 +20,13 @@ const trustBadges = [
 const HeroSection = () => {
   return (
     <section className="relative h-screen min-h-[700px] max-h-[1000px] flex items-center overflow-hidden bg-[#FAFAFA]">
-      {/* Video background with slow zoom effect */}
-      <div className="absolute inset-0 overflow-hidden">
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="w-full h-full object-cover opacity-60 scale-105 animate-[pulse_30s_ease-in-out_infinite_alternate]"
-        >
-          <source src={heroVideoUrl} type="video/mp4" />
-        </video>
+      {/* Image background with slow zoom effect */}
+      <div className="absolute inset-0 overflow-hidden bg-white">
+        <img
+          src="/hero-vmora.png"
+          alt="VMORA Luxury Diamond"
+          className="w-full h-full object-cover scale-105 animate-[pulse_30s_ease-in-out_infinite_alternate]"
+        />
         <div className="hero-video-overlay-light absolute inset-0" />
       </div>
 

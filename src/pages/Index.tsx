@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
+import LooseDiamondsCarousel from "@/components/LooseDiamondsCarousel";
 import CategorySection from "@/components/CategorySection";
 import DiamondSearchPreview from "@/components/DiamondSearchPreview";
 import BestSellers from "@/components/BestSellers";
@@ -16,6 +17,7 @@ const Index = () => {
       <Navbar />
       <main>
         <HeroSection />
+        <LooseDiamondsCarousel />
         <CategorySection />
         <DiamondSearchPreview />
         <BestSellers />
