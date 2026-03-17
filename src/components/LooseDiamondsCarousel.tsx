@@ -125,11 +125,11 @@ const LooseDiamondsCarousel = () => {
                     className="absolute flex flex-col items-center justify-center cursor-pointer"
                     onClick={() => setActiveIndex(shape.originalIndex)}
                   >
-                    <div className={`relative mb-8 transition-all duration-500 ${isActive ? 'diamond-glow' : ''}`}>
+                    <div className="relative mb-8 transition-all duration-500">
                       <img 
                         src={shape.img} 
                         alt={`${shape.name} cut diamond`}
-                        className={`object-contain transition-transform duration-700 ease-in-out ${isActive ? 'w-64 h-64 md:w-80 md:h-80 drop-shadow-2xl hover:scale-105' : 'w-48 h-48 drop-shadow-md'}`}
+                        className={`relative z-10 object-contain transition-transform duration-700 ease-in-out ${isActive ? 'w-64 h-64 md:w-80 md:h-80 drop-shadow-2xl hover:scale-105' : 'w-48 h-48 drop-shadow-md'}`}
                       />
                     </div>
                     
