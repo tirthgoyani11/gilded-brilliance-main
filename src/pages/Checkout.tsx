@@ -19,16 +19,46 @@ const Checkout = () => {
   const generateMessage = () => {
     const itemLines = cart
       .map((item, i) => {
-        const lines = [
-          `Item ${i + 1}:`,
-          `  Name: ${item.title}`,
+        if (item.type === "diamond" && item.fullDiamond) {
+          const d = item.fullDiamond;
+          const lines = [
+            `Item ${i + 1}: ${item.title}`,
+            `═══ Diamond Details ═══`,
+            `Stone ID: ${d.stoneId}`,
+            `Shape: ${d.shape}`,
+            `Carat: ${d.carat.toFixed(2)}`,
+            `Color: ${d.color}`,
+            `Clarity: ${d.clarity}`,
+            `Cut: ${d.cut}`,
+            `Polish: ${d.polish}`,
+            `Symmetry: ${d.symmetry}`,
+            `Fluorescence: ${d.fluorescence}`,
+            `Measurements: ${d.measurements}`,
+            `Depth: ${d.depthPct}%`,
+            `Table: ${d.tablePct}%`,
+            `Ratio: ${d.ratio.toFixed(2)}`,
+            `Type: ${d.type}`,
+            ``,
+            `═══ Media & Cert ═══`,
+            `Lab: ${d.certLab}`,
+            `Report: ${d.certNumber}`,
+            `Verify: https://${d.certLab.toLowerCase() === "igi" ? "www.igi.org/verify-your-report/?r=" : "www.gia.edu/report-check?reportno="}${d.certNumber}`,
+            `Image: ${d.imageUrl}`,
+            d.v360StoneId ? `360 View: https://v360.in/diamondview.aspx?cid=vd&d=${encodeURIComponent(d.v360StoneId)}` : ``,
+            `Online: https://vmorajewels.com/diamond/${d.stoneId}`,
+            `Price: ${currency(item.price * item.quantity)}`,
+          ].filter(Boolean);
+          return lines.join("\n");
+        }
+
+        return [
+          `Item ${i + 1}: ${item.title}`,
           `  Type: ${item.type === "diamond" ? "Diamond" : "Jewelry"}`,
           `  Qty: ${item.quantity}`,
           `  Price: ${currency(item.price * item.quantity)}`,
-        ];
-        return lines.join("\n");
+        ].join("\n");
       })
-      .join("\n\n");
+      .join("\n\n────────────────\n\n");
 
     return [
       `Hello Vmora Team,`,
@@ -38,17 +68,15 @@ const Checkout = () => {
       name ? `Customer: ${name}` : "",
       phone ? `Contact: ${phone}` : "",
       ``,
-      `─── Order Details ───`,
+      `═══ Selection Details ═══`,
       ``,
       itemLines,
       ``,
-      `─── Summary ───`,
-      ``,
+      `═══ Summary ═══`,
       `Total Items: ${cart.length}`,
       `Estimated Total: ${currency(subtotal)}`,
       ``,
-      `Kindly assist me further.`,
-      ``,
+      `Please assist me further.`,
       `Thank you.`,
     ]
       .filter(Boolean)

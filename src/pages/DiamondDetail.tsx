@@ -102,7 +102,7 @@ const DiamondDetail = () => {
                   variant="luxury"
                   size="lg"
                   className="flex-1"
-                  onClick={() => addToCart({ id: `diamond-${diamond.stoneId}`, title: `${diamond.shape} ${diamond.carat}ct`, type: "diamond", price: diamond.price, imageUrl: diamond.imageUrl })}
+                  onClick={() => addToCart({ id: `diamond-${diamond.stoneId}`, title: `${diamond.shape} ${diamond.carat}ct`, type: "diamond", price: diamond.price, imageUrl: diamond.imageUrl, fullDiamond: diamond })}
                 >
                   Add to Cart
                 </Button>
@@ -272,7 +272,7 @@ const DiamondDetail = () => {
             <Button
               size="sm"
               variant="luxury"
-              onClick={() => addToCart({ id: `diamond-${diamond.stoneId}`, title: `${diamond.shape} ${diamond.carat}ct`, type: "diamond", price: diamond.price, imageUrl: diamond.imageUrl })}
+              onClick={() => addToCart({ id: `diamond-${diamond.stoneId}`, title: `${diamond.shape} ${diamond.carat}ct`, type: "diamond", price: diamond.price, imageUrl: diamond.imageUrl, fullDiamond: diamond })}
             >
               Add to Cart
             </Button>

@@ -3,11 +3,11 @@ import { OrbitControls, Torus, MeshDistortMaterial } from "@react-three/drei";
 import SiteLayout from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/contexts/StoreContext";
-import { currency } from "@/lib/diamond-utils";
+import { currency, WHATSAPP_NUMBER } from "@/lib/diamond-utils";
 import { useMemo, useState } from "react";
 import { Check, MessageCircle, Save } from "lucide-react";
 
-const WHATSAPP_NUMBER = "+91XXXXXXXXXX";
+
 
 const settings = [
   { key: "Solitaire" as const, desc: "A single diamond, elevated to perfection" },
@@ -243,6 +243,7 @@ const RingBuilder = () => {
                         type: "diamond",
                         price: totalPrice,
                         imageUrl: selectedDiamond.imageUrl,
+                        fullDiamond: selectedDiamond,
                       });
                     }
                   }}
