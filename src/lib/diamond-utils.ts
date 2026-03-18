@@ -1,5 +1,7 @@
 import type { Diamond } from "@/types/diamond";
 
+export const WHATSAPP_NUMBER = "+919830551558";
+
 export const currency = (value: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
 

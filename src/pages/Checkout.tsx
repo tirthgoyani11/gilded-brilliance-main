@@ -1,12 +1,12 @@
 import { useState } from "react";
 import SiteLayout from "@/components/SiteLayout";
 import { useStore } from "@/contexts/StoreContext";
-import { currency } from "@/lib/diamond-utils";
+import { currency, WHATSAPP_NUMBER } from "@/lib/diamond-utils";
 import { MessageCircle, Copy, Check, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
-const WHATSAPP_NUMBER = "+91XXXXXXXXXX";
+
 
 const Checkout = () => {
   const { cart, clearCart } = useStore();

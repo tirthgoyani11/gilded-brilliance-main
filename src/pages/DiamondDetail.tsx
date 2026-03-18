@@ -1,13 +1,13 @@
 import { Link, useParams } from "react-router-dom";
 import SiteLayout from "@/components/SiteLayout";
 import DiamondMediaPanel from "@/components/DiamondMediaPanel";
-import { certificateLink, currency } from "@/lib/diamond-utils";
+import { certificateLink, currency, WHATSAPP_NUMBER } from "@/lib/diamond-utils";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/contexts/StoreContext";
 import { MessageCircle, ExternalLink, Ruler } from "lucide-react";
 import { useState } from "react";
 
-const WHATSAPP_NUMBER = "+91XXXXXXXXXX";
+
 
 const DiamondDetail = () => {
   const { stoneId = "" } = useParams();

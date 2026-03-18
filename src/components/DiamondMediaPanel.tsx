@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { diamondV360Src, diamondVideoOrFallback, getFallbackImage } from "@/lib/diamond-utils";
+import { diamondV360Src, diamondVideoOrFallback, getFallbackImage, WHATSAPP_NUMBER } from "@/lib/diamond-utils";
 import type { Diamond } from "@/types/diamond";
 import { RotateCcw, Play, Image as ImageIcon } from "lucide-react";
 
@@ -66,7 +66,7 @@ const DiamondMediaPanel = ({ diamond }: { diamond: Diamond }) => {
                 <button
                   onClick={() => {
                     const message = encodeURIComponent(`Hello Vmora Team,\n\nI'm interested in viewing the real images/videos for diamond ${diamond.stoneId} (${diamond.shape} ${diamond.carat}ct).`);
-                    window.open(`https://wa.me/+91XXXXXXXXXX?text=${message}`, "_blank");
+                    window.open(`https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g, "")}?text=${message}`, "_blank");
                   }}
                   className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-medium text-white bg-[#25D366] hover:bg-[#20BD5A] px-3 py-1.5 rounded-md luxury-transition"
                 >

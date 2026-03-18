@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { MessageCircle, X } from "lucide-react";
+import { WHATSAPP_NUMBER } from "@/lib/diamond-utils";
 
-const WHATSAPP_NUMBER = "+91XXXXXXXXXX"; // TODO: Replace with actual number
+
 
 const WhatsAppFloat = () => {
   const [expanded, setExpanded] = useState(false);

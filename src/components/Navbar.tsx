@@ -4,8 +4,9 @@ import { Heart, ShoppingBag, User, Menu, X, Search, MessageCircle } from "lucide
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStore } from "@/contexts/StoreContext";
+import { WHATSAPP_NUMBER } from "@/lib/diamond-utils";
 
-const WHATSAPP_NUMBER = "+91XXXXXXXXXX";
+
 
 const navLinks = [
   { label: "Shop Jewelry", href: "/jewelry" },

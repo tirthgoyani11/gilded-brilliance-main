@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
+import { WHATSAPP_NUMBER } from "@/lib/diamond-utils";
 
-const WHATSAPP_NUMBER = "+91XXXXXXXXXX";
+
 
 const footerGroups = {
   shop: [

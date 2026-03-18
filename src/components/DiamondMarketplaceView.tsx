@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Check, Scale, SlidersHorizontal, X, RotateCcw, MessageCircle, Eye } from "lucide-react";
-import { certificateLink, currency, getFallbackImage } from "@/lib/diamond-utils";
+import { certificateLink, currency, getFallbackImage, WHATSAPP_NUMBER } from "@/lib/diamond-utils";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/contexts/StoreContext";
 
@@ -9,7 +9,7 @@ const labs = ["All", "natural", "lab-grown"];
 const certs = ["All", "IGI", "GIA"];
 const CARAT_SLIDER_MIN = 0;
 const CARAT_SLIDER_MAX = 50;
-const WHATSAPP_NUMBER = "+91XXXXXXXXXX";
+
 
 
 
