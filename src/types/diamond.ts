@@ -40,6 +40,7 @@ export interface CartItem {
   price: number;
   quantity: number;
   imageUrl: string;
+  fullDiamond?: Diamond;
 }
 
 export interface RingBuilderSelection {
