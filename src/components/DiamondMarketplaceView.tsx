@@ -118,7 +118,7 @@ const fluorescenceScale = ["None", "Faint", "Medium", "Strong", "V Strong"];
 
 const DiamondMarketplaceView = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(true);
-  const [view, setView] = useState<"table" | "grid">("table");
+  const [view, setView] = useState<"table" | "grid">("grid");
   const [shape, setShape] = useState("All");
   const [color, setColor] = useState("All");
   const [clarity, setClarity] = useState("All");
@@ -343,7 +343,7 @@ const DiamondMarketplaceView = () => {
       </div>
 
       {/* Sticky Filter Panel */}
-      <div className={`sticky top-0 z-40 rounded-2xl border border-border bg-background/95 backdrop-blur-md p-5 mb-8 shadow-luxury ${mobileFiltersOpen ? "block" : "hidden md:block"}`}>
+      <div className={`relative lg:sticky lg:top-4 z-40 rounded-2xl border border-border bg-background/95 backdrop-blur-md p-5 mb-8 shadow-luxury ${mobileFiltersOpen ? "block" : "hidden md:block"}`}>
         {/* Shape Filter - Premium */}
         <div className="mb-6">
           <div className="mb-3 flex items-center justify-between">
@@ -360,7 +360,7 @@ const DiamondMarketplaceView = () => {
               Reset
             </button>
           </div>
-          <div className="flex flex-wrap justify-start gap-2">
+          <div className="flex overflow-x-auto pb-4 mb-2 -mx-1 px-1 gap-2 no-scrollbar lg:flex-wrap snap-x">
             {shapes.map((option) => {
               const active = shape === option;
               const iconReady = hasKiraIcon(option);
@@ -369,7 +369,7 @@ const DiamondMarketplaceView = () => {
                   key={option}
                   type="button"
                   onClick={() => setShape(option)}
-                  className={`group min-w-[80px] rounded-xl px-2 pb-1.5 pt-2 text-[10px] font-medium uppercase tracking-[0.06em] outline-none luxury-transition shape-filter-hover ${
+                  className={`group min-w-[80px] flex-shrink-0 snap-center rounded-xl px-2 pb-1.5 pt-2 text-[10px] font-medium uppercase tracking-[0.06em] outline-none luxury-transition shape-filter-hover ${
                     active
                       ? "shape-filter-active text-white"
                       : "bg-secondary/60 text-foreground/60 hover:text-foreground hover:bg-secondary"
