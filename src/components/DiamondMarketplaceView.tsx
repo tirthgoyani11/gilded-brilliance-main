@@ -236,9 +236,21 @@ const DiamondMarketplaceView = () => {
   
   const fluorescenceGrades = ["All", ...fluorescenceScale.filter((c) => diamonds.some((d) => d.fluorescence?.toUpperCase().includes(c.toUpperCase()))), ...new Set(diamonds.map((d) => d.fluorescence).filter((c) => !fluorescenceScale.some(s => c?.toUpperCase().includes(s.toUpperCase()))))];
 
+  const [debouncedFilters, setDebouncedFilters] = useState({
+    shape, color, clarity, cut, polish, symmetry, fluorescence, lab, cert, caratMin, caratMax, priceMax, ratioMax, depthMax, tableMax
+  });
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedFilters({ shape, color, clarity, cut, polish, symmetry, fluorescence, lab, cert, caratMin, caratMax, priceMax, ratioMax, depthMax, tableMax });
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [shape, color, clarity, cut, polish, symmetry, fluorescence, lab, cert, caratMin, caratMax, priceMax, ratioMax, depthMax, tableMax]);
+
   const filtered = useMemo(
-    () =>
-      diamonds.filter((d) => {
+    () => {
+      const { shape, color, clarity, cut, polish, symmetry, fluorescence, lab, cert, caratMin, caratMax, priceMax, ratioMax, depthMax, tableMax } = debouncedFilters;
+      return diamonds.filter((d) => {
         if (shape !== "All") {
           const coreShapes = preferredShapeOrder.filter((key) => key !== "other");
           const isOther = shape === "Other";
@@ -266,7 +278,7 @@ const DiamondMarketplaceView = () => {
         if (d.tablePct > tableMax) return false;
         return true;
       }),
-    [shape, color, clarity, cut, polish, symmetry, fluorescence, lab, cert, caratMin, caratMax, priceMax, ratioMax, depthMax, tableMax],
+    [diamonds, debouncedFilters],
   );
 
   const sorted = useMemo(() => {
@@ -287,7 +299,7 @@ const DiamondMarketplaceView = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [shape, color, clarity, cut, polish, symmetry, fluorescence, lab, cert, caratMin, caratMax, priceMax, ratioMax, depthMax, tableMax, sortBy]);
+  }, [debouncedFilters, sortBy]);
 
   const paginatedDiamonds = useMemo(() => {
     return sorted.slice(0, page * 50);
