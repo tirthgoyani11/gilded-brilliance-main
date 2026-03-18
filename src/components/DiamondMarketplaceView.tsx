@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Check, Scale, SlidersHorizontal, X, RotateCcw, MessageCircle, Eye } from "lucide-react";
-import { certificateLink, currency } from "@/lib/diamond-utils";
+import { certificateLink, currency, getFallbackImage } from "@/lib/diamond-utils";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/contexts/StoreContext";
 
@@ -105,6 +105,8 @@ const kiraShapeIconSrc = (shape: string, active: boolean) => {
 };
 
 const hasKiraIcon = (shape: string) => true;
+
+
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
@@ -588,10 +590,20 @@ const DiamondMarketplaceView = () => {
               {/* Image */}
               <div className="relative aspect-[4/3] overflow-hidden bg-secondary/30">
                 <img
-                  src={d.imageUrl}
+                  src={d.imageUrl || getFallbackImage(d.shape)}
                   alt={d.stoneId}
                   className="w-full h-full object-cover luxury-transition-slow group-hover:scale-110"
                   loading="lazy"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    const fallback = getFallbackImage(d.shape);
+                    // Prevent infinite loops if fallback also fails
+                    if (!target.src.includes(fallback)) {
+                      target.src = fallback;
+                      // Fallback images are transparent PNGs, so contain+padding looks better
+                      target.className = "w-full h-full object-contain p-4 luxury-transition-slow group-hover:scale-110";
+                    }
+                  }}
                 />
                 {/* 360 badge */}
                 {d.v360StoneId && (

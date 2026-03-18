@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { diamondV360Src, diamondVideoOrFallback } from "@/lib/diamond-utils";
+import { diamondV360Src, diamondVideoOrFallback, getFallbackImage } from "@/lib/diamond-utils";
 import type { Diamond } from "@/types/diamond";
 import { RotateCcw, Play, Image as ImageIcon } from "lucide-react";
 
 const DiamondMediaPanel = ({ diamond }: { diamond: Diamond }) => {
   const hasV360 = Boolean(diamond.v360StoneId);
   const videoSrc = diamondVideoOrFallback(diamond);
+  const [isFallback, setIsFallback] = useState(!diamond.imageUrl);
   // Default to V360 if available (priority: v360 → video → still)
   const [mediaMode, setMediaMode] = useState<"still" | "video" | "v360">(
     hasV360 ? "v360" : "still"
@@ -43,11 +44,37 @@ const DiamondMediaPanel = ({ diamond }: { diamond: Diamond }) => {
       {/* Media viewer */}
       <div className="rounded-2xl overflow-hidden border border-border bg-[#0A0A0A] relative group">
         {mediaMode === "still" ? (
-          <img
-            src={diamond.imageUrl}
-            alt={diamond.stoneId}
-            className="w-full h-[500px] object-cover luxury-transition-slow group-hover:scale-105"
-          />
+          <>
+            <img
+              src={diamond.imageUrl || getFallbackImage(diamond.shape)}
+              alt={diamond.stoneId}
+              className={`w-full h-[500px] luxury-transition-slow group-hover:scale-105 ${isFallback ? "object-contain p-12" : "object-cover"}`}
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                const fallback = getFallbackImage(diamond.shape);
+                if (!target.src.includes(fallback)) {
+                  target.src = fallback;
+                  setIsFallback(true);
+                }
+              }}
+            />
+            {isFallback && (
+              <div className="absolute inset-x-4 bottom-4 z-10 p-4 rounded-xl border border-[#C6A87D]/30 bg-background/90 backdrop-blur-md shadow-luxury flex flex-col items-center text-center gap-2">
+                <p className="text-xs font-body text-foreground">
+                  This is a standard reference shape. For actual imagery and details of this specific diamond, please consult our experts.
+                </p>
+                <button
+                  onClick={() => {
+                    const message = encodeURIComponent(`Hello Vmora Team,\n\nI'm interested in viewing the real images/videos for diamond ${diamond.stoneId} (${diamond.shape} ${diamond.carat}ct).`);
+                    window.open(`https://wa.me/+91XXXXXXXXXX?text=${message}`, "_blank");
+                  }}
+                  className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-medium text-white bg-[#25D366] hover:bg-[#20BD5A] px-3 py-1.5 rounded-md luxury-transition"
+                >
+                  Request Real Images via WhatsApp
+                </button>
+              </div>
+            )}
+          </>
         ) : null}
 
         {mediaMode === "video" ? (
