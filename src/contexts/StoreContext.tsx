@@ -74,18 +74,13 @@ interface StoreContextValue {
 const StoreContext = createContext<StoreContextValue | undefined>(undefined);
 
 export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
-  const [diamonds, setDiamonds] = useState<Diamond[]>(() => {
-    const stored = readStorage(STORAGE_KEYS.diamonds, mockDiamonds);
-    return stored.map(normalizeDiamondMedia);
-  });
+  const [diamonds, setDiamonds] = useState<Diamond[]>([]);
   const [cart, setCart] = useState<CartItem[]>(() => readStorage(STORAGE_KEYS.cart, []));
   const [wishlist, setWishlist] = useState<string[]>(() => readStorage(STORAGE_KEYS.wishlist, []));
   const [compare, setCompare] = useState<Diamond[]>(() => readStorage(STORAGE_KEYS.compare, []));
   const [ringBuilder, setRingBuilderState] = useState<RingBuilderSelection>(() => readStorage(STORAGE_KEYS.ringBuilder, {}));
 
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEYS.diamonds, JSON.stringify(diamonds));
-  }, [diamonds]);
+
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEYS.cart, JSON.stringify(cart));

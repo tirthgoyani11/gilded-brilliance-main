@@ -155,20 +155,23 @@ const DiamondMarketplaceView = () => {
       };
     }
 
-    const caratMinValue = Math.min(...valid.map((d) => d.carat));
-    const caratMaxValue = Math.max(...valid.map((d) => d.carat));
-    const priceMaxValue = Math.max(...valid.map((d) => d.price));
-    const ratioMaxValue = Math.max(...valid.map((d) => d.ratio));
-    const depthMaxValue = Math.max(...valid.map((d) => d.depthPct));
-    const tableMaxValue = Math.max(...valid.map((d) => d.tablePct));
+    let cMin = Infinity, cMax = -Infinity, pMax = -Infinity, rMax = -Infinity, dMax = -Infinity, tMax = -Infinity;
+    for (const d of valid) {
+      if (d.carat < cMin) cMin = d.carat;
+      if (d.carat > cMax) cMax = d.carat;
+      if (d.price > pMax) pMax = d.price;
+      if (d.ratio > rMax) rMax = d.ratio;
+      if (d.depthPct > dMax) dMax = d.depthPct;
+      if (d.tablePct > tMax) tMax = d.tablePct;
+    }
 
     return {
-      caratMin: Number(caratMinValue.toFixed(2)),
-      caratMax: Number(caratMaxValue.toFixed(2)),
-      priceMax: Math.ceil(priceMaxValue),
-      ratioMax: Number(ratioMaxValue.toFixed(2)),
-      depthMax: Number(depthMaxValue.toFixed(1)),
-      tableMax: Number(tableMaxValue.toFixed(1)),
+      caratMin: Number(cMin.toFixed(2)),
+      caratMax: Number(cMax.toFixed(2)),
+      priceMax: Math.ceil(pMax),
+      ratioMax: Number(rMax.toFixed(2)),
+      depthMax: Number(dMax.toFixed(1)),
+      tableMax: Number(tMax.toFixed(1)),
     };
   }, [diamonds]);
 
@@ -225,17 +228,16 @@ const DiamondMarketplaceView = () => {
     return result;
   }, [diamonds]);
 
-  const colors = ["All", ...colorScale.filter((c) => diamonds.some((d) => d.color?.toUpperCase().includes(c)))];
-  const clarities = ["All", ...clarityScale.filter((c) => diamonds.some((d) => d.clarity?.toUpperCase().includes(c)))];
+  const colors = useMemo(() => ["All", ...colorScale.filter((c) => diamonds.some((d) => d.color?.toUpperCase().includes(c)))], [diamonds]);
+  const clarities = useMemo(() => ["All", ...clarityScale.filter((c) => diamonds.some((d) => d.clarity?.toUpperCase().includes(c)))], [diamonds]);
   
-  const cuts = ["All", ...cutScale.filter((c) => diamonds.some((d) => d.cut?.toUpperCase() === c.toUpperCase() || (c === "8X" && d.cut?.toUpperCase().includes("8X")))), ...new Set(diamonds.map((d) => d.cut).filter((c) => !cutScale.some(s => s.toUpperCase() === c?.toUpperCase() || (s === "8X" && c?.toUpperCase().includes("8X")))))];
+  const cuts = useMemo(() => ["All", ...cutScale.filter((c) => diamonds.some((d) => d.cut?.toUpperCase() === c.toUpperCase() || (c === "8X" && d.cut?.toUpperCase().includes("8X")))), ...new Set(diamonds.map((d) => d.cut).filter((c) => !cutScale.some(s => s.toUpperCase() === c?.toUpperCase() || (s === "8X" && c?.toUpperCase().includes("8X")))))], [diamonds]);
   
-  const polishGrades = ["All", ...polishScale.filter((c) => diamonds.some((d) => d.polish?.toUpperCase() === c.toUpperCase() || (c === "8X" && d.polish?.toUpperCase().includes("8X")))), ...new Set(diamonds.map((d) => d.polish).filter((c) => !polishScale.some(s => s.toUpperCase() === c?.toUpperCase() || (s === "8X" && c?.toUpperCase().includes("8X")))))];
+  const polishGrades = useMemo(() => ["All", ...polishScale.filter((c) => diamonds.some((d) => d.polish?.toUpperCase() === c.toUpperCase() || (c === "8X" && d.polish?.toUpperCase().includes("8X")))), ...new Set(diamonds.map((d) => d.polish).filter((c) => !polishScale.some(s => s.toUpperCase() === c?.toUpperCase() || (s === "8X" && c?.toUpperCase().includes("8X")))))], [diamonds]);
   
-  const symmetryGrades = ["All", ...symmetryScale.filter((c) => diamonds.some((d) => d.symmetry?.toUpperCase() === c.toUpperCase() || (c === "8X" && d.symmetry?.toUpperCase().includes("8X")) || (c === "3X+" && d.symmetry?.toUpperCase().includes("3X+")) || (c === "3VG+" && d.symmetry?.toUpperCase().includes("3VG+")))), ...new Set(diamonds.map((d) => d.symmetry).filter((c) => !symmetryScale.some(s => s.toUpperCase() === c?.toUpperCase() || (s === "8X" && c?.toUpperCase().includes("8X")) || (s === "3X+" && c?.toUpperCase().includes("3X+")) || (s === "3VG+" && c?.toUpperCase().includes("3VG+")))))];
+  const symmetryGrades = useMemo(() => ["All", ...symmetryScale.filter((c) => diamonds.some((d) => d.symmetry?.toUpperCase() === c.toUpperCase() || (c === "8X" && d.symmetry?.toUpperCase().includes("8X")) || (c === "3X+" && d.symmetry?.toUpperCase().includes("3X+")) || (c === "3VG+" && d.symmetry?.toUpperCase().includes("3VG+")))), ...new Set(diamonds.map((d) => d.symmetry).filter((c) => !symmetryScale.some(s => s.toUpperCase() === c?.toUpperCase() || (s === "8X" && c?.toUpperCase().includes("8X")) || (s === "3X+" && c?.toUpperCase().includes("3X+")) || (s === "3VG+" && c?.toUpperCase().includes("3VG+")))))], [diamonds]);
   
-  const fluorescenceGrades = ["All", ...fluorescenceScale.filter((c) => diamonds.some((d) => d.fluorescence?.toUpperCase().includes(c.toUpperCase()))), ...new Set(diamonds.map((d) => d.fluorescence).filter((c) => !fluorescenceScale.some(s => c?.toUpperCase().includes(s.toUpperCase()))))];
-
+  const fluorescenceGrades = useMemo(() => ["All", ...fluorescenceScale.filter((c) => diamonds.some((d) => d.fluorescence?.toUpperCase().includes(c.toUpperCase()))), ...new Set(diamonds.map((d) => d.fluorescence).filter((c) => !fluorescenceScale.some(s => c?.toUpperCase().includes(s.toUpperCase()))))], [diamonds]);
   const [debouncedFilters, setDebouncedFilters] = useState({
     shape, color, clarity, cut, polish, symmetry, fluorescence, lab, cert, caratMin, caratMax, priceMax, ratioMax, depthMax, tableMax
   });
