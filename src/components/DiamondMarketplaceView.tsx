@@ -135,6 +135,7 @@ const DiamondMarketplaceView = () => {
   const [depthMax, setDepthMax] = useState(0);
   const [tableMax, setTableMax] = useState(0);
   const [sortBy, setSortBy] = useState<"best" | "price-asc" | "price-desc" | "carat-asc" | "carat-desc">("best");
+  const [page, setPage] = useState(1);
   const { diamonds, toggleCompare, isCompared } = useStore();
 
   const hasInitializedBounds = useRef(false);
@@ -206,6 +207,7 @@ const DiamondMarketplaceView = () => {
     setDepthMax(rangeBounds.depthMax);
     setTableMax(rangeBounds.tableMax);
     setSortBy("best");
+    setPage(1);
   };
 
   const caratSliderMinValue = clamp(caratMin, CARAT_SLIDER_MIN, CARAT_SLIDER_MAX);
@@ -280,6 +282,14 @@ const DiamondMarketplaceView = () => {
         return withScore.sort((a, b) => a.price / a.carat - b.price / b.carat);
     }
   }, [filtered, sortBy]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [shape, color, clarity, cut, polish, symmetry, fluorescence, lab, cert, caratMin, caratMax, priceMax, ratioMax, depthMax, tableMax, sortBy]);
+
+  const paginatedDiamonds = useMemo(() => {
+    return sorted.slice(0, page * 50);
+  }, [sorted, page]);
 
   const openExpertWhatsApp = () => {
     const message = encodeURIComponent(
@@ -532,7 +542,7 @@ const DiamondMarketplaceView = () => {
               </tr>
             </thead>
             <tbody>
-              {sorted.map((d) => (
+              {paginatedDiamonds.map((d) => (
                 <tr key={d.stoneId} className="border-b border-border/50 hover:bg-primary/[0.03] luxury-transition group cursor-pointer">
                   <td className="px-4 py-3.5 text-sm font-body">{d.shape}</td>
                   <td className="px-4 py-3.5 text-sm font-body tabular-nums">{d.carat.toFixed(2)}</td>
@@ -573,7 +583,7 @@ const DiamondMarketplaceView = () => {
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {sorted.map((d) => (
+          {paginatedDiamonds.map((d) => (
             <article key={d.stoneId} className="rounded-2xl border border-border bg-background shadow-luxury overflow-hidden group luxury-transition hover:shadow-luxury-hover hover:border-primary/15">
               {/* Image */}
               <div className="relative aspect-[4/3] overflow-hidden bg-secondary/30">
@@ -640,6 +650,18 @@ const DiamondMarketplaceView = () => {
               </div>
             </article>
           ))}
+        </div>
+      )}
+
+      {paginatedDiamonds.length < sorted.length && (
+        <div className="mt-8 flex justify-center">
+          <Button
+            onClick={() => setPage((p) => p + 1)}
+            variant="outline"
+            className="border-primary text-primary hover:bg-primary hover:text-white luxury-transition"
+          >
+            Load More Options ({sorted.length - paginatedDiamonds.length} remaining)
+          </Button>
         </div>
       )}
 
