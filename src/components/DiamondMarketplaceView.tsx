@@ -582,7 +582,7 @@ const DiamondMarketplaceView = () => {
           </table>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
           {paginatedDiamonds.map((d) => (
             <article key={d.stoneId} className="rounded-2xl border border-border bg-background shadow-luxury overflow-hidden group luxury-transition hover:shadow-luxury-hover hover:border-primary/15">
               {/* Image */}
