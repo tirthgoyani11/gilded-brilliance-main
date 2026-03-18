@@ -59,8 +59,8 @@ const shapeIconByKey: Record<string, { normal: string; active: string }> = {
     active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/13_Click.png",
   },
   other: {
-    normal: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/26.png",
-    active: "https://diamonds.kiradiam.com/KOnline/images/search/ShapeNew/26_Click.png",
+    normal: "/other.png",
+    active: "/other.png",
   },
 };
 
@@ -117,7 +117,7 @@ const symmetryScale = ["8X", "3X+", "3VG+", "Ideal", "Excellent", "Very Good", "
 const fluorescenceScale = ["None", "Faint", "Medium", "Strong", "V Strong"];
 
 const DiamondMarketplaceView = () => {
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(true);
   const [view, setView] = useState<"table" | "grid">("table");
   const [shape, setShape] = useState("All");
   const [color, setColor] = useState("All");
@@ -468,56 +468,53 @@ const DiamondMarketplaceView = () => {
           </div>
         </div>
 
-        {/* Range Sliders */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <label className="block">
-            <span className="text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground">Carat Min: <span className="text-foreground font-medium">{caratMin.toFixed(2)}</span></span>
-            <input
-              type="range"
-              min={CARAT_SLIDER_MIN}
-              max={CARAT_SLIDER_MAX}
-              step="0.01"
-              value={caratSliderMinValue}
-              onChange={(e) => {
-                const next = Number(e.target.value);
-                setCaratMin(next);
-                if (next > caratMax) setCaratMax(next);
-              }}
-              className="w-full mt-2 accent-[#C6A87D] h-1"
-            />
-          </label>
-          <label className="block">
-            <span className="text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground">Carat Max: <span className="text-foreground font-medium">{caratMax.toFixed(2)}</span></span>
-            <input
-              type="range"
-              min={CARAT_SLIDER_MIN}
-              max={CARAT_SLIDER_MAX}
-              step="0.01"
-              value={caratSliderMaxValue}
-              onChange={(e) => {
-                const next = Number(e.target.value);
-                setCaratMax(next);
-                if (next < caratMin) setCaratMin(next);
-              }}
-              className="w-full mt-2 accent-[#C6A87D] h-1"
-            />
-          </label>
-          <label className="block">
-            <span className="text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground">Max Price: <span className="text-foreground font-medium">{currency(priceMax)}</span></span>
-            <input type="range" min="0" max={rangeBounds.priceMax} step="100" value={priceMax} onChange={(e) => setPriceMax(Number(e.target.value))} className="w-full mt-2 accent-[#C6A87D] h-1" />
-          </label>
-          <label className="block">
-            <span className="text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground">Ratio: <span className="text-foreground font-medium">{ratioMax.toFixed(2)}</span></span>
-            <input type="range" min="0" max={rangeBounds.ratioMax} step="0.01" value={ratioMax} onChange={(e) => setRatioMax(Number(e.target.value))} className="w-full mt-2 accent-[#C6A87D] h-1" />
-          </label>
-          <label className="block">
-            <span className="text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground">Depth: <span className="text-foreground font-medium">{depthMax.toFixed(1)}%</span></span>
-            <input type="range" min="0" max={rangeBounds.depthMax} step="0.1" value={depthMax} onChange={(e) => setDepthMax(Number(e.target.value))} className="w-full mt-2 accent-[#C6A87D] h-1" />
-          </label>
-          <label className="block">
-            <span className="text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground">Table: <span className="text-foreground font-medium">{tableMax.toFixed(1)}%</span></span>
-            <input type="range" min="0" max={rangeBounds.tableMax} step="0.1" value={tableMax} onChange={(e) => setTableMax(Number(e.target.value))} className="w-full mt-2 accent-[#C6A87D] h-1" />
-          </label>
+        {/* Carat & Range Sliders */}
+        <div className="flex flex-col gap-5">
+          {/* Carat Input Row */}
+          <div className="flex items-center justify-between border-y border-border/40 py-4">
+            <span className="text-base font-body text-foreground">Carats</span>
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                placeholder="FROM"
+                value={caratMin === CARAT_SLIDER_MIN ? "" : caratMin}
+                onChange={(e) => {
+                  const val = e.target.value === "" ? CARAT_SLIDER_MIN : Number(e.target.value);
+                  setCaratMin(val);
+                }}
+                className="w-24 h-10 px-4 rounded-full border border-border bg-background text-sm text-center font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition outline-none placeholder:text-muted-foreground/70"
+              />
+              <input
+                type="number"
+                placeholder="TO"
+                value={caratMax === CARAT_SLIDER_MAX ? "" : caratMax}
+                onChange={(e) => {
+                  const val = e.target.value === "" ? CARAT_SLIDER_MAX : Number(e.target.value);
+                  setCaratMax(val);
+                }}
+                className="w-24 h-10 px-4 rounded-full border border-border bg-background text-sm text-center font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition outline-none placeholder:text-muted-foreground/70"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <label className="block">
+              <span className="text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground">Max Price: <span className="text-foreground font-medium">{currency(priceMax)}</span></span>
+              <input type="range" min="0" max={rangeBounds.priceMax} step="100" value={priceMax} onChange={(e) => setPriceMax(Number(e.target.value))} className="w-full mt-2 accent-[#C6A87D] h-1" />
+            </label>
+            <label className="block">
+              <span className="text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground">Ratio: <span className="text-foreground font-medium">{ratioMax.toFixed(2)}</span></span>
+              <input type="range" min="0" max={rangeBounds.ratioMax} step="0.01" value={ratioMax} onChange={(e) => setRatioMax(Number(e.target.value))} className="w-full mt-2 accent-[#C6A87D] h-1" />
+            </label>
+            <label className="block">
+              <span className="text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground">Depth: <span className="text-foreground font-medium">{depthMax.toFixed(1)}%</span></span>
+              <input type="range" min="0" max={rangeBounds.depthMax} step="0.1" value={depthMax} onChange={(e) => setDepthMax(Number(e.target.value))} className="w-full mt-2 accent-[#C6A87D] h-1" />
+            </label>
+            <label className="block">
+              <span className="text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground">Table: <span className="text-foreground font-medium">{tableMax.toFixed(1)}%</span></span>
+              <input type="range" min="0" max={rangeBounds.tableMax} step="0.1" value={tableMax} onChange={(e) => setTableMax(Number(e.target.value))} className="w-full mt-2 accent-[#C6A87D] h-1" />
+            </label>
+          </div>
         </div>
       </div>
 
