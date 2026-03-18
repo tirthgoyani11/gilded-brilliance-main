@@ -32,18 +32,38 @@ const DiamondDetail = () => {
   const perCarat = diamond.carat > 0 ? diamond.price / diamond.carat : 0;
 
   const openDiamondWhatsApp = () => {
+    const certUrl = certificateLink(diamond);
     const message = encodeURIComponent(
-      `Hello Vmora Team,\n\nI'm interested in the following diamond:\n\n` +
-        `Diamond Details:\n` +
-        `- Stone ID: ${diamond.stoneId}\n` +
-        `- Shape: ${diamond.shape}\n` +
-        `- Carat: ${diamond.carat.toFixed(2)}\n` +
-        `- Color: ${diamond.color}\n` +
-        `- Clarity: ${diamond.clarity}\n` +
-        `- Cut: ${diamond.cut}\n` +
-        `- Price: ${currency(diamond.price)}\n` +
-        `- Certificate: ${diamond.certLab} ${diamond.certNumber}\n\n` +
-        `Please assist me further.`
+      `Hello Vmora Team,\n\n` +
+        `I'm interested in the following diamond:\n\n` +
+        `═══ Diamond Details ═══\n` +
+        `Stone ID: ${diamond.stoneId}\n` +
+        `Shape: ${diamond.shape}\n` +
+        `Carat: ${diamond.carat.toFixed(2)}\n` +
+        `Color: ${diamond.color}\n` +
+        `Clarity: ${diamond.clarity}\n` +
+        `Cut: ${diamond.cut}\n` +
+        `Polish: ${diamond.polish}\n` +
+        `Symmetry: ${diamond.symmetry}\n` +
+        `Fluorescence: ${diamond.fluorescence}\n` +
+        `Measurements: ${diamond.measurements}\n` +
+        `Depth: ${diamond.depthPct}%\n` +
+        `Table: ${diamond.tablePct}%\n` +
+        `Ratio: ${diamond.ratio.toFixed(2)}\n` +
+        `Type: ${diamond.type}\n\n` +
+        `═══ Pricing ═══\n` +
+        `Total Price: ${currency(diamond.price)}\n` +
+        `Price/Carat: ${currency(perCarat)}\n\n` +
+        `═══ Certificate ═══\n` +
+        `Lab: ${diamond.certLab}\n` +
+        `Report No: ${diamond.certNumber}\n` +
+        `Verify: ${certUrl}\n\n` +
+        `═══ Media ═══\n` +
+        `Image: ${diamond.imageUrl || "Not available"}\n` +
+        (diamond.v360StoneId ? `360° View: https://v360.in/diamondview.aspx?cid=vd&d=${encodeURIComponent(diamond.v360StoneId)}\n` : ``) +
+        `\n═══ View Online ═══\n` +
+        `https://vmorajewels.com/diamond/${diamond.stoneId}\n` +
+        `\nPlease share real images/videos and assist me further. Thank you!`
     );
     window.open(`https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g, "")}?text=${message}`, "_blank");
   };

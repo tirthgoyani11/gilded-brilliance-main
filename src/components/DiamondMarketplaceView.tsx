@@ -279,7 +279,8 @@ const DiamondMarketplaceView = () => {
         if (d.depthPct > depthMax) return false;
         if (d.tablePct > tableMax) return false;
         return true;
-      }),
+      });
+    },
     [diamonds, debouncedFilters],
   );
 
