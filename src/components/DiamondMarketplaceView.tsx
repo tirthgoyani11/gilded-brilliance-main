@@ -413,6 +413,33 @@ const DiamondMarketplaceView = () => {
           </div>
         </div>
 
+        {/* Carat Input Row */}
+        <div className="flex items-center justify-between border-y border-border/40 py-4 mb-5">
+          <span className="text-sm uppercase tracking-[0.15em] font-body text-muted-foreground font-medium">Carats</span>
+          <div className="flex items-center gap-3">
+            <input
+              type="number"
+              placeholder="FROM"
+              value={caratMin === CARAT_SLIDER_MIN ? "" : caratMin}
+              onChange={(e) => {
+                const val = e.target.value === "" ? CARAT_SLIDER_MIN : Number(e.target.value);
+                setCaratMin(val);
+              }}
+              className="w-24 h-10 px-4 rounded-full border border-border bg-background text-sm text-center font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition outline-none placeholder:text-muted-foreground/70"
+            />
+            <input
+              type="number"
+              placeholder="TO"
+              value={caratMax === CARAT_SLIDER_MAX ? "" : caratMax}
+              onChange={(e) => {
+                const val = e.target.value === "" ? CARAT_SLIDER_MAX : Number(e.target.value);
+                setCaratMax(val);
+              }}
+              className="w-24 h-10 px-4 rounded-full border border-border bg-background text-sm text-center font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition outline-none placeholder:text-muted-foreground/70"
+            />
+          </div>
+        </div>
+
         {/* Filter Chips Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-2 mb-4">
           {/* Color visual scale */}
@@ -480,34 +507,8 @@ const DiamondMarketplaceView = () => {
           </div>
         </div>
 
-        {/* Carat & Range Sliders */}
-        <div className="flex flex-col gap-5">
-          {/* Carat Input Row */}
-          <div className="flex items-center justify-between border-y border-border/40 py-4">
-            <span className="text-base font-body text-foreground">Carats</span>
-            <div className="flex items-center gap-3">
-              <input
-                type="number"
-                placeholder="FROM"
-                value={caratMin === CARAT_SLIDER_MIN ? "" : caratMin}
-                onChange={(e) => {
-                  const val = e.target.value === "" ? CARAT_SLIDER_MIN : Number(e.target.value);
-                  setCaratMin(val);
-                }}
-                className="w-24 h-10 px-4 rounded-full border border-border bg-background text-sm text-center font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition outline-none placeholder:text-muted-foreground/70"
-              />
-              <input
-                type="number"
-                placeholder="TO"
-                value={caratMax === CARAT_SLIDER_MAX ? "" : caratMax}
-                onChange={(e) => {
-                  const val = e.target.value === "" ? CARAT_SLIDER_MAX : Number(e.target.value);
-                  setCaratMax(val);
-                }}
-                className="w-24 h-10 px-4 rounded-full border border-border bg-background text-sm text-center font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition outline-none placeholder:text-muted-foreground/70"
-              />
-            </div>
-          </div>
+        {/* Range Sliders */}
+        <div className="flex flex-col gap-5 border-t border-border/40 pt-4 mt-2">
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <label className="block">
