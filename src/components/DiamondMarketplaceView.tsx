@@ -344,8 +344,8 @@ const DiamondMarketplaceView = () => {
         </div>
       </div>
 
-      {/* Sticky Filter Panel */}
-      <div className={`relative lg:sticky lg:top-4 z-40 rounded-2xl border border-border bg-background/95 backdrop-blur-md p-5 mb-8 shadow-luxury ${mobileFiltersOpen ? "block" : "hidden md:block"}`}>
+      {/* Main Filter Panel */}
+      <div className={`relative z-40 rounded-2xl border border-border bg-background/95 backdrop-blur-md p-5 mb-8 shadow-luxury ${mobileFiltersOpen ? "block" : "hidden md:block"}`}>
         {/* Shape Filter - Premium */}
         <div className="mb-6">
           <div className="mb-3 flex items-center justify-between">
