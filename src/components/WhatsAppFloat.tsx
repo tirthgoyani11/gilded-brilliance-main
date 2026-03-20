@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageCircle, X } from "lucide-react";
+import { X } from "lucide-react";
 import { WHATSAPP_NUMBER } from "@/lib/diamond-utils";
 
 
@@ -48,7 +48,7 @@ const WhatsAppFloat = () => {
             onClick={openWhatsApp}
             className="w-full py-3 rounded-xl bg-[#25D366] text-white text-[11px] uppercase tracking-[0.14em] font-body font-semibold hover:bg-[#20BD5A] hover:shadow-[0_4px_12px_rgba(37,211,102,0.3)] luxury-transition flex items-center justify-center gap-2.5"
           >
-            <MessageCircle className="w-4 h-4" strokeWidth={2.5} />
+            <img src="/whatsapp-icon.png" alt="WhatsApp" className="w-4 h-4 object-contain" />
             Chat on WhatsApp
           </button>
         </div>
@@ -60,7 +60,7 @@ const WhatsAppFloat = () => {
         className="w-14 h-14 rounded-full bg-[#25D366] text-white shadow-[0_8px_20px_rgba(37,211,102,0.3)] hover:shadow-[0_12px_30px_rgba(37,211,102,0.4)] luxury-transition hover:scale-110 flex items-center justify-center group relative z-50"
         aria-label="Chat with Diamond Expert"
       >
-        <MessageCircle className="w-6 h-6" />
+        <img src="/whatsapp-icon.png" alt="WhatsApp" className="w-7 h-7 object-contain" />
         {/* Pulse ring relative to whatsapp float */}
         <span className="absolute inset-0 rounded-full animate-[pulse-gold_3s_ease-in-out_infinite] opacity-50 pointer-events-none" />
       </button>
