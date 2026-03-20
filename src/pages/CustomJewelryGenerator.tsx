@@ -345,20 +345,20 @@ const CustomJewelryGenerator = () => {
               </div>
 
               <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <h3 className="font-heading text-xl">Step 3: Send To Expert</h3>
+                <h3 className="font-heading text-xl">Private Inquiry</h3>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  We will send your full custom request to our jewelry specialist and redirect you to WhatsApp instantly.
+                  Share your selection with our expert team.
                 </p>
 
                 <Button onClick={sendToWhatsApp} className="mt-4 w-full" size="lg">
                   <MessageCircle className="mr-2 h-4 w-4" />
-                  Generate Request And Open WhatsApp
+                  Send Inquiry
                 </Button>
 
                 <div className="mt-4 space-y-2 text-xs text-muted-foreground">
-                  <p className="inline-flex items-center gap-2"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> Full details included automatically</p>
-                  <p className="inline-flex items-center gap-2"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> Diamond specs + customization choices</p>
-                  <p className="inline-flex items-center gap-2"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> Direct handoff to VMORA expert team</p>
+                  <p className="inline-flex items-center gap-2"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> Fast expert response</p>
+                  <p className="inline-flex items-center gap-2"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> Personalized guidance</p>
+                  <p className="inline-flex items-center gap-2"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> Discreet and direct</p>
                 </div>
               </div>
 

@@ -22,7 +22,7 @@ const Checkout = lazy(() => import("./pages/Checkout.tsx"));
 const Account = lazy(() => import("./pages/Account.tsx"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard.tsx"));
 const AdminImport = lazy(() => import("./pages/AdminImport.tsx"));
-const AdminContent = lazy(() => import("./pages/AdminContent.tsx"));
+const AdminContent = lazy(() => import("./pages/AdminContent"));
 const AdminListings = lazy(() => import("./pages/AdminListings.tsx"));
 const AdminHistory = lazy(() => import("./pages/AdminHistory.tsx"));
 const Compare = lazy(() => import("./pages/Compare.tsx"));
