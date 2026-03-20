@@ -55,19 +55,9 @@ const DesignLineUp = () => {
 
   return (
     <SiteLayout>
-      <section className="relative overflow-hidden bg-[#F4EEE2] py-10 lg:py-14">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-45 mix-blend-multiply"
-          style={{
-            backgroundImage: "url(/marble-bg.png)",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundAttachment: "fixed",
-          }}
-        />
-
-        <div className="container relative z-10 mx-auto px-4 lg:px-10">
-          <div className="rounded-3xl border border-[#d8c9b1]/55 bg-[#fffdf9]/93 p-6 shadow-[0_18px_44px_-26px_rgba(0,0,0,0.32)] lg:p-10">
+      <section className="bg-background py-10 lg:py-14">
+        <div className="container mx-auto px-4 lg:px-10">
+          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm lg:p-10">
             <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-primary">
               <Sparkles className="h-3.5 w-3.5" />
               Design Line Up
@@ -93,12 +83,12 @@ const DesignLineUp = () => {
 
           <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {lineUpItems.map((item) => (
-              <article key={item.id} className="overflow-hidden rounded-2xl border border-[#d8c9b1]/45 bg-[#fffdf9]/95 shadow-[0_10px_30px_-20px_rgba(0,0,0,0.34)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_38px_-20px_rgba(0,0,0,0.38)]">
-                <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-gradient-to-br from-[#efe2ca] via-[#d6b681] to-[#a9804a]">
+              <article key={item.id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+                <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-muted/40">
                   {item.image ? (
                     <img src={item.image} alt={item.title} className="h-full w-full object-cover" loading="lazy" />
                   ) : (
-                    <span className="rounded-full border border-white/40 bg-black/20 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/90">{item.id}</span>
+                    <span className="rounded-full border border-border bg-background px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/75">{item.id}</span>
                   )}
                 </div>
                 <div className="p-5">
@@ -113,7 +103,7 @@ const DesignLineUp = () => {
             ))}
           </div>
 
-          <div className="mt-10 rounded-2xl border border-[#d8c9b1]/50 bg-[#fffdf9]/94 p-6 shadow-[0_14px_34px_-22px_rgba(0,0,0,0.3)] lg:p-8">
+          <div className="mt-10 rounded-2xl border border-border bg-card p-6 shadow-sm lg:p-8">
             <h3 className="font-heading text-2xl">Why We Are Best</h3>
             <p className="mt-3 max-w-4xl text-sm text-muted-foreground sm:text-base">
               From initial concept to final delivery, our team executes each custom creation with transparent consultation,
