@@ -10,6 +10,7 @@ import { WHATSAPP_NUMBER } from "@/lib/diamond-utils";
 
 const navLinks = [
   { label: "Loose Diamonds", href: "/diamonds" },
+  { label: "Design Line Up", href: "/design-line-up" },
   { label: "Education", href: "/education" },
   { label: "About", href: "/about" },
 ];

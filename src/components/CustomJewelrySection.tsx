@@ -1,38 +1,38 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Diamond, Gem, PenSquare } from "lucide-react";
+import { ArrowRight, Clock3, Diamond, Gem } from "lucide-react";
 
 const offerings = [
   {
-    title: "Custom Jewelry Design",
+    title: "Bespoke Jewelry",
     description:
-      "Share your idea, budget, and style. We craft rings, pendants, earrings, and bracelets exactly for your needs.",
-    icon: PenSquare,
-    to: "/about",
-    cta: "Start Consultation",
+      "From signature rings to statement necklaces, each piece is tailored to your vision with atelier-level finishing.",
+    icon: Gem,
+    to: "/design-line-up",
+    cta: "Discover The Line Up",
+  },
+  {
+    title: "Private Watch Creations",
+    description:
+      "Refined watch concepts crafted with custom materials, dial direction, and detail language built around your taste.",
+    icon: Clock3,
+    to: "/design-line-up",
+    cta: "View Timepiece Editions",
   },
   {
     title: "Loose Diamonds",
     description:
-      "Explore certified natural and lab-grown loose diamonds with transparent details and expert support.",
+      "Select from certified natural and lab-grown diamonds curated for brilliance, precision, and confidence.",
     icon: Diamond,
     to: "/diamonds",
-    cta: "Browse Loose Diamonds",
-  },
-  {
-    title: "Jewelry Collections",
-    description:
-      "Discover ready inspiration, then personalize the final piece with your choice of center stone and setting details.",
-    icon: Gem,
-    to: "/about",
-    cta: "View Custom Process",
+    cta: "Explore Certified Stones",
   },
 ];
 
 const CustomJewelrySection = () => {
   return (
-    <section className="relative overflow-hidden bg-[#FAFAFA] py-16 lg:py-24">
+    <section className="relative overflow-hidden bg-[#F7F2EA] py-16 lg:py-24">
       <div
-        className="pointer-events-none absolute inset-0 opacity-35 mix-blend-multiply"
+        className="pointer-events-none absolute inset-0 opacity-45 mix-blend-multiply"
         style={{
           backgroundImage: "url(/marble-bg.png)",
           backgroundSize: "cover",
@@ -41,11 +41,11 @@ const CustomJewelrySection = () => {
         }}
       />
       <div className="container relative z-10 mx-auto px-4">
-        <div className="mx-auto mb-10 max-w-3xl text-center lg:mb-14">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-primary">What We Offer</p>
-          <h2 className="font-heading text-3xl text-foreground sm:text-4xl lg:text-5xl">Custom Jewelry and Loose Diamonds</h2>
+        <div className="mx-auto mb-10 max-w-4xl text-center lg:mb-14">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-primary">Design Line Up</p>
+          <h2 className="font-heading text-3xl leading-tight text-foreground sm:text-4xl lg:text-6xl">Luxury Jewelry and Timepieces, Crafted Around You</h2>
           <p className="mt-4 text-base text-muted-foreground sm:text-lg">
-            We are not only selling products. We build jewelry around your vision, from stone selection to the final handcrafted piece.
+            Create extraordinary jewelry and watches with one-on-one design guidance, certified stones, and uncompromising craftsmanship.
           </p>
         </div>
 
@@ -53,9 +53,9 @@ const CustomJewelrySection = () => {
           {offerings.map(({ title, description, icon: Icon, to, cta }) => (
             <article
               key={title}
-              className="group flex h-full flex-col rounded-2xl border border-border/70 bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+              className="group flex h-full flex-col rounded-2xl border border-[#d8c9b1]/45 bg-[#fffdf9]/95 p-6 shadow-[0_10px_28px_-16px_rgba(0,0,0,0.22)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_-20px_rgba(0,0,0,0.3)]"
             >
-              <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary ring-1 ring-primary/15">
                 <Icon className="h-5 w-5" />
               </div>
               <h3 className="font-heading text-xl text-foreground">{title}</h3>

@@ -8,6 +8,7 @@ import { StoreProvider } from "@/contexts/StoreContext";
 import { Analytics } from "@vercel/analytics/react";
 const Index = lazy(() => import("./pages/Index.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
+const DesignLineUp = lazy(() => import("./pages/DesignLineUp.tsx"));
 const Diamonds = lazy(() => import("./pages/Diamonds.tsx"));
 const DiamondDetail = lazy(() => import("./pages/DiamondDetail.tsx"));
 const Education = lazy(() => import("./pages/Education.tsx"));
@@ -38,6 +39,7 @@ const App = () => (
           <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm uppercase tracking-[0.12em] text-muted-foreground">Loading VMORA</div>}>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/design-line-up" element={<DesignLineUp />} />
               <Route path="/diamonds" element={<Diamonds />} />
               <Route path="/diamond/:stoneId" element={<DiamondDetail />} />
               <Route path="/education" element={<Education />} />
