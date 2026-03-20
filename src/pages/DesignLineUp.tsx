@@ -10,12 +10,14 @@ const lineUpItems = [
     title: "Signature Watch Atelier",
     type: "Custom Watches",
     summary: "A refined watch direction with custom dial language, case architecture, and strap finish.",
+    image: "/design-line-up/placeholder1-watch.jpeg",
   },
   {
     id: "placeholder2",
     title: "Diamond Watch Edition",
     type: "Custom Watches",
     summary: "Diamond-accented detailing and polished finishing designed for elevated statement wear.",
+    image: "/design-line-up/placeholder2-watch.jpg",
   },
   {
     id: "placeholder3",
@@ -92,8 +94,12 @@ const DesignLineUp = () => {
           <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {lineUpItems.map((item) => (
               <article key={item.id} className="overflow-hidden rounded-2xl border border-[#d8c9b1]/45 bg-[#fffdf9]/95 shadow-[0_10px_30px_-20px_rgba(0,0,0,0.34)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_38px_-20px_rgba(0,0,0,0.38)]">
-                <div className="flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-[#efe2ca] via-[#d6b681] to-[#a9804a]">
-                  <span className="rounded-full border border-white/40 bg-black/20 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/90">{item.id}</span>
+                <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-gradient-to-br from-[#efe2ca] via-[#d6b681] to-[#a9804a]">
+                  {item.image ? (
+                    <img src={item.image} alt={item.title} className="h-full w-full object-cover" loading="lazy" />
+                  ) : (
+                    <span className="rounded-full border border-white/40 bg-black/20 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/90">{item.id}</span>
+                  )}
                 </div>
                 <div className="p-5">
                   <p className="mb-2 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-primary">
