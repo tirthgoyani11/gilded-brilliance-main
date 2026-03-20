@@ -1,9 +1,8 @@
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import LooseDiamondsCarousel from "@/components/LooseDiamondsCarousel";
-import CategorySection from "@/components/CategorySection";
 import DiamondSearchPreview from "@/components/DiamondSearchPreview";
-import BestSellers from "@/components/BestSellers";
+import CustomJewelrySection from "@/components/CustomJewelrySection";
 import EducationSection from "@/components/EducationSection";
 import BrandStory from "@/components/BrandStory";
 import Footer from "@/components/Footer";
@@ -35,13 +34,10 @@ const Index = () => {
           <LooseDiamondsCarousel />
         </FadeInReveal>
         <FadeInReveal>
-          <CategorySection />
+          <CustomJewelrySection />
         </FadeInReveal>
         <FadeInReveal>
           <DiamondSearchPreview />
-        </FadeInReveal>
-        <FadeInReveal>
-          <BestSellers />
         </FadeInReveal>
         <FadeInReveal>
           <TrustSection />
