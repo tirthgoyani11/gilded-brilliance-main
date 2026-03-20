@@ -7,8 +7,8 @@ const offerings = [
     description:
       "Share your idea, budget, and style. We craft rings, pendants, earrings, and bracelets exactly for your needs.",
     icon: PenSquare,
-    to: "/ring-builder",
-    cta: "Start Your Design",
+    to: "/about",
+    cta: "Start Consultation",
   },
   {
     title: "Loose Diamonds",
@@ -23,8 +23,8 @@ const offerings = [
     description:
       "Discover ready inspiration, then personalize the final piece with your choice of center stone and setting details.",
     icon: Gem,
-    to: "/jewelry",
-    cta: "Explore Jewelry",
+    to: "/about",
+    cta: "View Custom Process",
   },
 ];
 

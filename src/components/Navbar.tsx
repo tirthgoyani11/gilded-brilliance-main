@@ -9,9 +9,7 @@ import { WHATSAPP_NUMBER } from "@/lib/diamond-utils";
 
 
 const navLinks = [
-  { label: "Shop Jewelry", href: "/jewelry" },
   { label: "Loose Diamonds", href: "/diamonds" },
-  { label: "Ring Builder", href: "/ring-builder" },
   { label: "Education", href: "/education" },
   { label: "About", href: "/about" },
 ];

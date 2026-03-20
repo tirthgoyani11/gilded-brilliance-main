@@ -8,10 +8,8 @@ import { StoreProvider } from "@/contexts/StoreContext";
 import { Analytics } from "@vercel/analytics/react";
 const Index = lazy(() => import("./pages/Index.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
-const Jewelry = lazy(() => import("./pages/Jewelry.tsx"));
 const Diamonds = lazy(() => import("./pages/Diamonds.tsx"));
 const DiamondDetail = lazy(() => import("./pages/DiamondDetail.tsx"));
-const RingBuilder = lazy(() => import("./pages/RingBuilder.tsx"));
 const Education = lazy(() => import("./pages/Education.tsx"));
 const CertificateVerification = lazy(() => import("./pages/CertificateVerification.tsx"));
 const About = lazy(() => import("./pages/About.tsx"));
@@ -40,10 +38,8 @@ const App = () => (
           <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm uppercase tracking-[0.12em] text-muted-foreground">Loading VMORA</div>}>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/jewelry" element={<Jewelry />} />
               <Route path="/diamonds" element={<Diamonds />} />
               <Route path="/diamond/:stoneId" element={<DiamondDetail />} />
-              <Route path="/ring-builder" element={<RingBuilder />} />
               <Route path="/education" element={<Education />} />
               <Route path="/certificate-verification" element={<CertificateVerification />} />
               <Route path="/about" element={<About />} />
