@@ -9,6 +9,7 @@ type CmsPayload = {
   body?: string;
   posts?: string[];
   topics?: { title: string; body: string }[];
+  items?: { id: string; title: string; type: string; summary: string; image?: string }[];
 };
 
 type JewelryAdminItem = {
@@ -37,15 +38,19 @@ const defaultCms: Record<string, CmsPayload> = {
     subtitle: "Master the 4Cs and buy with confidence.",
     topics: [],
   },
+  designLineUp: {
+    title: "Custom Jewelry and Watches Design Line Up",
+    subtitle: "Curated custom concepts for jewelry and watches.",
+    items: [],
+  },
   brandStory: {
     title: "Where Vmora Precision Meets Passion",
     body: "Vmora curates exceptional diamonds and silver artistry with uncompromising standards.",
   },
 };
 
-const cmsKeys = ["about", "blog", "education", "brandStory"] as const;
+const cmsKeys = ["about", "blog", "education", "designLineUp", "brandStory"] as const;
 type CmsKey = (typeof cmsKeys)[number];
-
 
 const AdminContent = () => {
   const [status, setStatus] = useState("");
@@ -73,11 +78,19 @@ const AdminContent = () => {
     if (activeKey === "education") {
       return (cms.topics || []).map((t) => `${t.title}|${t.body}`).join("\n");
     }
+    if (activeKey === "designLineUp") {
+      return (cms.items || [])
+        .map((item) => `${item.id}|${item.title}|${item.type}|${item.summary}|${item.image || ""}`)
+        .join("\n");
+    }
     return cms.body || "";
   }, [activeKey, cms]);
 
   const [cmsText, setCmsText] = useState("");
 
+  useEffect(() => {
+    setCmsText(cmsTextarea);
+  }, [cmsTextarea]);
 
   const loadAll = async () => {
     setLoading(true);
@@ -104,6 +117,7 @@ const AdminContent = () => {
           }
         }
       }
+
       setContents(next);
       setJewelry(Array.isArray(jewelryJson?.items) ? jewelryJson.items : []);
       setStatus("Loaded admin-managed content and jewelry.");
@@ -124,14 +138,14 @@ const AdminContent = () => {
       subtitle: cms.subtitle || "",
     };
 
-    if (activeKey === "about") {
+    if (activeKey === "about" || activeKey === "brandStory") {
       nextPayload.body = cmsText;
     } else if (activeKey === "blog") {
       nextPayload.posts = cmsText
         .split("\n")
         .map((line) => line.trim())
         .filter(Boolean);
-    } else {
+    } else if (activeKey === "education") {
       nextPayload.topics = cmsText
         .split("\n")
         .map((line) => line.trim())
@@ -140,6 +154,22 @@ const AdminContent = () => {
           const [title, ...rest] = line.split("|");
           return { title: (title || "Topic").trim(), body: rest.join("|").trim() };
         });
+    } else {
+      nextPayload.items = cmsText
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line, index) => {
+          const [id, title, type, summary, image] = line.split("|");
+          return {
+            id: (id || `item-${index + 1}`).trim(),
+            title: (title || "Design Item").trim(),
+            type: (type || "Custom Jewelry").trim(),
+            summary: (summary || "").trim(),
+            image: (image || "").trim() || undefined,
+          };
+        })
+        .filter((item) => item.id && item.title && item.summary);
     }
 
     try {
@@ -288,7 +318,15 @@ const AdminContent = () => {
               onChange={(e) => setCmsText(e.target.value)}
               rows={10}
               className="w-full p-3 rounded border border-border bg-background"
-              placeholder={activeKey === "education" ? "One per line: Title|Body" : activeKey === "blog" ? "One blog post title per line" : "Body"}
+              placeholder={
+                activeKey === "education"
+                  ? "One per line: Title|Body"
+                  : activeKey === "blog"
+                    ? "One blog post title per line"
+                    : activeKey === "designLineUp"
+                      ? "One per line: id|title|type|summary|image-url"
+                      : "Body"
+              }
             />
             <div className="flex gap-2">
               <Button onClick={() => void saveCms()}>Save {activeKey}</Button>

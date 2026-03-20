@@ -9,6 +9,7 @@ import { Analytics } from "@vercel/analytics/react";
 const Index = lazy(() => import("./pages/Index.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const DesignLineUp = lazy(() => import("./pages/DesignLineUp.tsx"));
+const CustomJewelryGenerator = lazy(() => import("./pages/CustomJewelryGenerator.tsx"));
 const Diamonds = lazy(() => import("./pages/Diamonds.tsx"));
 const DiamondDetail = lazy(() => import("./pages/DiamondDetail.tsx"));
 const Education = lazy(() => import("./pages/Education.tsx"));
@@ -40,6 +41,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/design-line-up" element={<DesignLineUp />} />
+              <Route path="/custom-jewelry-generator" element={<CustomJewelryGenerator />} />
               <Route path="/diamonds" element={<Diamonds />} />
               <Route path="/diamond/:stoneId" element={<DiamondDetail />} />
               <Route path="/education" element={<Education />} />

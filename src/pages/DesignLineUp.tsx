@@ -1,10 +1,22 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Clock3, Gem, MessageCircle, Sparkles } from "lucide-react";
 import SiteLayout from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { WHATSAPP_NUMBER } from "@/lib/diamond-utils";
+import productRing from "@/assets/product-ring.jpg";
+import productBracelet from "@/assets/product-bracelet.jpg";
+import productNecklace from "@/assets/product-necklace.jpg";
 
-const lineUpItems = [
+type DesignLineUpItem = {
+  id: string;
+  title: string;
+  type: string;
+  summary: string;
+  image?: string;
+};
+
+const fallbackLineUpItems: DesignLineUpItem[] = [
   {
     id: "placeholder1",
     title: "Signature Watch Atelier",
@@ -24,28 +36,80 @@ const lineUpItems = [
     title: "Bridal Jewelry Suite",
     type: "Custom Jewelry",
     summary: "Coordinated ring, necklace, and earrings curated to your style narrative.",
+    image: productRing,
   },
   {
     id: "placeholder4",
     title: "Everyday Luxury Line",
     type: "Custom Jewelry",
     summary: "Elegant daily-wear pieces balancing comfort, proportion, and high-end presence.",
+    image: productBracelet,
   },
   {
     id: "placeholder5",
     title: "Collector Timepiece",
     type: "Custom Watches",
     summary: "Collector-grade design expression with personalized materials and finishing codes.",
+    image: "/design-line-up/placeholder1-watch.jpeg",
   },
   {
     id: "placeholder6",
     title: "Heirloom Redesign",
     type: "Custom Jewelry",
     summary: "Transform legacy family pieces into modern heirlooms with emotional value intact.",
+    image: productNecklace,
   },
 ];
 
 const DesignLineUp = () => {
+  const [content, setContent] = useState({
+    title: "Luxury Jewelry And Timepieces, Crafted For You",
+    subtitle:
+      "Explore a private design lineup where every ring, necklace, bracelet, and watch is built around your taste, certified stone preferences, and precision finishing standards.",
+    items: fallbackLineUpItems,
+  });
+
+  useEffect(() => {
+    let active = true;
+
+    const loadContent = async () => {
+      try {
+        const response = await fetch("/api/content?key=designLineUp");
+        if (!response.ok || !active) return;
+
+        const payload = await response.json();
+        const cms = payload?.content?.payload;
+        if (!cms || typeof cms !== "object") return;
+
+        const nextItems = Array.isArray(cms.items)
+          ? cms.items
+              .map((item: { id?: unknown; title?: unknown; type?: unknown; summary?: unknown; image?: unknown }) => ({
+                id: String(item?.id ?? "").trim(),
+                title: String(item?.title ?? "").trim(),
+                type: String(item?.type ?? "Custom Jewelry").trim(),
+                summary: String(item?.summary ?? "").trim(),
+                image: String(item?.image ?? "").trim() || undefined,
+              }))
+              .filter((item: DesignLineUpItem) => item.id && item.title && item.summary)
+          : null;
+
+        setContent((prev) => ({
+          title: typeof cms.title === "string" && cms.title.trim() ? cms.title : prev.title,
+          subtitle: typeof cms.subtitle === "string" && cms.subtitle.trim() ? cms.subtitle : prev.subtitle,
+          items: nextItems && nextItems.length > 0 ? nextItems : prev.items,
+        }));
+      } catch {
+        // Keep fallback content when API is unavailable.
+      }
+    };
+
+    void loadContent();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const openWhatsApp = () => {
     const message = encodeURIComponent(
       "Hello Vmora Team, I want to explore your Custom Jewelry and Watches Design Line Up. Please guide me with options and pricing."
@@ -63,11 +127,10 @@ const DesignLineUp = () => {
               Design Line Up
             </p>
             <h1 className="font-heading text-3xl leading-tight text-foreground sm:text-4xl lg:text-6xl">
-              Luxury Jewelry And Timepieces, Crafted For You
+              {content.title}
             </h1>
             <p className="mt-4 max-w-3xl text-sm text-muted-foreground sm:text-base">
-              Explore a private design lineup where every ring, necklace, bracelet, and watch is built around your taste,
-              certified stone preferences, and precision finishing standards.
+              {content.subtitle}
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
@@ -76,13 +139,16 @@ const DesignLineUp = () => {
                 Begin Private Consultation
               </Button>
               <Button asChild variant="outline" className="min-w-[220px]">
+                <Link to="/custom-jewelry-generator">Open Custom Generator</Link>
+              </Button>
+              <Button asChild variant="outline" className="min-w-[220px]">
                 <Link to="/diamonds">View Certified Loose Diamonds</Link>
               </Button>
             </div>
           </div>
 
           <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {lineUpItems.map((item) => (
+            {content.items.map((item) => (
               <article key={item.id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
                 <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-muted/40">
                   {item.image ? (
