@@ -1,0 +1,77 @@
+import { ensureUserStateTable, sql } from "./_lib/db.js";
+
+const normalizeClientId = (value) => {
+  const clientId = typeof value === "string" ? value.trim() : "";
+  return clientId.length >= 8 ? clientId : "";
+};
+
+const toState = (row) => ({
+  cart: Array.isArray(row?.cart) ? row.cart : [],
+  wishlist: Array.isArray(row?.wishlist) ? row.wishlist : [],
+  compare: Array.isArray(row?.compare) ? row.compare : [],
+  ringBuilder: row?.ring_builder && typeof row.ring_builder === "object" ? row.ring_builder : {},
+  updatedAt: row?.updated_at ?? null,
+});
+
+export default async function handler(req, res) {
+  try {
+    await ensureUserStateTable();
+
+    if (req.method === "GET") {
+      const clientId = normalizeClientId(req.query?.clientId);
+      if (!clientId) {
+        return res.status(400).json({ message: "Missing or invalid clientId" });
+      }
+
+      const [row] = await sql`
+        SELECT cart, wishlist, compare, ring_builder, updated_at
+        FROM user_state
+        WHERE client_id = ${clientId}
+        LIMIT 1;
+      `;
+
+      return res.status(200).json({ state: row ? toState(row) : null });
+    }
+
+    if (req.method === "POST") {
+      const clientId = normalizeClientId(req.body?.clientId);
+      if (!clientId) {
+        return res.status(400).json({ message: "Missing or invalid clientId" });
+      }
+
+      const cart = Array.isArray(req.body?.cart) ? req.body.cart : [];
+      const wishlist = Array.isArray(req.body?.wishlist) ? req.body.wishlist : [];
+      const compare = Array.isArray(req.body?.compare) ? req.body.compare : [];
+      const ringBuilder = req.body?.ringBuilder && typeof req.body.ringBuilder === "object" ? req.body.ringBuilder : {};
+
+      const [row] = await sql`
+        INSERT INTO user_state (client_id, cart, wishlist, compare, ring_builder, updated_at)
+        VALUES (
+          ${clientId},
+          ${JSON.stringify(cart)}::jsonb,
+          ${JSON.stringify(wishlist)}::jsonb,
+          ${JSON.stringify(compare)}::jsonb,
+          ${JSON.stringify(ringBuilder)}::jsonb,
+          NOW()
+        )
+        ON CONFLICT (client_id)
+        DO UPDATE SET
+          cart = EXCLUDED.cart,
+          wishlist = EXCLUDED.wishlist,
+          compare = EXCLUDED.compare,
+          ring_builder = EXCLUDED.ring_builder,
+          updated_at = NOW()
+        RETURNING cart, wishlist, compare, ring_builder, updated_at;
+      `;
+
+      return res.status(200).json({ state: toState(row) });
+    }
+
+    return res.status(405).json({ message: "Method not allowed" });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to process user state",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+}

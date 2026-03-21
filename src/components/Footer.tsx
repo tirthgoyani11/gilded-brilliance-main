@@ -8,7 +8,7 @@ const footerGroups = {
   shop: [
     { label: "Shop Jewelry", to: "/jewelry" },
     { label: "Loose Diamonds", to: "/diamonds" },
-    { label: "Custom Ring Builder", to: "/ring-builder" },
+    { label: "Custom Ring Builder", to: "/custom-jewelry-generator" },
     { label: "Wishlist", to: "/wishlist" },
   ],
   learn: [

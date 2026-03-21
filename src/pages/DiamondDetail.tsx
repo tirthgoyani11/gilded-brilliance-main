@@ -107,7 +107,7 @@ const DiamondDetail = () => {
                   Add to Cart
                 </Button>
                 <Button variant="luxury-outline" size="lg" asChild>
-                  <Link to="/ring-builder" onClick={() => setRingBuilder({ diamondStoneId: diamond.stoneId })}>
+                  <Link to="/custom-jewelry-generator" onClick={() => setRingBuilder({ diamondStoneId: diamond.stoneId })}>
                     Add to Ring
                   </Link>
                 </Button>

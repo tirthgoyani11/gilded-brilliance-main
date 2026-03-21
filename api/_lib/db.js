@@ -101,11 +101,28 @@ export async function ensureJewelryTable() {
   await sql`CREATE INDEX IF NOT EXISTS idx_jewelry_items_active ON jewelry_items(is_active);`;
 }
 
+export async function ensureUserStateTable() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS user_state (
+      client_id TEXT PRIMARY KEY,
+      cart JSONB NOT NULL DEFAULT '[]'::jsonb,
+      wishlist JSONB NOT NULL DEFAULT '[]'::jsonb,
+      compare JSONB NOT NULL DEFAULT '[]'::jsonb,
+      ring_builder JSONB NOT NULL DEFAULT '{}'::jsonb,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `;
+
+  await sql`CREATE INDEX IF NOT EXISTS idx_user_state_updated_at ON user_state(updated_at DESC);`;
+}
+
 export async function ensureCoreTables() {
   await ensureDiamondsTable();
   await ensureImportLogsTable();
   await ensureCmsContentTable();
   await ensureJewelryTable();
+  await ensureUserStateTable();
 }
 
 export async function createImportLog({ source, totalRows, createdRows, updatedRows, failedRows, status, errorMessage, details }) {

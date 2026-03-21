@@ -42,6 +42,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/design-line-up" element={<DesignLineUp />} />
               <Route path="/custom-jewelry-generator" element={<CustomJewelryGenerator />} />
+              <Route path="/ring-builder" element={<CustomJewelryGenerator />} />
               <Route path="/diamonds" element={<Diamonds />} />
               <Route path="/diamond/:stoneId" element={<DiamondDetail />} />
               <Route path="/education" element={<Education />} />

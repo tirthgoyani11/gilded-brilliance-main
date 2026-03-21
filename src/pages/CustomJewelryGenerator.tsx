@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, CheckCircle2, Gem, MessageCircle, Sparkles } from "lucide-react";
 import SiteLayout from "@/components/SiteLayout";
@@ -12,7 +12,7 @@ const metalOptions = ["White Gold", "Yellow Gold", "Rose Gold", "Silver", "Plati
 const styleOptions = ["Classic", "Minimal", "Vintage", "Halo", "Modern", "Statement"];
 
 const CustomJewelryGenerator = () => {
-  const { diamonds } = useStore();
+  const { diamonds, ringBuilder } = useStore();
 
   const [search, setSearch] = useState("");
   const [shape, setShape] = useState("All");
@@ -110,9 +110,15 @@ const CustomJewelryGenerator = () => {
     window.open(`https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g, "")}?text=${encoded}`, "_blank");
   };
 
+  useEffect(() => {
+    if (!ringBuilder.diamondStoneId || selectedDiamond) return;
+    const fromBuilder = diamonds.find((diamond) => diamond.stoneId === ringBuilder.diamondStoneId);
+    if (fromBuilder) setSelectedDiamond(fromBuilder);
+  }, [diamonds, ringBuilder.diamondStoneId, selectedDiamond]);
+
   return (
     <SiteLayout>
-      <section className="bg-background py-10 lg:py-14">
+      <section className="bg-background py-10 lg:py-14 pb-28 md:pb-14">
         <div className="container mx-auto px-4 lg:px-10 space-y-8">
           <header className="rounded-3xl border border-border bg-card p-6 shadow-sm lg:p-10">
             <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
@@ -380,6 +386,21 @@ const CustomJewelryGenerator = () => {
           </section>
         </div>
       </section>
+
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur-md p-3">
+        <div className="container mx-auto flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Custom Builder</p>
+            <p className="text-sm font-medium truncate">
+              {selectedDiamond ? `${selectedDiamond.stoneId} · ${currency(selectedDiamond.price)}` : "Pick a diamond to continue"}
+            </p>
+          </div>
+          <Button onClick={sendToWhatsApp} size="sm" className="shrink-0">
+            <MessageCircle className="mr-1.5 h-4 w-4" />
+            Send
+          </Button>
+        </div>
+      </div>
     </SiteLayout>
   );
 };

@@ -54,6 +54,66 @@ const STORAGE_KEYS = {
   wishlist: "vmora_store_wishlist",
   compare: "vmora_store_compare",
   ringBuilder: "vmora_store_ring_builder",
+  clientId: "vmora_store_client_id",
+};
+
+const getOrCreateClientId = () => {
+  if (typeof window === "undefined") return "";
+
+  const existing = window.localStorage.getItem(STORAGE_KEYS.clientId);
+  if (existing && existing.trim().length > 0) return existing;
+
+  const generated =
+    typeof window.crypto?.randomUUID === "function"
+      ? window.crypto.randomUUID()
+      : `vmora_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+
+  window.localStorage.setItem(STORAGE_KEYS.clientId, generated);
+  return generated;
+};
+
+const isValidCartItem = (item: unknown): item is CartItem => {
+  if (!item || typeof item !== "object") return false;
+  const candidate = item as Partial<CartItem>;
+  return (
+    typeof candidate.id === "string" &&
+    candidate.id.trim().length > 0 &&
+    typeof candidate.title === "string" &&
+    (candidate.type === "diamond" || candidate.type === "jewelry") &&
+    typeof candidate.price === "number" &&
+    Number.isFinite(candidate.price) &&
+    typeof candidate.quantity === "number" &&
+    Number.isFinite(candidate.quantity) &&
+    candidate.quantity > 0
+  );
+};
+
+const normalizeCart = (items: unknown): CartItem[] => {
+  if (!Array.isArray(items)) return [];
+  return items
+    .filter(isValidCartItem)
+    .map((item) => ({
+      ...item,
+      quantity: Math.max(1, Math.floor(item.quantity)),
+    }));
+};
+
+const normalizeWishlist = (items: unknown): string[] => {
+  if (!Array.isArray(items)) return [];
+  return [...new Set(items.filter((item): item is string => typeof item === "string" && item.trim().length > 0))];
+};
+
+const normalizeCompare = (items: unknown): Diamond[] => {
+  if (!Array.isArray(items)) return [];
+  const byStoneId = new Map<string, Diamond>();
+
+  for (const item of items) {
+    if (!isValidDiamond(item)) continue;
+    const normalized = normalizeDiamondMedia(item);
+    byStoneId.set(normalized.stoneId, normalized);
+  }
+
+  return [...byStoneId.values()].slice(-3);
 };
 
 const readStorage = <T,>(key: string, fallback: T): T => {
@@ -87,23 +147,51 @@ interface StoreContextValue {
 const StoreContext = createContext<StoreContextValue | undefined>(undefined);
 
 export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
+  const [clientId] = useState(() => getOrCreateClientId());
+  const [userStateHydrated, setUserStateHydrated] = useState(false);
   const [diamonds, setDiamonds] = useState<Diamond[]>([]);
   const [cart, setCart] = useState<CartItem[]>(() => readStorage(STORAGE_KEYS.cart, []));
   const [wishlist, setWishlist] = useState<string[]>(() => readStorage(STORAGE_KEYS.wishlist, []));
-  const [compare, setCompare] = useState<Diamond[]>(() => {
-    const stored = readStorage<unknown[]>(STORAGE_KEYS.compare, []);
-    if (!Array.isArray(stored)) return [];
-
-    const byStoneId = new Map<string, Diamond>();
-    for (const item of stored) {
-      if (!isValidDiamond(item)) continue;
-      const normalized = normalizeDiamondMedia(item);
-      byStoneId.set(normalized.stoneId, normalized);
-    }
-
-    return [...byStoneId.values()].slice(-3);
-  });
+  const [compare, setCompare] = useState<Diamond[]>(() => normalizeCompare(readStorage<unknown[]>(STORAGE_KEYS.compare, [])));
   const [ringBuilder, setRingBuilderState] = useState<RingBuilderSelection>(() => readStorage(STORAGE_KEYS.ringBuilder, {}));
+
+  useEffect(() => {
+    let active = true;
+
+    const hydrateUserState = async () => {
+      if (!clientId) {
+        if (active) setUserStateHydrated(true);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/user-state?clientId=${encodeURIComponent(clientId)}`);
+        if (!response.ok) return;
+        const payload = await response.json();
+        if (!active || !payload?.state) return;
+
+        const nextCart = normalizeCart(payload.state.cart);
+        const nextWishlist = normalizeWishlist(payload.state.wishlist);
+        const nextCompare = normalizeCompare(payload.state.compare);
+        const nextRingBuilder = payload.state.ringBuilder && typeof payload.state.ringBuilder === "object" ? payload.state.ringBuilder : {};
+
+        if (nextCart.length > 0) setCart(nextCart);
+        if (nextWishlist.length > 0) setWishlist(nextWishlist);
+        if (nextCompare.length > 0) setCompare(nextCompare);
+        if (Object.keys(nextRingBuilder).length > 0) setRingBuilderState(nextRingBuilder);
+      } catch {
+        // Keep local state if Neon user sync is unavailable.
+      } finally {
+        if (active) setUserStateHydrated(true);
+      }
+    };
+
+    void hydrateUserState();
+
+    return () => {
+      active = false;
+    };
+  }, [clientId]);
 
 
 
@@ -122,6 +210,30 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEYS.ringBuilder, JSON.stringify(ringBuilder));
   }, [ringBuilder]);
+
+  useEffect(() => {
+    if (!userStateHydrated || !clientId) return;
+
+    const timeoutId = window.setTimeout(() => {
+      void fetch("/api/user-state", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientId,
+          cart,
+          wishlist,
+          compare,
+          ringBuilder,
+        }),
+      }).catch(() => {
+        // Local state continues to work if remote sync fails.
+      });
+    }, 350);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [clientId, userStateHydrated, cart, wishlist, compare, ringBuilder]);
 
   const importDiamonds = async (items: Diamond[], options?: ImportOptions): Promise<ImportResult> => {
     let created = 0;

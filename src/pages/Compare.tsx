@@ -3,10 +3,12 @@ import { currency, diamondV360Src, getFallbackImage } from "@/lib/diamond-utils"
 import { useStore } from "@/contexts/StoreContext";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
+import { useState } from "react";
 
 const Compare = () => {
   const { compare, toggleCompare } = useStore();
+  const [mediaMode, setMediaMode] = useState<"image" | "v360">("image");
 
   return (
     <SiteLayout>
@@ -25,7 +27,23 @@ const Compare = () => {
           <div className="space-y-6">
             <div className="flex flex-wrap items-center gap-2 justify-between">
               <p className="text-sm text-muted-foreground">Viewing {compare.length} of 3 slots</p>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 justify-end">
+                <div className="inline-flex rounded-lg border border-border overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setMediaMode("image")}
+                    className={`px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] ${mediaMode === "image" ? "bg-foreground text-background" : "bg-background text-foreground/60 hover:text-foreground"}`}
+                  >
+                    Image
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMediaMode("v360")}
+                    className={`px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] ${mediaMode === "v360" ? "bg-foreground text-background" : "bg-background text-foreground/60 hover:text-foreground"}`}
+                  >
+                    3D
+                  </button>
+                </div>
                 <Button asChild variant="outline" size="sm">
                   <Link to="/diamonds">Add More Diamonds</Link>
                 </Button>
@@ -63,26 +81,23 @@ const Compare = () => {
                     <div className="p-4 space-y-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="rounded-xl border border-border overflow-hidden bg-secondary/20">
-                          <div className="px-3 py-2 border-b border-border text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Image</div>
-                          <div className="aspect-square bg-secondary/30">
-                            <img
-                              src={d.imageUrl || getFallbackImage(d.shape)}
-                              alt={`${d.stoneId} still image`}
-                              className="w-full h-full object-contain p-3"
-                              loading="lazy"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                const fallback = getFallbackImage(d.shape);
-                                if (!target.src.includes(fallback)) target.src = fallback;
-                              }}
-                            />
+                          <div className="px-3 py-2 border-b border-border text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                            {mediaMode === "image" ? "Image" : "3D View"}
                           </div>
-                        </div>
-
-                        <div className="rounded-xl border border-border overflow-hidden bg-secondary/20">
-                          <div className="px-3 py-2 border-b border-border text-[10px] uppercase tracking-[0.14em] text-muted-foreground">3D View</div>
                           <div className="aspect-square bg-secondary/30">
-                            {has360 ? (
+                            {mediaMode === "image" ? (
+                              <img
+                                src={d.imageUrl || getFallbackImage(d.shape)}
+                                alt={`${d.stoneId} still image`}
+                                className="w-full h-full object-contain p-3"
+                                loading="lazy"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  const fallback = getFallbackImage(d.shape);
+                                  if (!target.src.includes(fallback)) target.src = fallback;
+                                }}
+                              />
+                            ) : has360 ? (
                               <iframe
                                 title={`360 view ${d.stoneId}`}
                                 src={diamondV360Src(viewerStoneId)}
@@ -97,24 +112,31 @@ const Compare = () => {
                             )}
                           </div>
                         </div>
+
+                        <div className="rounded-xl border border-border bg-background p-3 space-y-2 text-sm">
+                          <p><span className="text-muted-foreground">Stone:</span> {d.stoneId || "-"}</p>
+                          <p><span className="text-muted-foreground">Shape:</span> {d.shape || "-"}</p>
+                          <p><span className="text-muted-foreground">Carat:</span> {Number.isFinite(d.carat) ? d.carat.toFixed(2) : "-"}</p>
+                          <p><span className="text-muted-foreground">Color:</span> {d.color || "-"}</p>
+                          <p><span className="text-muted-foreground">Clarity:</span> {d.clarity || "-"}</p>
+                          <p><span className="text-muted-foreground">Cut:</span> {d.cut || "-"}</p>
+                          <p><span className="text-muted-foreground">Price:</span> <span className="font-medium">{Number.isFinite(d.price) ? currency(d.price) : "-"}</span></p>
+                        </div>
                       </div>
 
                       <div className="flex items-center gap-2">
                         <Button asChild variant="outline" size="sm" className="flex-1">
                           <Link to={`/diamond/${d.stoneId}`}>View Details</Link>
                         </Button>
-                        {has360 ? (
+                        {has360 && mediaMode === "v360" ? (
                           <Button asChild variant="ghost" size="sm" className="flex-1">
                             <a href={diamondV360Src(viewerStoneId)} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-1.5">
                               <RotateCcw className="w-3.5 h-3.5" />
                               Open 3D
-                              <ExternalLink className="w-3.5 h-3.5" />
                             </a>
                           </Button>
                         ) : null}
                       </div>
-
-                      <p className="font-heading text-xl">{Number.isFinite(d.price) ? currency(d.price) : "-"}</p>
                     </div>
                   </article>
                 );

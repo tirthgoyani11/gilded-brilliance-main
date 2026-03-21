@@ -172,7 +172,7 @@ const HeroSection = () => {
               size="xl"
               className="border-border text-foreground hover:bg-foreground hover:text-background group"
             >
-              <Link to="/ring-builder">
+              <Link to="/custom-jewelry-generator">
                 Create Your Ring
                 <ArrowRight className="w-4 h-4 ml-2 opacity-0 luxury-transition group-hover:opacity-100 group-hover:translate-x-1" />
               </Link>
