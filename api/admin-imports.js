@@ -1,8 +1,16 @@
 import { ensureImportLogsTable, sql } from "./_lib/db.js";
 import { requireAdmin } from "./_lib/admin-auth.js";
+import { cachePolicies, setCommonSecurityHeaders, setCorsForRequest } from "./_lib/security.js";
 
 export default async function handler(req, res) {
   try {
+    setCommonSecurityHeaders(res, { cacheControl: cachePolicies.privateNoStore });
+    setCorsForRequest(req, res, { allowedMethods: "GET,OPTIONS" });
+
+    if (req.method === "OPTIONS") {
+      return res.status(204).end();
+    }
+
     await ensureImportLogsTable();
     if (!requireAdmin(req, res)) return;
 
@@ -40,6 +48,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("Failed to fetch import history:", error);
-    return res.status(500).json({ message: "Failed to fetch import history", error: error.message });
+    return res.status(500).json({ message: "Failed to fetch import history" });
   }
 }

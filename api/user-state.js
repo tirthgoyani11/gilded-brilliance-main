@@ -1,9 +1,31 @@
 import { ensureUserStateTable, sql } from "./_lib/db.js";
+import {
+  cachePolicies,
+  createMemoryRateLimiter,
+  rejectIfCrossOriginWrite,
+  setCommonSecurityHeaders,
+  setCorsForRequest,
+} from "./_lib/security.js";
 
 const normalizeClientId = (value) => {
   const clientId = typeof value === "string" ? value.trim() : "";
-  return clientId.length >= 8 ? clientId : "";
+  return clientId.length >= 8 && clientId.length <= 128 ? clientId : "";
 };
+
+const sanitizeArray = (value, maxItems) => {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, maxItems);
+};
+
+const tooLargeBody = (body) => {
+  try {
+    return JSON.stringify(body || {}).length > 1_000_000;
+  } catch {
+    return true;
+  }
+};
+
+const isRateLimited = createMemoryRateLimiter({ windowMs: 60_000, maxRequests: 120 });
 
 const toState = (row) => ({
   cart: Array.isArray(row?.cart) ? row.cart : [],
@@ -14,6 +36,22 @@ const toState = (row) => ({
 
 export default async function handler(req, res) {
   try {
+    setCommonSecurityHeaders(res, { cacheControl: cachePolicies.privateNoStore });
+    setCorsForRequest(req, res, { allowedMethods: "GET,POST,OPTIONS" });
+
+    if (req.method === "OPTIONS") {
+      return res.status(204).end();
+    }
+
+    const requester = req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "anonymous";
+    if (isRateLimited(requester)) {
+      return res.status(429).json({ message: "Too many requests" });
+    }
+
+    if (rejectIfCrossOriginWrite(req, res)) {
+      return;
+    }
+
     await ensureUserStateTable();
 
     if (req.method === "GET") {
@@ -33,14 +71,18 @@ export default async function handler(req, res) {
     }
 
     if (req.method === "POST") {
+      if (tooLargeBody(req.body)) {
+        return res.status(413).json({ message: "Payload too large" });
+      }
+
       const clientId = normalizeClientId(req.body?.clientId);
       if (!clientId) {
         return res.status(400).json({ message: "Missing or invalid clientId" });
       }
 
-      const cart = Array.isArray(req.body?.cart) ? req.body.cart : [];
-      const wishlist = Array.isArray(req.body?.wishlist) ? req.body.wishlist : [];
-      const compare = Array.isArray(req.body?.compare) ? req.body.compare : [];
+      const cart = sanitizeArray(req.body?.cart, 200);
+      const wishlist = sanitizeArray(req.body?.wishlist, 200);
+      const compare = sanitizeArray(req.body?.compare, 20);
 
       const [row] = await sql`
         INSERT INTO user_state (client_id, cart, wishlist, compare, updated_at)
@@ -67,7 +109,6 @@ export default async function handler(req, res) {
   } catch (error) {
     return res.status(500).json({
       message: "Failed to process user state",
-      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 }

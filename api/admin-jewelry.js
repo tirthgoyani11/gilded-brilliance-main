@@ -1,5 +1,6 @@
 import { ensureCoreTables, sql } from "./_lib/db.js";
 import { requireAdmin } from "./_lib/admin-auth.js";
+import { cachePolicies, rejectIfCrossOriginWrite, setCommonSecurityHeaders, setCorsForRequest } from "./_lib/security.js";
 
 const mapRow = (row) => ({
   id: row.id,
@@ -16,6 +17,17 @@ const mapRow = (row) => ({
 
 export default async function handler(req, res) {
   try {
+    setCommonSecurityHeaders(res, { cacheControl: cachePolicies.privateNoStore });
+    setCorsForRequest(req, res, { allowedMethods: "GET,POST,PUT,DELETE,OPTIONS" });
+
+    if (req.method === "OPTIONS") {
+      return res.status(204).end();
+    }
+
+    if (rejectIfCrossOriginWrite(req, res)) {
+      return;
+    }
+
     await ensureCoreTables();
 
     if (!requireAdmin(req, res)) {
@@ -109,7 +121,6 @@ export default async function handler(req, res) {
   } catch (error) {
     return res.status(500).json({
       message: "Failed to manage jewelry",
-      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 }

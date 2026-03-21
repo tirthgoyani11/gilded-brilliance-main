@@ -1,8 +1,20 @@
 import { sql } from "./_lib/db.js";
 import { requireAdmin } from "./_lib/admin-auth.js";
+import { cachePolicies, rejectIfCrossOriginWrite, setCommonSecurityHeaders, setCorsForRequest } from "./_lib/security.js";
 
 export default async function handler(req, res) {
   try {
+    setCommonSecurityHeaders(res, { cacheControl: cachePolicies.privateNoStore });
+    setCorsForRequest(req, res, { allowedMethods: "POST,OPTIONS" });
+
+    if (req.method === "OPTIONS") {
+      return res.status(204).end();
+    }
+
+    if (rejectIfCrossOriginWrite(req, res)) {
+      return;
+    }
+
     if (!requireAdmin(req, res)) return;
 
     if (req.method !== "POST") {
@@ -59,6 +71,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("Failed to revert import batch:", error);
-    return res.status(500).json({ message: "Failed to revert import batch", error: error.message });
+    return res.status(500).json({ message: "Failed to revert import batch" });
   }
 }

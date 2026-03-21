@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { StoreProvider } from "@/contexts/StoreContext";
 import { Analytics } from "@vercel/analytics/react";
+import ScrollToTop from "@/components/ScrollToTop";
 const Index = lazy(() => import("./pages/Index.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const DesignLineUp = lazy(() => import("./pages/DesignLineUp.tsx"));
@@ -37,6 +38,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ScrollToTop />
           <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm uppercase tracking-[0.12em] text-muted-foreground">Loading VMORA</div>}>
             <Routes>
               <Route path="/" element={<Index />} />

@@ -1,8 +1,20 @@
 import { ensureDiamondsTable, sql } from "./_lib/db.js";
 import { requireAdmin } from "./_lib/admin-auth.js";
+import { cachePolicies, rejectIfCrossOriginWrite, setCommonSecurityHeaders, setCorsForRequest } from "./_lib/security.js";
 
 export default async function handler(req, res) {
   try {
+    setCommonSecurityHeaders(res, { cacheControl: cachePolicies.privateNoStore });
+    setCorsForRequest(req, res, { allowedMethods: "DELETE,OPTIONS" });
+
+    if (req.method === "OPTIONS") {
+      return res.status(204).end();
+    }
+
+    if (rejectIfCrossOriginWrite(req, res)) {
+      return;
+    }
+
     await ensureDiamondsTable();
     if (!requireAdmin(req, res)) return;
 
@@ -48,6 +60,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("Failed to delete diamonds Admin API:", error);
-    return res.status(500).json({ message: "Failed to delete diamonds", error: error.message });
+    return res.status(500).json({ message: "Failed to delete diamonds" });
   }
 }

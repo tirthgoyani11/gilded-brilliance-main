@@ -1,4 +1,5 @@
 import { ensureCoreTables, sql } from "./_lib/db.js";
+import { cachePolicies, setCommonSecurityHeaders, setCorsForRequest } from "./_lib/security.js";
 
 const mapRow = (row) => ({
   id: row.id,
@@ -13,6 +14,13 @@ const mapRow = (row) => ({
 
 export default async function handler(req, res) {
   try {
+    setCommonSecurityHeaders(res, { cacheControl: cachePolicies.publicShort });
+    setCorsForRequest(req, res, { allowedMethods: "GET,OPTIONS" });
+
+    if (req.method === "OPTIONS") {
+      return res.status(204).end();
+    }
+
     await ensureCoreTables();
 
     if (req.method !== "GET") {
@@ -30,7 +38,6 @@ export default async function handler(req, res) {
   } catch (error) {
     return res.status(500).json({
       message: "Failed to fetch jewelry",
-      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 }

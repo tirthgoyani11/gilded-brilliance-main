@@ -1,4 +1,5 @@
 import { ensureDiamondsTable, sql } from "./_lib/db.js";
+import { cachePolicies, setCommonSecurityHeaders, setCorsForRequest } from "./_lib/security.js";
 
 const toDiamond = (row) => ({
   stoneId: row.stone_id,
@@ -26,6 +27,13 @@ const toDiamond = (row) => ({
 
 export default async function handler(req, res) {
   try {
+    setCommonSecurityHeaders(res, { cacheControl: cachePolicies.publicShort });
+    setCorsForRequest(req, res, { allowedMethods: "GET,OPTIONS" });
+
+    if (req.method === "OPTIONS") {
+      return res.status(204).end();
+    }
+
     if (req.method !== "GET") {
       return res.status(405).json({ message: "Method not allowed" });
     }
@@ -39,12 +47,10 @@ export default async function handler(req, res) {
       LIMIT 20000;
     `;
 
-    res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
     return res.status(200).json({ diamonds: rows.map(toDiamond) });
   } catch (error) {
     return res.status(500).json({
       message: "Failed to fetch diamonds",
-      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 }
