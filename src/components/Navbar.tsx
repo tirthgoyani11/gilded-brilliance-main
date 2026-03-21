@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Heart, ShoppingBag, User, Menu, X, Search, MessageCircle } from "lucide-react";
+import { Heart, ShoppingBag, User, Menu, X, Search, MessageCircle, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStore } from "@/contexts/StoreContext";
@@ -18,7 +18,7 @@ const navLinks = [
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { cart, wishlist } = useStore();
+  const { cart, wishlist, compare } = useStore();
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const openWhatsApp = () => {
@@ -93,6 +93,18 @@ const Navbar = () => {
                     {wishlist.length > 0 ? (
                       <span className="absolute -top-1.5 -right-2 w-4 h-4 bg-primary text-primary-foreground text-[9px] rounded-full flex items-center justify-center font-medium">
                         {wishlist.length > 9 ? "9+" : wishlist.length}
+                      </span>
+                    ) : null}
+                  </span>
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" size="icon" className="text-foreground/50 hover:text-foreground w-9 h-9">
+                <Link to="/compare">
+                  <span className="relative inline-flex">
+                    <Scale className="w-4 h-4" />
+                    {compare.length > 0 ? (
+                      <span className="absolute -top-1.5 -right-2 w-4 h-4 bg-primary text-primary-foreground text-[9px] rounded-full flex items-center justify-center font-medium">
+                        {compare.length}
                       </span>
                     ) : null}
                   </span>

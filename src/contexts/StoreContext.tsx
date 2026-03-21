@@ -14,6 +14,19 @@ const normalizeDiamondMedia = (diamond: Diamond): Diamond => {
   };
 };
 
+const isValidDiamond = (item: unknown): item is Diamond => {
+  if (!item || typeof item !== "object") return false;
+  const candidate = item as Partial<Diamond>;
+  return (
+    typeof candidate.stoneId === "string" &&
+    candidate.stoneId.trim().length > 0 &&
+    typeof candidate.carat === "number" &&
+    Number.isFinite(candidate.carat) &&
+    typeof candidate.price === "number" &&
+    Number.isFinite(candidate.price)
+  );
+};
+
 type ImportProgress = {
   totalChunks: number;
   completedChunks: number;
@@ -77,7 +90,19 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
   const [diamonds, setDiamonds] = useState<Diamond[]>([]);
   const [cart, setCart] = useState<CartItem[]>(() => readStorage(STORAGE_KEYS.cart, []));
   const [wishlist, setWishlist] = useState<string[]>(() => readStorage(STORAGE_KEYS.wishlist, []));
-  const [compare, setCompare] = useState<Diamond[]>(() => readStorage(STORAGE_KEYS.compare, []));
+  const [compare, setCompare] = useState<Diamond[]>(() => {
+    const stored = readStorage<unknown[]>(STORAGE_KEYS.compare, []);
+    if (!Array.isArray(stored)) return [];
+
+    const byStoneId = new Map<string, Diamond>();
+    for (const item of stored) {
+      if (!isValidDiamond(item)) continue;
+      const normalized = normalizeDiamondMedia(item);
+      byStoneId.set(normalized.stoneId, normalized);
+    }
+
+    return [...byStoneId.values()].slice(-3);
+  });
   const [ringBuilder, setRingBuilderState] = useState<RingBuilderSelection>(() => readStorage(STORAGE_KEYS.ringBuilder, {}));
 
 
@@ -217,14 +242,15 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
   const isWishlisted = (stoneId: string) => wishlist.includes(stoneId);
 
   const toggleCompare = (diamond: Diamond) => {
+    const normalized = normalizeDiamondMedia(diamond);
     setCompare((prev) => {
-      if (prev.some((item) => item.stoneId === diamond.stoneId)) {
-        return prev.filter((item) => item.stoneId !== diamond.stoneId);
+      if (prev.some((item) => item.stoneId === normalized.stoneId)) {
+        return prev.filter((item) => item.stoneId !== normalized.stoneId);
       }
       if (prev.length >= 3) {
-        return [...prev.slice(1), diamond];
+        return [...prev.slice(1), normalized];
       }
-      return [...prev, diamond];
+      return [...prev, normalized];
     });
   };
 
