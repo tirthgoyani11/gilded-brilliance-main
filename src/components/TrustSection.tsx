@@ -1,24 +1,23 @@
 import { motion } from "framer-motion";
-import { ShieldCheck, BadgeCheck, Truck, Globe, RotateCcw, Heart } from "lucide-react";
 
 const trustItems = [
   {
-    icon: BadgeCheck,
+    iconImage: "/icons/logo_only_IGI.png",
     title: "IGI Certified",
     description: "Every diamond is independently certified with full traceability.",
   },
   {
-    icon: ShieldCheck,
+    iconImage: "/icons/blacklist_2631511.png",
     title: "No Middlemen",
     description: "Direct sourcing ensures transparent pricing, always.",
   },
   {
-    icon: Globe,
+    iconImage: "/icons/shopping-online_1238431.png",
     title: "Direct Sourcing",
     description: "From source to you. No compromises. Just mastery.",
   },
   {
-    icon: Truck,
+    iconImage: "/icons/import_4834333.png",
     title: "Discreet Shipping",
     description: "Delivered securely and discreetly to your doorstep, globally.",
   },
@@ -60,7 +59,12 @@ const TrustSection = () => {
               <div className="absolute top-0 right-0 w-24 h-24 bg-[radial-gradient(circle_at_top_right,rgba(198,168,125,0.06),transparent_70%)] rounded-tr-2xl pointer-events-none" />
               
               <div className="w-12 h-12 rounded-[14px] bg-secondary flex items-center justify-center mb-6 luxury-transition group-hover:scale-110 group-hover:bg-[#FFF9F0]">
-                <item.icon className="w-6 h-6 text-[#C6A87D] luxury-transition group-hover:rotate-3" strokeWidth={1.5} />
+                <img
+                  src={item.iconImage}
+                  alt={`${item.title} icon`}
+                  className="w-6 h-6 object-contain luxury-transition group-hover:rotate-3"
+                  loading="lazy"
+                />
               </div>
               <h3 className="font-heading text-[1.15rem] mb-2.5 text-foreground leading-tight">{item.title}</h3>
               <p className="text-[13px] text-muted-foreground leading-[1.7]">{item.description}</p>

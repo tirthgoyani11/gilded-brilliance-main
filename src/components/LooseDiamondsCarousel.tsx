@@ -1,22 +1,24 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const shapes = [
-  { name: "Round", img: "/shapes/round-Diamond.png" },
-  { name: "Princess", img: "/shapes/princess-Diamond.png" },
-  { name: "Emerald", img: "/shapes/emerald-Diamond.png" },
-  { name: "Asscher", img: "/shapes/asscher-Diamond.png" },
-  { name: "Oval", img: "/shapes/oval-Diamond.png" },
-  { name: "Pear", img: "/shapes/pear-Diamond.png" },
-  { name: "Heart", img: "/shapes/heart-Diamond.png" },
-  { name: "Marquise", img: "/shapes/marquise-Diamond.png" },
-  { name: "Cushion", img: "/shapes/cushion-Diamond.png" },
-  { name: "Radiant", img: "/shapes/radiant-Diamond.png" },
+  { name: "Round", img: "/shapes/round-Diamond.png", line: "Maximum brilliance and fire" },
+  { name: "Princess", img: "/shapes/princess-Diamond.png", line: "Modern edges with bold sparkle" },
+  { name: "Emerald", img: "/shapes/emerald-Diamond.png", line: "Elegant step cuts and clean flashes" },
+  { name: "Asscher", img: "/shapes/asscher-Diamond.png", line: "Vintage symmetry with deep hall-of-mirrors" },
+  { name: "Oval", img: "/shapes/oval-Diamond.png", line: "Elongated beauty with soft brilliance" },
+  { name: "Pear", img: "/shapes/pear-Diamond.png", line: "Graceful silhouette with lively light" },
+  { name: "Heart", img: "/shapes/heart-Diamond.png", line: "Romantic shape with expressive sparkle" },
+  { name: "Marquise", img: "/shapes/marquise-Diamond.png", line: "Striking length that looks larger per carat" },
+  { name: "Cushion", img: "/shapes/cushion-Diamond.png", line: "Soft corners with pillow-like charm" },
+  { name: "Radiant", img: "/shapes/radiant-Diamond.png", line: "Crisp facets with intense scintillation" },
 ];
 
 const LooseDiamondsCarousel = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const navigate = useNavigate();
 
   const nextSlide = () => {
     setActiveIndex((prev) => (prev + 1) % shapes.length);
@@ -24,6 +26,11 @@ const LooseDiamondsCarousel = () => {
 
   const prevSlide = () => {
     setActiveIndex((prev) => (prev - 1 + shapes.length) % shapes.length);
+  };
+
+  const openLooseDiamondsWithShape = (shapeName: string) => {
+    const params = new URLSearchParams({ shape: shapeName });
+    navigate(`/diamonds?${params.toString()}`);
   };
 
   const getVisibleShapes = () => {
@@ -123,7 +130,7 @@ const LooseDiamondsCarousel = () => {
                       mass: 0.8
                     }}
                     className="absolute flex flex-col items-center justify-center cursor-pointer"
-                    onClick={() => setActiveIndex(shape.originalIndex)}
+                    onClick={() => openLooseDiamondsWithShape(shape.name)}
                   >
                     <div className="relative mb-8 transition-all duration-500">
                       <img 
@@ -139,7 +146,7 @@ const LooseDiamondsCarousel = () => {
                         {shape.name.toUpperCase()}
                       </h4>
                       <p className="text-xs text-muted-foreground mt-2 font-accent uppercase tracking-widest">
-                        Maximizes light return
+                        {shape.line}
                       </p>
                     </div>
                   </motion.div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, BadgeCheck, Gem, GraduationCap, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, BadgeCheck, GraduationCap, ShieldCheck, Sparkles } from "lucide-react";
 import SiteLayout from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -70,6 +70,13 @@ const faqs = [
       "Absolutely. Understanding the 4Cs before design helps you choose the right center stone and prevents overpaying for specs that do not improve visible beauty.",
   },
 ];
+
+const topicIconByTitle: Record<string, string> = {
+  cut: "/icons/4c-cut.svg",
+  color: "/icons/4c-color.svg",
+  clarity: "/icons/4c-clarity.svg",
+  carat: "/icons/4c-carat.svg",
+};
 
 const Education = () => {
   const [content, setContent] = useState({
@@ -261,7 +268,12 @@ const Education = () => {
                   className="rounded-2xl border border-border bg-card p-5 shadow-sm"
                 >
                   <div className="mb-3 inline-flex rounded-full border border-primary/20 bg-primary/10 p-2 text-primary">
-                    <Gem className="h-4 w-4" />
+                    <img
+                      src={topicIconByTitle[topic.title.trim().toLowerCase()] || "/icons/4c-cut.svg"}
+                      alt={`${topic.title} icon`}
+                      className="h-4 w-4 object-contain"
+                      loading="lazy"
+                    />
                   </div>
                   <h3 className="font-heading text-xl text-foreground">{topic.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{topic.body}</p>

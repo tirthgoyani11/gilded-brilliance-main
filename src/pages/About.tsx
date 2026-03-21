@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, BadgeCheck, Crown, Gem, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, BadgeCheck, Crown, ShieldCheck, Sparkles } from "lucide-react";
 import SiteLayout from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
 
@@ -18,6 +18,12 @@ const brandPillars = [
     body: "We prioritize clear guidance, certification confidence, and direct communication so clients can choose without uncertainty.",
   },
 ];
+
+const pillarIconByTitle: Record<string, string> = {
+  "curated diamond intelligence": "/icons/diamond_5033075.png",
+  "luxury craft execution": "/icons/luxury.png",
+  "transparent buying experience": "/icons/customer-care_6012388.png",
+};
 
 const About = () => {
   const [content, setContent] = useState({
@@ -148,7 +154,12 @@ const About = () => {
                 className="rounded-2xl border border-border bg-card p-6 shadow-sm"
               >
                 <div className="mb-3 inline-flex rounded-full border border-primary/20 bg-primary/10 p-2 text-primary">
-                  <Gem className="h-4 w-4" />
+                  <img
+                    src={pillarIconByTitle[pillar.title.trim().toLowerCase()] || "/icons/diamond_5033075.png"}
+                    alt={`${pillar.title} icon`}
+                    className="h-4 w-4 object-contain"
+                    loading="lazy"
+                  />
                 </div>
                 <h2 className="font-heading text-2xl text-foreground">{pillar.title}</h2>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{pillar.body}</p>

@@ -1,7 +1,7 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, BadgeCheck, RotateCcw, Globe } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useRef } from "react";
 
 const luxuryTransition = {
@@ -13,9 +13,9 @@ const heroVideoUrl =
   "https://cdn.pixabay.com/vimeo/345110515/diamond-24892.mp4?width=1280&hash=01bc724c965e6abefce4a123f15c7e84af314d3b";
 
 const trustBadges = [
-  { icon: BadgeCheck, label: "Independently Certified" },
-  { icon: Globe, label: "From Source To You" },
-  { icon: RotateCcw, label: "360° Diamond View" },
+  { iconImage: "/icons/logo_only_IGI.png", label: "Independently Certified" },
+  { iconImage: "/icons/customer-care_6012388.png", label: "From Source To You" },
+  { iconImage: "/icons/360-degrees_8200057.png", label: "360° Diamond View" },
 ];
 
 const FloatingDiamonds = () => {
@@ -199,7 +199,12 @@ const HeroSection = () => {
           >
             {trustBadges.map((badge, i) => (
               <div key={badge.label} className="flex items-center gap-2.5 group">
-                <badge.icon className="w-4 h-4 text-[#C6A87D] luxury-transition group-hover:scale-110" />
+                <img
+                  src={badge.iconImage}
+                  alt={`${badge.label} icon`}
+                  className="w-4 h-4 object-contain luxury-transition group-hover:scale-110"
+                  loading="lazy"
+                />
                 <span className="text-[10px] md:text-[11px] uppercase tracking-[0.15em] font-body text-foreground/70 font-medium">
                   {badge.label}
                 </span>

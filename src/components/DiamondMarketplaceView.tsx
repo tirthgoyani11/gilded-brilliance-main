@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Check, Scale, SlidersHorizontal, X, RotateCcw, MessageCircle, Eye } from "lucide-react";
 import { certificateLink, currency, getFallbackImage, WHATSAPP_NUMBER } from "@/lib/diamond-utils";
 import { Button } from "@/components/ui/button";
@@ -119,6 +119,7 @@ const symmetryScale = ["8X", "3X+", "3VG+", "Ideal", "Excellent", "Very Good", "
 const fluorescenceScale = ["None", "Faint", "Medium", "Strong", "V Strong"];
 
 const DiamondMarketplaceView = () => {
+  const [searchParams] = useSearchParams();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(true);
   const [view, setView] = useState<"table" | "grid">("grid");
   const [shape, setShape] = useState("All");
@@ -227,6 +228,23 @@ const DiamondMarketplaceView = () => {
     if (custom.length > 0) result.push("Other");
     return result;
   }, [diamonds]);
+
+  useEffect(() => {
+    const shapeParam = searchParams.get("shape")?.trim();
+    if (!shapeParam || !shapes.length) return;
+
+    const shapeParamKey = canonicalShapeKey(shapeParam);
+    const matchingOption = shapes.find((option) => canonicalShapeKey(option) === shapeParamKey);
+
+    if (matchingOption) {
+      setShape(matchingOption);
+      return;
+    }
+
+    if (shapes.includes("Other")) {
+      setShape("Other");
+    }
+  }, [searchParams, shapes]);
 
   const colors = useMemo(() => ["All", ...colorScale.filter((c) => diamonds.some((d) => d.color?.toUpperCase().includes(c)))], [diamonds]);
   const clarities = useMemo(() => ["All", ...clarityScale.filter((c) => diamonds.some((d) => d.clarity?.toUpperCase().includes(c)))], [diamonds]);

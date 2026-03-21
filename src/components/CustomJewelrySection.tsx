@@ -7,6 +7,7 @@ const offerings = [
     description:
       "From signature rings to statement necklaces, each piece is tailored to your vision with atelier-level finishing.",
     icon: Gem,
+    iconImage: "/icons/jewelry.png",
     to: "/design-line-up",
     cta: "Discover The Line Up",
   },
@@ -15,6 +16,7 @@ const offerings = [
     description:
       "Refined watch concepts crafted with custom materials, dial direction, and detail language built around your taste.",
     icon: Clock3,
+    iconImage: "/icons/luxury.png",
     to: "/design-line-up",
     cta: "View Timepiece Editions",
   },
@@ -23,6 +25,7 @@ const offerings = [
     description:
       "Select from certified natural and lab-grown diamonds curated for brilliance, precision, and confidence.",
     icon: Diamond,
+    iconImage: "/icons/diamond_5033075.png",
     to: "/diamonds",
     cta: "Explore Certified Stones",
   },
@@ -50,13 +53,17 @@ const CustomJewelrySection = () => {
         </div>
 
         <div className="grid gap-5 md:grid-cols-3 lg:gap-6">
-          {offerings.map(({ title, description, icon: Icon, to, cta }) => (
+          {offerings.map(({ title, description, icon: Icon, iconImage, to, cta }) => (
             <article
               key={title}
               className="group flex h-full flex-col rounded-2xl border border-[#d8c9b1]/45 bg-[#fffdf9]/95 p-6 shadow-[0_10px_28px_-16px_rgba(0,0,0,0.22)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_-20px_rgba(0,0,0,0.3)]"
             >
               <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary ring-1 ring-primary/15">
-                <Icon className="h-5 w-5" />
+                {iconImage ? (
+                  <img src={iconImage} alt={`${title} logo`} className="h-7 w-7 object-contain" loading="lazy" />
+                ) : (
+                  <Icon className="h-5 w-5" />
+                )}
               </div>
               <h3 className="font-heading text-xl text-foreground">{title}</h3>
               <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">{description}</p>

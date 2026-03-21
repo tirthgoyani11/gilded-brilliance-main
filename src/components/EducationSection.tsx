@@ -1,28 +1,29 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Gem, Palette, Shield, Sparkles, ArrowRight } from "lucide-react";
+import { Palette, ArrowRight } from "lucide-react";
 
 const topics = [
   {
-    icon: Gem,
+    iconImage: "/icons/money_15109816.png",
     title: "The 4Cs",
     description: "Cut, Color, Clarity, and Carat — the universal measures of diamond quality.",
     link: "/education",
   },
   {
-    icon: Shield,
+    iconImage: "/icons/logo_only_IGI.png",
     title: "IGI Certification",
     description: "Independent grading by the International Gemological Institute — your assurance of authenticity.",
     link: "/certificate-verification",
   },
   {
     icon: Palette,
+    iconImage: "/shapes/heart-Diamond.png",
     title: "Diamond Shapes",
     description: "Round, Oval, Cushion, Emerald — discover which shape speaks to you.",
     link: "/education",
   },
   {
-    icon: Sparkles,
+    iconImage: "/icons/victory_14424850.png",
     title: "Lab vs Natural",
     description: "Optically identical, chemically pure — understand the difference and make an informed choice.",
     link: "/education",
@@ -71,8 +72,17 @@ const EducationSection = () => {
                 to={topic.link}
                 className="group relative block rounded-2xl border border-border bg-background p-8 shadow-luxury luxury-transition hover:shadow-luxury-hover hover:border-[#C6A87D]/30 h-full diamond-glow"
               >
-                <div className="w-12 h-12 rounded-[14px] bg-secondary flex items-center justify-center mb-6 luxury-transition group-hover:bg-[#FFF9F0] group-hover:scale-110">
-                  <topic.icon className="w-5 h-5 text-primary group-hover:text-[#C6A87D] luxury-transition group-hover:-rotate-3" strokeWidth={1.5} />
+                <div className="w-12 h-12 rounded-[14px] bg-secondary flex items-center justify-center mb-6 luxury-transition group-hover:bg-[#FFF9F0]">
+                  {"iconImage" in topic ? (
+                    <img
+                      src={topic.iconImage}
+                      alt={topic.title}
+                      className="w-7 h-7 object-contain luxury-transition group-hover:scale-110"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <topic.icon className="w-5 h-5 text-primary group-hover:text-[#C6A87D] luxury-transition group-hover:-rotate-3 group-hover:scale-110" strokeWidth={1.5} />
+                  )}
                 </div>
                 <h3 className="font-heading text-[1.1rem] mb-2.5 text-foreground group-hover:text-foreground luxury-transition leading-tight">{topic.title}</h3>
                 <p className="text-[13px] text-muted-foreground leading-[1.7] mb-6">{topic.description}</p>
