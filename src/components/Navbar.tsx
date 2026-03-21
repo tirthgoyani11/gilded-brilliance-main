@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Heart, ShoppingBag, User, Menu, X, Search, MessageCircle, Scale } from "lucide-react";
+import { Heart, ShoppingBag, User, Menu, X, Search, MessageCircle, Scale, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStore } from "@/contexts/StoreContext";
@@ -18,8 +18,23 @@ const navLinks = [
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { cart, wishlist, compare } = useStore();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const { cart, wishlist, compare, diamonds } = useStore();
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const normalizedQuery = query.trim().toLowerCase();
+  const quickSearchResults = normalizedQuery
+    ? diamonds
+        .filter((diamond) => {
+          const haystack = [diamond.stoneId, diamond.shape, diamond.color, diamond.clarity, diamond.cut]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+          return haystack.includes(normalizedQuery);
+        })
+        .slice(0, 6)
+    : [];
 
   const openWhatsApp = () => {
     const message = encodeURIComponent("Hello Vmora Team, I'd like to speak with a diamond expert.");
@@ -83,9 +98,79 @@ const Navbar = () => {
               >
                 <MessageCircle className="w-4 h-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="text-foreground/50 hover:text-foreground w-9 h-9">
-                <Search className="w-4 h-4" />
-              </Button>
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-foreground/50 hover:text-foreground w-9 h-9"
+                  onClick={() => setSearchOpen((prev) => !prev)}
+                  aria-label="Search diamonds"
+                >
+                  <Search className="w-4 h-4" />
+                </Button>
+                <AnimatePresence>
+                  {searchOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                      transition={{ duration: 0.18 }}
+                      className="absolute right-0 top-11 w-[88vw] max-w-sm rounded-xl border border-border bg-background shadow-luxury z-50"
+                    >
+                      <div className="p-3 border-b border-border">
+                        <div className="relative">
+                          <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                          <input
+                            autoFocus
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder="Search by stone id, shape, color..."
+                            className="w-full h-9 rounded-lg border border-border bg-background pl-9 pr-3 text-sm outline-none focus:border-primary"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="max-h-80 overflow-auto p-2">
+                        {normalizedQuery.length === 0 ? (
+                          <p className="px-2 py-2 text-xs text-muted-foreground">Type to search diamonds instantly.</p>
+                        ) : quickSearchResults.length === 0 ? (
+                          <p className="px-2 py-2 text-xs text-muted-foreground">No diamonds found for "{query}".</p>
+                        ) : (
+                          quickSearchResults.map((diamond) => (
+                            <Link
+                              key={diamond.stoneId}
+                              to={`/diamond/${diamond.stoneId}`}
+                              onClick={() => {
+                                setSearchOpen(false);
+                                setQuery("");
+                              }}
+                              className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-secondary/60 luxury-transition"
+                            >
+                              <div>
+                                <p className="text-xs font-medium">{diamond.stoneId}</p>
+                                <p className="text-[11px] text-muted-foreground">{diamond.shape} · {diamond.carat.toFixed(2)}ct · {diamond.color} · {diamond.clarity}</p>
+                              </div>
+                              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
+                            </Link>
+                          ))
+                        )}
+                      </div>
+
+                      <div className="border-t border-border p-2">
+                        <Button asChild variant="ghost" size="sm" className="w-full justify-between">
+                          <Link
+                            to={normalizedQuery ? `/diamonds?search=${encodeURIComponent(query.trim())}` : "/diamonds"}
+                            onClick={() => setSearchOpen(false)}
+                          >
+                            View all matching diamonds
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
               <Button asChild variant="ghost" size="icon" className="text-foreground/50 hover:text-foreground w-9 h-9">
                 <Link to="/wishlist">
                   <span className="relative inline-flex">
