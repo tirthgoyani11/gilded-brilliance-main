@@ -9,7 +9,6 @@ const toState = (row) => ({
   cart: Array.isArray(row?.cart) ? row.cart : [],
   wishlist: Array.isArray(row?.wishlist) ? row.wishlist : [],
   compare: Array.isArray(row?.compare) ? row.compare : [],
-  ringBuilder: row?.ring_builder && typeof row.ring_builder === "object" ? row.ring_builder : {},
   updatedAt: row?.updated_at ?? null,
 });
 
@@ -24,7 +23,7 @@ export default async function handler(req, res) {
       }
 
       const [row] = await sql`
-        SELECT cart, wishlist, compare, ring_builder, updated_at
+        SELECT cart, wishlist, compare, updated_at
         FROM user_state
         WHERE client_id = ${clientId}
         LIMIT 1;
@@ -42,16 +41,14 @@ export default async function handler(req, res) {
       const cart = Array.isArray(req.body?.cart) ? req.body.cart : [];
       const wishlist = Array.isArray(req.body?.wishlist) ? req.body.wishlist : [];
       const compare = Array.isArray(req.body?.compare) ? req.body.compare : [];
-      const ringBuilder = req.body?.ringBuilder && typeof req.body.ringBuilder === "object" ? req.body.ringBuilder : {};
 
       const [row] = await sql`
-        INSERT INTO user_state (client_id, cart, wishlist, compare, ring_builder, updated_at)
+        INSERT INTO user_state (client_id, cart, wishlist, compare, updated_at)
         VALUES (
           ${clientId},
           ${JSON.stringify(cart)}::jsonb,
           ${JSON.stringify(wishlist)}::jsonb,
           ${JSON.stringify(compare)}::jsonb,
-          ${JSON.stringify(ringBuilder)}::jsonb,
           NOW()
         )
         ON CONFLICT (client_id)
@@ -59,9 +56,8 @@ export default async function handler(req, res) {
           cart = EXCLUDED.cart,
           wishlist = EXCLUDED.wishlist,
           compare = EXCLUDED.compare,
-          ring_builder = EXCLUDED.ring_builder,
           updated_at = NOW()
-        RETURNING cart, wishlist, compare, ring_builder, updated_at;
+        RETURNING cart, wishlist, compare, updated_at;
       `;
 
       return res.status(200).json({ state: toState(row) });

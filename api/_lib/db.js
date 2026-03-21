@@ -108,7 +108,6 @@ export async function ensureUserStateTable() {
       cart JSONB NOT NULL DEFAULT '[]'::jsonb,
       wishlist JSONB NOT NULL DEFAULT '[]'::jsonb,
       compare JSONB NOT NULL DEFAULT '[]'::jsonb,
-      ring_builder JSONB NOT NULL DEFAULT '{}'::jsonb,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );

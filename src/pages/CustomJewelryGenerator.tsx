@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { ArrowRight, CheckCircle2, Gem, MessageCircle, Sparkles } from "lucide-react";
 import SiteLayout from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,8 @@ const metalOptions = ["White Gold", "Yellow Gold", "Rose Gold", "Silver", "Plati
 const styleOptions = ["Classic", "Minimal", "Vintage", "Halo", "Modern", "Statement"];
 
 const CustomJewelryGenerator = () => {
-  const { diamonds, ringBuilder } = useStore();
+  const { diamonds } = useStore();
+  const [searchParams] = useSearchParams();
 
   const [search, setSearch] = useState("");
   const [shape, setShape] = useState("All");
@@ -111,10 +112,11 @@ const CustomJewelryGenerator = () => {
   };
 
   useEffect(() => {
-    if (!ringBuilder.diamondStoneId || selectedDiamond) return;
-    const fromBuilder = diamonds.find((diamond) => diamond.stoneId === ringBuilder.diamondStoneId);
-    if (fromBuilder) setSelectedDiamond(fromBuilder);
-  }, [diamonds, ringBuilder.diamondStoneId, selectedDiamond]);
+    const requestedStoneId = searchParams.get("stoneId");
+    if (!requestedStoneId || selectedDiamond) return;
+    const fromQuery = diamonds.find((diamond) => diamond.stoneId === requestedStoneId);
+    if (fromQuery) setSelectedDiamond(fromQuery);
+  }, [diamonds, searchParams, selectedDiamond]);
 
   return (
     <SiteLayout>
