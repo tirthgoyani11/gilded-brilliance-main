@@ -42,9 +42,3 @@ export interface CartItem {
   imageUrl: string;
   fullDiamond?: Diamond;
 }
-
-export interface RingBuilderSelection {
-  diamondStoneId?: string;
-  setting?: "Solitaire" | "Halo" | "Pave" | "Three Stone";
-  metal?: "Silver" | "White Gold" | "Yellow Gold" | "Rose Gold";
-}

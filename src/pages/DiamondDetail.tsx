@@ -11,7 +11,7 @@ import { useState } from "react";
 
 const DiamondDetail = () => {
   const { stoneId = "" } = useParams();
-  const { diamonds, addToCart, setRingBuilder } = useStore();
+  const { diamonds, addToCart } = useStore();
   const diamond = diamonds.find((d) => d.stoneId === stoneId);
   const [activeTab, setActiveTab] = useState<"details" | "certificate" | "shipping">("details");
 
@@ -107,8 +107,8 @@ const DiamondDetail = () => {
                   Add to Cart
                 </Button>
                 <Button variant="luxury-outline" size="lg" asChild>
-                  <Link to="/custom-jewelry-generator" onClick={() => setRingBuilder({ diamondStoneId: diamond.stoneId })}>
-                    Add to Ring
+                  <Link to={`/custom-jewelry-generator?stoneId=${encodeURIComponent(diamond.stoneId)}`}>
+                    Open Custom Builder
                   </Link>
                 </Button>
               </div>

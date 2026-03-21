@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import type { CartItem, Diamond, RingBuilderSelection } from "@/types/diamond";
+import type { CartItem, Diamond } from "@/types/diamond";
 import { mockDiamonds } from "@/data/mockCatalog";
 
 const diamondStillImage = (stoneId: string) => `https://v3601514.v360.in/imaged/${encodeURIComponent(stoneId)}/still.jpg`;
@@ -53,7 +53,6 @@ const STORAGE_KEYS = {
   cart: "vmora_store_cart",
   wishlist: "vmora_store_wishlist",
   compare: "vmora_store_compare",
-  ringBuilder: "vmora_store_ring_builder",
   clientId: "vmora_store_client_id",
 };
 
@@ -132,7 +131,6 @@ interface StoreContextValue {
   cart: CartItem[];
   wishlist: string[];
   compare: Diamond[];
-  ringBuilder: RingBuilderSelection;
   importDiamonds: (items: Diamond[], options?: ImportOptions) => Promise<ImportResult>;
   addToCart: (item: Omit<CartItem, "quantity">) => void;
   removeFromCart: (id: string) => void;
@@ -141,7 +139,6 @@ interface StoreContextValue {
   isWishlisted: (stoneId: string) => boolean;
   toggleCompare: (diamond: Diamond) => void;
   isCompared: (stoneId: string) => boolean;
-  setRingBuilder: (next: Partial<RingBuilderSelection>) => void;
 }
 
 const StoreContext = createContext<StoreContextValue | undefined>(undefined);
@@ -153,7 +150,6 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>(() => readStorage(STORAGE_KEYS.cart, []));
   const [wishlist, setWishlist] = useState<string[]>(() => readStorage(STORAGE_KEYS.wishlist, []));
   const [compare, setCompare] = useState<Diamond[]>(() => normalizeCompare(readStorage<unknown[]>(STORAGE_KEYS.compare, [])));
-  const [ringBuilder, setRingBuilderState] = useState<RingBuilderSelection>(() => readStorage(STORAGE_KEYS.ringBuilder, {}));
 
   useEffect(() => {
     let active = true;
@@ -173,12 +169,10 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
         const nextCart = normalizeCart(payload.state.cart);
         const nextWishlist = normalizeWishlist(payload.state.wishlist);
         const nextCompare = normalizeCompare(payload.state.compare);
-        const nextRingBuilder = payload.state.ringBuilder && typeof payload.state.ringBuilder === "object" ? payload.state.ringBuilder : {};
 
         if (nextCart.length > 0) setCart(nextCart);
         if (nextWishlist.length > 0) setWishlist(nextWishlist);
         if (nextCompare.length > 0) setCompare(nextCompare);
-        if (Object.keys(nextRingBuilder).length > 0) setRingBuilderState(nextRingBuilder);
       } catch {
         // Keep local state if Neon user sync is unavailable.
       } finally {
@@ -208,10 +202,6 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
   }, [compare]);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEYS.ringBuilder, JSON.stringify(ringBuilder));
-  }, [ringBuilder]);
-
-  useEffect(() => {
     if (!userStateHydrated || !clientId) return;
 
     const timeoutId = window.setTimeout(() => {
@@ -223,7 +213,6 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
           cart,
           wishlist,
           compare,
-          ringBuilder,
         }),
       }).catch(() => {
         // Local state continues to work if remote sync fails.
@@ -233,7 +222,7 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [clientId, userStateHydrated, cart, wishlist, compare, ringBuilder]);
+  }, [clientId, userStateHydrated, cart, wishlist, compare]);
 
   const importDiamonds = async (items: Diamond[], options?: ImportOptions): Promise<ImportResult> => {
     let created = 0;
@@ -368,17 +357,12 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
 
   const isCompared = (stoneId: string) => compare.some((item) => item.stoneId === stoneId);
 
-  const setRingBuilder = (next: Partial<RingBuilderSelection>) => {
-    setRingBuilderState((prev) => ({ ...prev, ...next }));
-  };
-
   const value = useMemo(
     () => ({
       cart,
       diamonds,
       wishlist,
       compare,
-      ringBuilder,
       importDiamonds,
       addToCart,
       removeFromCart,
@@ -387,9 +371,8 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
       isWishlisted,
       toggleCompare,
       isCompared,
-      setRingBuilder,
     }),
-    [cart, diamonds, wishlist, compare, ringBuilder],
+    [cart, diamonds, wishlist, compare],
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
