@@ -44,6 +44,7 @@ const App = () => (
           <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm uppercase tracking-[0.12em] text-muted-foreground">Loading VMORA</div>}>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/jewelry" element={<DesignLineUp />} />
               <Route path="/design-line-up" element={<DesignLineUp />} />
               <Route path="/custom-jewelry-generator" element={<CustomJewelryGenerator />} />
               <Route path="/diamonds" element={<Diamonds />} />

@@ -10,13 +10,18 @@ type SeoEntry = {
 
 const SEO_BY_PATH: Record<string, SeoEntry> = {
   "/": {
-    title: "VMORA | Certified Diamonds & Fine Jewelry",
-    description: "Explore certified loose diamonds, bespoke jewelry, and luxury watch creations from VMORA with transparent pricing and expert guidance in Surat, Mumbai, India, and worldwide.",
-    keywords: "vmora, v.mora, v mora, vieroa, loose diamond search, jewellery search, custom jewellery search, trusted jeweller in surat, jeweller in mumbai, india diamonds, worldwide diamond shipping",
+    title: "VMORA Jewels | Certified Diamonds & Fine Jewelry",
+    description: "Explore certified loose diamonds and bespoke jewelry from VMORA Jewels with transparent pricing and expert guidance in Surat, Mumbai, India, and worldwide.",
+    keywords: "vmora jewels, vmora, v.mora, v mora, vieroa, loose diamond search, jewellery search, custom jewellery search, trusted jeweller in surat, jeweller in mumbai, india diamonds, worldwide diamond shipping",
+  },
+  "/jewelry": {
+    title: "Jewelry Collection | Fine Jewelry Designs | VMORA Jewels",
+    description: "Discover VMORA Jewels jewelry collection featuring rings, pendants, bracelets, earrings, and bespoke design inspiration.",
+    keywords: "vmora jewelry, vmora jewels, fine jewelry india, diamond jewelry designs, bespoke jewelry",
   },
   "/diamonds": {
-    title: "Loose Diamonds | Certified Natural & Lab-Grown Diamonds | VMORA",
-    description: "Browse certified loose diamonds by shape, color, clarity, carat, and price with transparent filters and premium guidance from VMORA.",
+    title: "Loose Diamonds | Certified Natural & Lab-Grown Diamonds | VMORA Jewels",
+    description: "Browse certified loose diamonds by shape, color, clarity, carat, and price with transparent filters and premium guidance from VMORA Jewels.",
     keywords: "loose diamonds, certified diamonds, natural diamonds, lab grown diamonds, diamond search, diamond filters, diamond sellers in surat, diamond sellers in mumbai",
   },
   "/education": {
@@ -77,9 +82,9 @@ const SEO_BY_PATH: Record<string, SeoEntry> = {
 };
 
 const DEFAULT_SEO: SeoEntry = {
-  title: "VMORA | Certified Diamonds & Fine Jewelry",
-  description: "Discover certified diamonds, custom jewelry, and premium buying guidance from VMORA.",
-  keywords: "vmora, diamonds, loose diamonds, custom jewelry, jewellery search, india",
+  title: "VMORA Jewels | Certified Diamonds & Fine Jewelry",
+  description: "Discover certified diamonds, custom jewelry, and premium buying guidance from VMORA Jewels.",
+  keywords: "vmora jewels, vmora, diamonds, loose diamonds, custom jewelry, jewellery search, india",
 };
 
 const upsertMeta = (selector: string, attrs: Record<string, string>, content: string) => {
