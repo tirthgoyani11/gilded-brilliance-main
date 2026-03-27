@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Scale, Check } from "lucide-react";
@@ -15,12 +15,70 @@ const DiamondSearchPreview = () => {
   const navigate = useNavigate();
 
   const [shape, setShape] = useState("Round");
-  const [priceMax, setPriceMax] = useState(25000);
-  const [caratMin, setCaratMin] = useState(1.0);
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
+  const [caratMin, setCaratMin] = useState("");
+  const [caratMax, setCaratMax] = useState("");
   const [color, setColor] = useState("All");
   const [clarity, setClarity] = useState("All");
 
+  const hasInitializedBounds = useRef(false);
+
+  const rangeBounds = useMemo(() => {
+    const valid = diamonds.filter((d) => Number.isFinite(d.carat) && Number.isFinite(d.price));
+    if (!valid.length) {
+      return {
+        caratMin: 0.3,
+        caratMax: 10,
+        priceMin: 500,
+        priceMax: 100000,
+      };
+    }
+
+    let cMin = Infinity;
+    let cMax = -Infinity;
+    let pMin = Infinity;
+    let pMax = -Infinity;
+    for (const d of valid) {
+      if (d.carat < cMin) cMin = d.carat;
+      if (d.carat > cMax) cMax = d.carat;
+      if (d.price < pMin) pMin = d.price;
+      if (d.price > pMax) pMax = d.price;
+    }
+
+    return {
+      caratMin: Number(cMin.toFixed(2)),
+      caratMax: Number(cMax.toFixed(2)),
+      priceMin: Math.floor(pMin),
+      priceMax: Math.ceil(pMax),
+    };
+  }, [diamonds]);
+
+  useEffect(() => {
+    if (!diamonds.length || hasInitializedBounds.current) return;
+    setPriceMin(String(rangeBounds.priceMin));
+    setPriceMax(String(rangeBounds.priceMax));
+    setCaratMin(String(rangeBounds.caratMin));
+    setCaratMax(String(rangeBounds.caratMax));
+    hasInitializedBounds.current = true;
+  }, [diamonds.length, rangeBounds]);
+
   const filtered = useMemo(() => {
+    const parsedPriceMin = Number(priceMin);
+    const parsedPriceMax = Number(priceMax);
+    const parsedCaratMin = Number(caratMin);
+    const parsedCaratMax = Number(caratMax);
+
+    const effectivePriceMin = Number.isFinite(parsedPriceMin) ? parsedPriceMin : rangeBounds.priceMin;
+    const effectivePriceMax = Number.isFinite(parsedPriceMax) ? parsedPriceMax : rangeBounds.priceMax;
+    const effectiveCaratMin = Number.isFinite(parsedCaratMin) ? parsedCaratMin : rangeBounds.caratMin;
+    const effectiveCaratMax = Number.isFinite(parsedCaratMax) ? parsedCaratMax : rangeBounds.caratMax;
+
+    const minPrice = Math.min(effectivePriceMin, effectivePriceMax);
+    const maxPrice = Math.max(effectivePriceMin, effectivePriceMax);
+    const minCarat = Math.min(effectiveCaratMin, effectiveCaratMax);
+    const maxCarat = Math.max(effectiveCaratMin, effectiveCaratMax);
+
     return diamonds.filter(d => {
       // Shape filter
       if (shape !== "All") {
@@ -32,14 +90,14 @@ const DiamondSearchPreview = () => {
       if (color !== "All" && !d.color?.toUpperCase().includes(color)) return false;
       // Clarity
       if (clarity !== "All" && !d.clarity?.toUpperCase().includes(clarity)) return false;
-      // Price
-      if (d.price > priceMax) return false;
-      // Carat
-      if (d.carat < caratMin) return false;
+      // Price range
+      if (d.price < minPrice || d.price > maxPrice) return false;
+      // Carat range
+      if (d.carat < minCarat || d.carat > maxCarat) return false;
       
       return true;
     }).slice(0, 7); // only top 7 items for preview table
-  }, [diamonds, shape, color, clarity, priceMax, caratMin]);
+  }, [diamonds, shape, color, clarity, priceMin, priceMax, caratMin, caratMax, rangeBounds]);
 
 
   return (
@@ -119,37 +177,71 @@ const DiamondSearchPreview = () => {
               </div>
             </div>
 
-            {/* Price & Carat Sliders */}
+            {/* Price & Carat Inputs */}
             <div className="col-span-1 md:col-span-1 lg:col-span-2 space-y-6">
               <div>
-                <div className="flex justify-between items-center mb-3">
-                  <p className="text-[10px] uppercase tracking-[0.14em] font-medium text-foreground">Max Price</p>
-                  <p className="text-[11px] text-muted-foreground font-medium">{currency(priceMax)}</p>
+                <div className="flex flex-wrap items-center gap-3 mb-3">
+                  <p className="text-[10px] uppercase tracking-[0.14em] font-medium text-foreground min-w-[82px]">Price</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      placeholder="MIN"
+                      value={priceMin}
+                      onChange={(e) => setPriceMin(e.target.value)}
+                      onBlur={() => {
+                        if (priceMin.trim() === "") {
+                          setPriceMin(String(rangeBounds.priceMin));
+                          return;
+                        }
+                        setPriceMin(String(Math.max(0, Number(priceMin))));
+                      }}
+                      className="w-24 h-9 px-3 rounded-full border border-border bg-background text-xs text-center font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition outline-none"
+                    />
+                    <input
+                      type="number"
+                      placeholder="MAX"
+                      value={priceMax}
+                      onChange={(e) => setPriceMax(e.target.value)}
+                      onBlur={() => {
+                        if (priceMax.trim() === "") {
+                          setPriceMax(String(rangeBounds.priceMax));
+                          return;
+                        }
+                        setPriceMax(String(Math.max(0, Number(priceMax))));
+                      }}
+                      className="w-24 h-9 px-3 rounded-full border border-border bg-background text-xs text-center font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition outline-none"
+                    />
+                  </div>
                 </div>
-                <input 
-                  type="range" 
-                  min="500" 
-                  max="100000" 
-                  step="500" 
-                  value={priceMax} 
-                  onChange={(e) => setPriceMax(Number(e.target.value))}
-                  className="w-full h-1.5 accent-[#C6A87D] bg-secondary rounded-full appearance-none outline-none"
-                />
+                <p className="text-[11px] text-muted-foreground font-medium">Range: {currency(rangeBounds.priceMin)} - {currency(rangeBounds.priceMax)}</p>
               </div>
               <div>
-                <div className="flex justify-between items-center mb-3">
-                  <p className="text-[10px] uppercase tracking-[0.14em] font-medium text-foreground">Min Carat</p>
-                  <p className="text-[11px] text-muted-foreground font-medium">{caratMin.toFixed(2)} ct</p>
+                <div className="flex flex-wrap items-center gap-3 mb-3">
+                  <p className="text-[10px] uppercase tracking-[0.14em] font-medium text-foreground min-w-[82px]">Carat</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      placeholder="FROM"
+                      value={caratMin}
+                      onChange={(e) => setCaratMin(e.target.value)}
+                      onBlur={() => {
+                        if (caratMin.trim() === "") setCaratMin(String(rangeBounds.caratMin));
+                      }}
+                      className="w-24 h-9 px-3 rounded-full border border-border bg-background text-xs text-center font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition outline-none"
+                    />
+                    <input
+                      type="number"
+                      placeholder="TO"
+                      value={caratMax}
+                      onChange={(e) => setCaratMax(e.target.value)}
+                      onBlur={() => {
+                        if (caratMax.trim() === "") setCaratMax(String(rangeBounds.caratMax));
+                      }}
+                      className="w-24 h-9 px-3 rounded-full border border-border bg-background text-xs text-center font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition outline-none"
+                    />
+                  </div>
                 </div>
-                <input 
-                  type="range" 
-                  min="0.3" 
-                  max="10.0" 
-                  step="0.10" 
-                  value={caratMin} 
-                  onChange={(e) => setCaratMin(Number(e.target.value))}
-                  className="w-full h-1.5 accent-[#C6A87D] bg-secondary rounded-full appearance-none outline-none"
-                />
+                <p className="text-[11px] text-muted-foreground font-medium">Range: {rangeBounds.caratMin.toFixed(2)} ct - {rangeBounds.caratMax.toFixed(2)} ct</p>
               </div>
             </div>
 
