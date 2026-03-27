@@ -158,9 +158,9 @@ const LooseDiamondsCarousel = () => {
 
         {/* Global CTA */}
         <div className="mt-16 text-center">
-            <h1 className="text-8xl font-accent text-primary/5 select-none pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-0 whitespace-nowrap">
+            <p className="text-8xl font-accent text-primary/5 select-none pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-0 whitespace-nowrap" aria-hidden="true">
               find your sparkle
-            </h1>
+            </p>
         </div>
 
       </div>

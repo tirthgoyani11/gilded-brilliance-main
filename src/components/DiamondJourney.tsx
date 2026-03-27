@@ -109,7 +109,7 @@ const DiamondJourney = () => {
     <section ref={sectionRef} className="relative h-screen bg-[radial-gradient(circle,#1a1a1a,#050505)] overflow-hidden">
       
       {/* Background Graphic */}
-      <img src="/process-bg.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none mix-blend-screen" />
+      <img src="/process-bg.png" alt="Decorative diamond journey background" className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none mix-blend-screen" />
 
       {/* Title block at the top */}
       <div className="absolute top-[10%] left-0 right-0 text-center z-20">

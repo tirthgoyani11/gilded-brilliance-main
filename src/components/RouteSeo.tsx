@@ -10,7 +10,7 @@ type SeoEntry = {
 
 const SEO_BY_PATH: Record<string, SeoEntry> = {
   "/": {
-    title: "VMORA | Certified Diamonds, Fine Jewelry, and Custom Luxury Design",
+    title: "VMORA | Certified Diamonds & Fine Jewelry",
     description: "Explore certified loose diamonds, bespoke jewelry, and luxury watch creations from VMORA with transparent pricing and expert guidance in Surat, Mumbai, India, and worldwide.",
     keywords: "vmora, v.mora, v mora, vieroa, loose diamond search, jewellery search, custom jewellery search, trusted jeweller in surat, jeweller in mumbai, india diamonds, worldwide diamond shipping",
   },

@@ -48,6 +48,10 @@ const Footer = () => {
               <MessageCircle className="w-3.5 h-3.5" />
               Speak with Expert
             </button>
+            <div className="mt-5 space-y-1.5 text-[11px] text-white/45 font-body">
+              <p>Phone: +91 98305 51558</p>
+              <p>Service Areas: Surat, Mumbai, India, Worldwide</p>
+            </div>
           </div>
 
           {/* Shop */}
@@ -89,6 +93,17 @@ const Footer = () => {
             <span>Transparency in Every Carat</span>
             <span className="hidden sm:inline">·</span>
             <span>Direct Access to Brilliance</span>
+          </div>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-4 text-[11px] text-white/45">
+            <a href="https://www.facebook.com/vmorajewels" target="_blank" rel="noreferrer" className="hover:text-[#C6A87D] luxury-transition">Facebook</a>
+            <span className="text-white/20">·</span>
+            <a href="https://x.com/vmorajewels" target="_blank" rel="noreferrer" className="hover:text-[#C6A87D] luxury-transition">X</a>
+            <span className="text-white/20">·</span>
+            <a href="https://www.instagram.com/vmorajewels" target="_blank" rel="noreferrer" className="hover:text-[#C6A87D] luxury-transition">Instagram</a>
+            <span className="text-white/20">·</span>
+            <a href="https://www.linkedin.com/company/vmorajewels" target="_blank" rel="noreferrer" className="hover:text-[#C6A87D] luxury-transition">LinkedIn</a>
+            <span className="text-white/20">·</span>
+            <a href="https://www.youtube.com/@vmorajewels" target="_blank" rel="noreferrer" className="hover:text-[#C6A87D] luxury-transition">YouTube</a>
           </div>
         </div>
 
