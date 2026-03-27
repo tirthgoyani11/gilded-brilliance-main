@@ -133,10 +133,8 @@ const DiamondMarketplaceView = () => {
   const [cert, setCert] = useState("All");
   const [caratMin, setCaratMin] = useState(0);
   const [caratMax, setCaratMax] = useState(0);
+  const [priceMin, setPriceMin] = useState(0);
   const [priceMax, setPriceMax] = useState(0);
-  const [ratioMax, setRatioMax] = useState(0);
-  const [depthMax, setDepthMax] = useState(0);
-  const [tableMax, setTableMax] = useState(0);
   const [sortBy, setSortBy] = useState<"best" | "price-asc" | "price-desc" | "carat-asc" | "carat-desc">("best");
   const [page, setPage] = useState(1);
   const { diamonds, toggleCompare, isCompared } = useStore();
@@ -149,30 +147,24 @@ const DiamondMarketplaceView = () => {
       return {
         caratMin: 0,
         caratMax: 5,
+        priceMin: 0,
         priceMax: 10000,
-        ratioMax: 2,
-        depthMax: 75,
-        tableMax: 80,
       };
     }
 
-    let cMin = Infinity, cMax = -Infinity, pMax = -Infinity, rMax = -Infinity, dMax = -Infinity, tMax = -Infinity;
+    let cMin = Infinity, cMax = -Infinity, pMin = Infinity, pMax = -Infinity;
     for (const d of valid) {
       if (d.carat < cMin) cMin = d.carat;
       if (d.carat > cMax) cMax = d.carat;
+      if (d.price < pMin) pMin = d.price;
       if (d.price > pMax) pMax = d.price;
-      if (d.ratio > rMax) rMax = d.ratio;
-      if (d.depthPct > dMax) dMax = d.depthPct;
-      if (d.tablePct > tMax) tMax = d.tablePct;
     }
 
     return {
       caratMin: Number(cMin.toFixed(2)),
       caratMax: Number(cMax.toFixed(2)),
+      priceMin: Math.floor(pMin),
       priceMax: Math.ceil(pMax),
-      ratioMax: Number(rMax.toFixed(2)),
-      depthMax: Number(dMax.toFixed(1)),
-      tableMax: Number(tMax.toFixed(1)),
     };
   }, [diamonds]);
 
@@ -182,18 +174,14 @@ const DiamondMarketplaceView = () => {
     if (!hasInitializedBounds.current) {
       setCaratMin(CARAT_SLIDER_MIN);
       setCaratMax(CARAT_SLIDER_MAX);
+      setPriceMin(rangeBounds.priceMin);
       setPriceMax(rangeBounds.priceMax);
-      setRatioMax(rangeBounds.ratioMax);
-      setDepthMax(rangeBounds.depthMax);
-      setTableMax(rangeBounds.tableMax);
       hasInitializedBounds.current = true;
       return;
     }
 
+    setPriceMin((prev) => clamp(prev, rangeBounds.priceMin, rangeBounds.priceMax));
     setPriceMax((prev) => clamp(prev, 0, rangeBounds.priceMax));
-    setRatioMax((prev) => clamp(prev, 0, rangeBounds.ratioMax));
-    setDepthMax((prev) => clamp(prev, 0, rangeBounds.depthMax));
-    setTableMax((prev) => clamp(prev, 0, rangeBounds.tableMax));
   }, [diamonds.length, rangeBounds]);
 
   const resetFilters = () => {
@@ -208,10 +196,8 @@ const DiamondMarketplaceView = () => {
     setCert("All");
     setCaratMin(CARAT_SLIDER_MIN);
     setCaratMax(CARAT_SLIDER_MAX);
+    setPriceMin(rangeBounds.priceMin);
     setPriceMax(rangeBounds.priceMax);
-    setRatioMax(rangeBounds.ratioMax);
-    setDepthMax(rangeBounds.depthMax);
-    setTableMax(rangeBounds.tableMax);
     setSortBy("best");
     setPage(1);
   };
@@ -257,19 +243,19 @@ const DiamondMarketplaceView = () => {
   
   const fluorescenceGrades = useMemo(() => ["All", ...fluorescenceScale.filter((c) => diamonds.some((d) => d.fluorescence?.toUpperCase().includes(c.toUpperCase()))), ...new Set(diamonds.map((d) => d.fluorescence).filter((c) => !fluorescenceScale.some(s => c?.toUpperCase().includes(s.toUpperCase()))))], [diamonds]);
   const [debouncedFilters, setDebouncedFilters] = useState({
-    shape, color, clarity, cut, polish, symmetry, fluorescence, lab, cert, caratMin, caratMax, priceMax, ratioMax, depthMax, tableMax
+    shape, color, clarity, cut, polish, symmetry, fluorescence, lab, cert, caratMin, caratMax, priceMin, priceMax
   });
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedFilters({ shape, color, clarity, cut, polish, symmetry, fluorescence, lab, cert, caratMin, caratMax, priceMax, ratioMax, depthMax, tableMax });
+      setDebouncedFilters({ shape, color, clarity, cut, polish, symmetry, fluorescence, lab, cert, caratMin, caratMax, priceMin, priceMax });
     }, 300);
     return () => clearTimeout(handler);
-  }, [shape, color, clarity, cut, polish, symmetry, fluorescence, lab, cert, caratMin, caratMax, priceMax, ratioMax, depthMax, tableMax]);
+  }, [shape, color, clarity, cut, polish, symmetry, fluorescence, lab, cert, caratMin, caratMax, priceMin, priceMax]);
 
   const filtered = useMemo(
     () => {
-      const { shape, color, clarity, cut, polish, symmetry, fluorescence, lab, cert, caratMin, caratMax, priceMax, ratioMax, depthMax, tableMax } = debouncedFilters;
+      const { shape, color, clarity, cut, polish, symmetry, fluorescence, lab, cert, caratMin, caratMax, priceMin, priceMax } = debouncedFilters;
       return diamonds.filter((d) => {
         if (shape !== "All") {
           const coreShapes = preferredShapeOrder.filter((key) => key !== "other");
@@ -291,11 +277,10 @@ const DiamondMarketplaceView = () => {
         if (cert !== "All" && d.certLab !== cert) return false;
         const minCarat = Math.min(caratMin, caratMax);
         const maxCarat = Math.max(caratMin, caratMax);
+        const minPrice = Math.min(priceMin, priceMax);
+        const maxPrice = Math.max(priceMin, priceMax);
         if (d.carat < minCarat || d.carat > maxCarat) return false;
-        if (d.price > priceMax) return false;
-        if (d.ratio > ratioMax) return false;
-        if (d.depthPct > depthMax) return false;
-        if (d.tablePct > tableMax) return false;
+        if (d.price < minPrice || d.price > maxPrice) return false;
         return true;
       });
     },
@@ -446,36 +431,66 @@ const DiamondMarketplaceView = () => {
           </div>
         </div>
 
-        {/* Carat Input Row */}
-        <div className="flex items-center justify-between border-y border-border/40 py-4 mb-5">
-          <span className="text-sm uppercase tracking-[0.15em] font-body text-muted-foreground font-medium">Carats</span>
-          <div className="flex items-center gap-3">
-            <input
-              type="number"
-              placeholder="FROM"
-              value={caratMin === CARAT_SLIDER_MIN ? "" : caratMin}
-              onChange={(e) => {
-                const val = e.target.value === "" ? CARAT_SLIDER_MIN : Number(e.target.value);
-                setCaratMin(val);
-              }}
-              className="w-24 h-10 px-4 rounded-full border border-border bg-background text-sm text-center font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition outline-none placeholder:text-muted-foreground/70"
-            />
-            <input
-              type="number"
-              placeholder="TO"
-              value={caratMax === CARAT_SLIDER_MAX ? "" : caratMax}
-              onChange={(e) => {
-                const val = e.target.value === "" ? CARAT_SLIDER_MAX : Number(e.target.value);
-                setCaratMax(val);
-              }}
-              className="w-24 h-10 px-4 rounded-full border border-border bg-background text-sm text-center font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition outline-none placeholder:text-muted-foreground/70"
-            />
+        {/* Carat + Price Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 border-y border-border/40 py-4 mb-5">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm uppercase tracking-[0.15em] font-body text-muted-foreground font-medium">Carats</span>
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                placeholder="FROM"
+                value={caratMin === CARAT_SLIDER_MIN ? "" : caratMin}
+                onChange={(e) => {
+                  const val = e.target.value === "" ? CARAT_SLIDER_MIN : Number(e.target.value);
+                  setCaratMin(val);
+                }}
+                className="w-24 h-10 px-4 rounded-full border border-border bg-background text-sm text-center font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition outline-none placeholder:text-muted-foreground/70"
+              />
+              <input
+                type="number"
+                placeholder="TO"
+                value={caratMax === CARAT_SLIDER_MAX ? "" : caratMax}
+                onChange={(e) => {
+                  const val = e.target.value === "" ? CARAT_SLIDER_MAX : Number(e.target.value);
+                  setCaratMax(val);
+                }}
+                className="w-24 h-10 px-4 rounded-full border border-border bg-background text-sm text-center font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition outline-none placeholder:text-muted-foreground/70"
+              />
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <span className="text-sm uppercase tracking-[0.15em] font-body text-muted-foreground font-medium">Price</span>
+              <p className="text-[10px] text-muted-foreground mt-1">Range: {currency(rangeBounds.priceMin)} - {currency(rangeBounds.priceMax)}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                placeholder="MIN"
+                value={priceMin === rangeBounds.priceMin ? "" : priceMin}
+                onChange={(e) => {
+                  const val = e.target.value === "" ? rangeBounds.priceMin : Number(e.target.value);
+                  setPriceMin(val);
+                }}
+                className="w-28 h-10 px-4 rounded-full border border-border bg-background text-sm text-center font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition outline-none placeholder:text-muted-foreground/70"
+              />
+              <input
+                type="number"
+                placeholder="MAX"
+                value={priceMax === rangeBounds.priceMax ? "" : priceMax}
+                onChange={(e) => {
+                  const val = e.target.value === "" ? rangeBounds.priceMax : Number(e.target.value);
+                  setPriceMax(val);
+                }}
+                className="w-28 h-10 px-4 rounded-full border border-border bg-background text-sm text-center font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition outline-none placeholder:text-muted-foreground/70"
+              />
+            </div>
           </div>
         </div>
 
         {/* Filter Chips Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-2 mb-4">
-          {/* Color visual scale */}
+          {/* Sequence: Color, Clarity, Lab, Type, Fluorescence, Cut, Polish, Symmetry, Sort */}
           <div>
             <label className="block text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground mb-1.5">Color</label>
             <select
@@ -490,6 +505,24 @@ const DiamondMarketplaceView = () => {
             <label className="block text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground mb-1.5">Clarity</label>
             <select className="w-full h-9 px-2.5 rounded-lg border border-border bg-background text-xs font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition appearance-none" value={clarity} onChange={(e) => setClarity(e.target.value)}>
               {clarities.map((v) => <option key={v}>{v}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground mb-1.5">Lab</label>
+            <select className="w-full h-9 px-2.5 rounded-lg border border-border bg-background text-xs font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition appearance-none" value={cert} onChange={(e) => setCert(e.target.value)}>
+              {certs.map((v) => <option key={v}>{v}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground mb-1.5">Type</label>
+            <select className="w-full h-9 px-2.5 rounded-lg border border-border bg-background text-xs font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition appearance-none" value={lab} onChange={(e) => setLab(e.target.value)}>
+              {labs.map((v) => <option key={v}>{v}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground mb-1.5">Fluorescence</label>
+            <select className="w-full h-9 px-2.5 rounded-lg border border-border bg-background text-xs font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition appearance-none" value={fluorescence} onChange={(e) => setFluorescence(e.target.value)}>
+              {fluorescenceGrades.map((v) => <option key={v}>{v}</option>)}
             </select>
           </div>
           <div>
@@ -511,24 +544,6 @@ const DiamondMarketplaceView = () => {
             </select>
           </div>
           <div>
-            <label className="block text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground mb-1.5">Fluorescence</label>
-            <select className="w-full h-9 px-2.5 rounded-lg border border-border bg-background text-xs font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition appearance-none" value={fluorescence} onChange={(e) => setFluorescence(e.target.value)}>
-              {fluorescenceGrades.map((v) => <option key={v}>{v}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground mb-1.5">Type</label>
-            <select className="w-full h-9 px-2.5 rounded-lg border border-border bg-background text-xs font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition appearance-none" value={lab} onChange={(e) => setLab(e.target.value)}>
-              {labs.map((v) => <option key={v}>{v}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground mb-1.5">Lab</label>
-            <select className="w-full h-9 px-2.5 rounded-lg border border-border bg-background text-xs font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition appearance-none" value={cert} onChange={(e) => setCert(e.target.value)}>
-              {certs.map((v) => <option key={v}>{v}</option>)}
-            </select>
-          </div>
-          <div>
             <label className="block text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground mb-1.5">Sort</label>
             <select className="w-full h-9 px-2.5 rounded-lg border border-border bg-background text-xs font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition appearance-none" value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)}>
               <option value="best">Best Value</option>
@@ -537,29 +552,6 @@ const DiamondMarketplaceView = () => {
               <option value="carat-asc">Carat ↑</option>
               <option value="carat-desc">Carat ↓</option>
             </select>
-          </div>
-        </div>
-
-        {/* Range Sliders */}
-        <div className="flex flex-col gap-5 border-t border-border/40 pt-4 mt-2">
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <label className="block">
-              <span className="text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground">Max Price: <span className="text-foreground font-medium">{currency(priceMax)}</span></span>
-              <input type="range" min="0" max={rangeBounds.priceMax} step="100" value={priceMax} onChange={(e) => setPriceMax(Number(e.target.value))} className="w-full mt-2 accent-[#C6A87D] h-1" />
-            </label>
-            <label className="block">
-              <span className="text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground">Ratio: <span className="text-foreground font-medium">{ratioMax.toFixed(2)}</span></span>
-              <input type="range" min="0" max={rangeBounds.ratioMax} step="0.01" value={ratioMax} onChange={(e) => setRatioMax(Number(e.target.value))} className="w-full mt-2 accent-[#C6A87D] h-1" />
-            </label>
-            <label className="block">
-              <span className="text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground">Depth: <span className="text-foreground font-medium">{depthMax.toFixed(1)}%</span></span>
-              <input type="range" min="0" max={rangeBounds.depthMax} step="0.1" value={depthMax} onChange={(e) => setDepthMax(Number(e.target.value))} className="w-full mt-2 accent-[#C6A87D] h-1" />
-            </label>
-            <label className="block">
-              <span className="text-[9px] uppercase tracking-[0.15em] font-body text-muted-foreground">Table: <span className="text-foreground font-medium">{tableMax.toFixed(1)}%</span></span>
-              <input type="range" min="0" max={rangeBounds.tableMax} step="0.1" value={tableMax} onChange={(e) => setTableMax(Number(e.target.value))} className="w-full mt-2 accent-[#C6A87D] h-1" />
-            </label>
           </div>
         </div>
       </div>
