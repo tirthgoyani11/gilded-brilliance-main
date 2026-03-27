@@ -124,10 +124,10 @@ const DiamondMarketplaceView = () => {
   const [fluorescence, setFluorescence] = useState("All");
   const [lab, setLab] = useState("All");
   const [cert, setCert] = useState("All");
-  const [caratMin, setCaratMin] = useState(0);
-  const [caratMax, setCaratMax] = useState(0);
-  const [priceMin, setPriceMin] = useState(0);
-  const [priceMax, setPriceMax] = useState(0);
+  const [caratMin, setCaratMin] = useState("");
+  const [caratMax, setCaratMax] = useState("");
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
   const [sortBy, setSortBy] = useState<"best" | "price-asc" | "price-desc" | "carat-asc" | "carat-desc">("best");
   const [page, setPage] = useState(1);
   const { diamonds, toggleCompare, isCompared } = useStore();
@@ -165,10 +165,10 @@ const DiamondMarketplaceView = () => {
     if (!diamonds.length) return;
 
     if (!hasInitializedBounds.current) {
-      setCaratMin(rangeBounds.caratMin);
-      setCaratMax(rangeBounds.caratMax);
-      setPriceMin(rangeBounds.priceMin);
-      setPriceMax(rangeBounds.priceMax);
+      setCaratMin(String(rangeBounds.caratMin));
+      setCaratMax(String(rangeBounds.caratMax));
+      setPriceMin(String(rangeBounds.priceMin));
+      setPriceMax(String(rangeBounds.priceMax));
       hasInitializedBounds.current = true;
       return;
     }
@@ -184,10 +184,10 @@ const DiamondMarketplaceView = () => {
     setFluorescence("All");
     setLab("All");
     setCert("All");
-    setCaratMin(rangeBounds.caratMin);
-    setCaratMax(rangeBounds.caratMax);
-    setPriceMin(rangeBounds.priceMin);
-    setPriceMax(rangeBounds.priceMax);
+    setCaratMin(String(rangeBounds.caratMin));
+    setCaratMax(String(rangeBounds.caratMax));
+    setPriceMin(String(rangeBounds.priceMin));
+    setPriceMax(String(rangeBounds.priceMax));
     setSortBy("best");
     setPage(1);
   };
@@ -243,6 +243,16 @@ const DiamondMarketplaceView = () => {
   const filtered = useMemo(
     () => {
       const { shape, color, clarity, cut, polish, symmetry, fluorescence, lab, cert, caratMin, caratMax, priceMin, priceMax } = debouncedFilters;
+      const parsedCaratMin = Number(caratMin);
+      const parsedCaratMax = Number(caratMax);
+      const parsedPriceMin = Number(priceMin);
+      const parsedPriceMax = Number(priceMax);
+
+      const effectiveCaratMin = Number.isFinite(parsedCaratMin) ? parsedCaratMin : rangeBounds.caratMin;
+      const effectiveCaratMax = Number.isFinite(parsedCaratMax) ? parsedCaratMax : rangeBounds.caratMax;
+      const effectivePriceMin = Number.isFinite(parsedPriceMin) ? parsedPriceMin : rangeBounds.priceMin;
+      const effectivePriceMax = Number.isFinite(parsedPriceMax) ? parsedPriceMax : rangeBounds.priceMax;
+
       return diamonds.filter((d) => {
         if (shape !== "All") {
           const coreShapes = preferredShapeOrder.filter((key) => key !== "other");
@@ -262,16 +272,16 @@ const DiamondMarketplaceView = () => {
         if (fluorescence !== "All" && d.fluorescence !== fluorescence) return false;
         if (lab !== "All" && d.type !== lab) return false;
         if (cert !== "All" && d.certLab !== cert) return false;
-        const minCarat = Math.min(caratMin, caratMax);
-        const maxCarat = Math.max(caratMin, caratMax);
-        const minPrice = Math.min(priceMin, priceMax);
-        const maxPrice = Math.max(priceMin, priceMax);
+        const minCarat = Math.min(effectiveCaratMin, effectiveCaratMax);
+        const maxCarat = Math.max(effectiveCaratMin, effectiveCaratMax);
+        const minPrice = Math.min(effectivePriceMin, effectivePriceMax);
+        const maxPrice = Math.max(effectivePriceMin, effectivePriceMax);
         if (d.carat < minCarat || d.carat > maxCarat) return false;
         if (d.price < minPrice || d.price > maxPrice) return false;
         return true;
       });
     },
-    [diamonds, debouncedFilters],
+    [diamonds, debouncedFilters, rangeBounds],
   );
 
   const sorted = useMemo(() => {
@@ -420,16 +430,16 @@ const DiamondMarketplaceView = () => {
 
         {/* Carat + Price Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 border-y border-border/40 py-4 mb-5">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm uppercase tracking-[0.15em] font-body text-muted-foreground font-medium">Carats</span>
+          <div className="flex flex-wrap items-center gap-3 lg:gap-4">
+            <span className="text-sm uppercase tracking-[0.15em] font-body text-muted-foreground font-medium min-w-[74px]">Carats</span>
             <div className="flex items-center gap-3">
               <input
                 type="number"
                 placeholder="FROM"
                 value={caratMin}
-                onChange={(e) => {
-                  const val = e.target.value === "" ? rangeBounds.caratMin : Number(e.target.value);
-                  setCaratMin(val);
+                onChange={(e) => setCaratMin(e.target.value)}
+                onBlur={() => {
+                  if (caratMin.trim() === "") setCaratMin(String(rangeBounds.caratMin));
                 }}
                 className="w-24 h-10 px-4 rounded-full border border-border bg-background text-sm text-center font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition outline-none placeholder:text-muted-foreground/70"
               />
@@ -437,16 +447,16 @@ const DiamondMarketplaceView = () => {
                 type="number"
                 placeholder="TO"
                 value={caratMax}
-                onChange={(e) => {
-                  const val = e.target.value === "" ? rangeBounds.caratMax : Number(e.target.value);
-                  setCaratMax(val);
+                onChange={(e) => setCaratMax(e.target.value)}
+                onBlur={() => {
+                  if (caratMax.trim() === "") setCaratMax(String(rangeBounds.caratMax));
                 }}
                 className="w-24 h-10 px-4 rounded-full border border-border bg-background text-sm text-center font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition outline-none placeholder:text-muted-foreground/70"
               />
             </div>
           </div>
-          <div className="flex items-center justify-between gap-3">
-            <div>
+          <div className="flex flex-wrap items-center gap-3 lg:gap-4">
+            <div className="min-w-[74px]">
               <span className="text-sm uppercase tracking-[0.15em] font-body text-muted-foreground font-medium">Price</span>
               <p className="text-[10px] text-muted-foreground mt-1">Range: {currency(rangeBounds.priceMin)} - {currency(rangeBounds.priceMax)}</p>
             </div>
@@ -455,9 +465,13 @@ const DiamondMarketplaceView = () => {
                 type="number"
                 placeholder="MIN"
                 value={priceMin}
-                onChange={(e) => {
-                  const val = e.target.value === "" ? rangeBounds.priceMin : Number(e.target.value);
-                  setPriceMin(Math.max(0, val));
+                onChange={(e) => setPriceMin(e.target.value)}
+                onBlur={() => {
+                  if (priceMin.trim() === "") {
+                    setPriceMin(String(rangeBounds.priceMin));
+                    return;
+                  }
+                  setPriceMin(String(Math.max(0, Number(priceMin))));
                 }}
                 className="w-28 h-10 px-4 rounded-full border border-border bg-background text-sm text-center font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition outline-none placeholder:text-muted-foreground/70"
               />
@@ -465,9 +479,13 @@ const DiamondMarketplaceView = () => {
                 type="number"
                 placeholder="MAX"
                 value={priceMax}
-                onChange={(e) => {
-                  const val = e.target.value === "" ? rangeBounds.priceMax : Number(e.target.value);
-                  setPriceMax(Math.max(0, val));
+                onChange={(e) => setPriceMax(e.target.value)}
+                onBlur={() => {
+                  if (priceMax.trim() === "") {
+                    setPriceMax(String(rangeBounds.priceMax));
+                    return;
+                  }
+                  setPriceMax(String(Math.max(0, Number(priceMax))));
                 }}
                 className="w-28 h-10 px-4 rounded-full border border-border bg-background text-sm text-center font-body focus:border-primary focus:ring-1 focus:ring-primary/20 luxury-transition outline-none placeholder:text-muted-foreground/70"
               />
