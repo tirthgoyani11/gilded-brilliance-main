@@ -4,41 +4,50 @@ import { useLocation } from "react-router-dom";
 type SeoEntry = {
   title: string;
   description: string;
+  keywords?: string;
   noindex?: boolean;
 };
 
 const SEO_BY_PATH: Record<string, SeoEntry> = {
   "/": {
     title: "VMORA | Certified Diamonds, Fine Jewelry, and Custom Luxury Design",
-    description: "Explore certified loose diamonds, bespoke jewelry, and luxury watch creations from VMORA with transparent pricing and expert guidance.",
+    description: "Explore certified loose diamonds, bespoke jewelry, and luxury watch creations from VMORA with transparent pricing and expert guidance in Surat, Mumbai, India, and worldwide.",
+    keywords: "vmora, v.mora, v mora, vieroa, loose diamond search, jewellery search, custom jewellery search, trusted jeweller in surat, jeweller in mumbai, india diamonds, worldwide diamond shipping",
   },
   "/diamonds": {
     title: "Loose Diamonds | Certified Natural & Lab-Grown Diamonds | VMORA",
-    description: "Browse certified loose diamonds by shape, color, clarity, carat, and price with transparent filters and premium guidance.",
+    description: "Browse certified loose diamonds by shape, color, clarity, carat, and price with transparent filters and premium guidance from VMORA.",
+    keywords: "loose diamonds, certified diamonds, natural diamonds, lab grown diamonds, diamond search, diamond filters, diamond sellers in surat, diamond sellers in mumbai",
   },
   "/education": {
     title: "Diamond Education Guide | 4Cs, Certification, and Buying Tips | VMORA",
     description: "Learn diamond cut, color, clarity, and carat with practical buying guidance and certification confidence from VMORA experts.",
+    keywords: "diamond education, 4cs diamond, diamond certification guide, how to buy diamonds, cut color clarity carat",
   },
   "/certificate-verification": {
     title: "Certificate Verification | Verify Your Diamond Report | VMORA",
     description: "Verify diamond certification details quickly and confidently before you buy with VMORA certificate verification.",
+    keywords: "diamond certificate verification, IGI verification, GIA verification, verify diamond report",
   },
   "/about": {
     title: "About VMORA | Luxury Diamond House and Bespoke Design",
     description: "Discover VMORA's approach to certified diamond sourcing, bespoke craftsmanship, and transparent luxury buying experiences.",
+    keywords: "about vmora, trusted jewellery brand india, trusted diamond seller surat, trusted jeweller mumbai",
   },
   "/design-line-up": {
     title: "Design Line Up | Bespoke Jewelry and Watch Concepts | VMORA",
     description: "Explore VMORA design concepts across rings, pendants, bracelets, earrings, and luxury watch projects.",
+    keywords: "jewellery design ideas, bespoke design line up, custom ring pendant bracelet earrings",
   },
   "/custom-jewelry-generator": {
     title: "Custom Jewelry Generator | Build Your Bespoke Concept | VMORA",
     description: "Create your custom jewelry concept by selecting style direction and diamond preferences with VMORA's bespoke workflow.",
+    keywords: "custom jewellery, custom jewelry search, bespoke jewellery india, design your jewelry",
   },
   "/blog": {
     title: "VMORA Blog | Diamond Insights and Luxury Jewelry Guidance",
     description: "Read practical insights on diamonds, certification, and premium jewelry decisions from VMORA.",
+    keywords: "diamond blog, jewelry blog, diamond buying tips, luxury jewelry insights",
   },
   "/compare": {
     title: "Compare Diamonds | Side-by-Side Stone Comparison | VMORA",
@@ -70,6 +79,7 @@ const SEO_BY_PATH: Record<string, SeoEntry> = {
 const DEFAULT_SEO: SeoEntry = {
   title: "VMORA | Certified Diamonds & Fine Jewelry",
   description: "Discover certified diamonds, custom jewelry, and premium buying guidance from VMORA.",
+  keywords: "vmora, diamonds, loose diamonds, custom jewelry, jewellery search, india",
 };
 
 const upsertMeta = (selector: string, attrs: Record<string, string>, content: string) => {
@@ -124,6 +134,7 @@ const RouteSeo = () => {
     upsertMeta('meta[property="og:title"]', { property: "og:title" }, seo.title);
     upsertMeta('meta[property="og:description"]', { property: "og:description" }, seo.description);
     upsertMeta('meta[property="og:url"]', { property: "og:url" }, canonicalUrl);
+    upsertMeta('meta[name="keywords"]', { name: "keywords" }, seo.keywords || DEFAULT_SEO.keywords || "");
     upsertMeta('meta[name="twitter:title"]', { name: "twitter:title" }, seo.title);
     upsertMeta('meta[name="twitter:description"]', { name: "twitter:description" }, seo.description);
     upsertMeta('meta[name="robots"]', { name: "robots" }, seo.noindex ? "noindex, nofollow" : "index, follow");

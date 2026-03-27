@@ -9,9 +9,12 @@
     <meta name="googlebot" content="index, follow" />
     <meta name="author" content="VMORA" />
     <meta name="application-name" content="VMORA" />
+    <meta name="geo.region" content="IN-GJ" />
+    <meta name="geo.placename" content="Surat, Mumbai, India" />
+    <meta name="language" content="en-IN" />
     <title>VMORA | Certified Diamonds & Fine Jewelry — Direct Access to Brilliance</title>
-    <meta name="description" content="Discover IGI certified diamonds and bespoke fine jewelry at VMORA. Direct-to-customer pricing, transparent selection, and expert guidance." />
-    <meta name="keywords" content="VMORA, certified diamonds, loose diamonds, IGI certified, lab-grown diamonds, fine jewelry, custom jewelry" />
+    <meta name="description" content="Discover IGI certified loose diamonds, bespoke jewelry, and custom luxury design at VMORA. Trusted in Surat, Mumbai, India, with worldwide service." />
+    <meta name="keywords" content="vmora, v.mora, v mora, vieroa, certified diamonds, loose diamond search, jewellery search, custom jewellery search, trusted jeweller in surat, jeweller in mumbai, india diamond seller, worldwide diamonds" />
     <link rel="canonical" href="https://www.vmorajewels.com/" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -20,15 +23,16 @@
     <!-- Open Graph / Social -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="VMORA — Crafted Brilliance" />
-    <meta property="og:description" content="Direct access to certified diamonds and fine jewelry. No middlemen. Transparent pricing. Worldwide shipping." />
+    <meta property="og:description" content="Direct access to certified diamonds and fine jewelry from VMORA. Trusted in Surat and Mumbai, serving India and worldwide." />
     <meta property="og:site_name" content="VMORA" />
     <meta property="og:url" content="https://www.vmorajewels.com/" />
     <meta property="og:image" content="https://www.vmorajewels.com/hero-vmora.png" />
+    <meta property="og:locale" content="en_IN" />
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="VMORA — Crafted Brilliance" />
-    <meta name="twitter:description" content="Direct access to certified diamonds. IGI certified. 360° viewing. Bespoke jewelry guidance." />
+    <meta name="twitter:description" content="Certified loose diamonds and bespoke jewelry from VMORA. Trusted in Surat, Mumbai, India, and worldwide." />
     <meta name="twitter:image" content="https://www.vmorajewels.com/hero-vmora.png" />
     
     <!-- Theme -->
@@ -39,8 +43,9 @@
         "@context": "https://schema.org",
         "@type": "Organization",
         "name": "VMORA",
+        "alternateName": ["V.MORA", "V MORA", "Vieroa"],
         "url": "https://www.vmorajewels.com/",
-        "logo": "https://www.vmorajewels.com/logo.png",
+        "logo": "https://www.vmorajewels.com/favicon.svg",
         "sameAs": []
       }
     </script>
@@ -50,7 +55,35 @@
         "@context": "https://schema.org",
         "@type": "WebSite",
         "name": "VMORA",
-        "url": "https://www.vmorajewels.com/"
+        "alternateName": ["V.MORA", "V MORA"],
+        "url": "https://www.vmorajewels.com/",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://www.vmorajewels.com/diamonds?search={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "JewelryStore",
+        "name": "VMORA",
+        "url": "https://www.vmorajewels.com/",
+        "image": "https://www.vmorajewels.com/hero-vmora.png",
+        "description": "Certified loose diamonds, bespoke jewelry, and custom luxury design services.",
+        "areaServed": [
+          { "@type": "City", "name": "Surat" },
+          { "@type": "City", "name": "Mumbai" },
+          { "@type": "Country", "name": "India" },
+          { "@type": "Place", "name": "Worldwide" }
+        ],
+        "makesOffer": [
+          { "@type": "Offer", "name": "Loose Diamond Search" },
+          { "@type": "Offer", "name": "Custom Jewelry Design" },
+          { "@type": "Offer", "name": "Diamond Certificate Verification" }
+        ]
       }
     </script>
   </head>
