@@ -32,7 +32,7 @@ const reviews = [
   {
     id: 4,
     name: "William Anderson",
-    rating: 5,
+    rating: 4,
     date: "April 2026",
     review: "Exceptional service from start to finish. The diamond I purchased has incredible fire and brilliance.",
     avatar: "/placeholder-avatar-4.png",
@@ -54,6 +54,60 @@ const reviews = [
     date: "April 2026",
     review: "Professional, trustworthy, and the quality is unmatched. Will definitely be returning for future purchases.",
     avatar: "/placeholder-avatar-6.png",
+    verified: true,
+  },
+  {
+    id: 7,
+    name: "Emma Thompson",
+    rating: 5,
+    date: "April 2026",
+    review: "The certification process was so transparent. I felt completely confident in my purchase. Highly recommend!",
+    avatar: "/placeholder-avatar-7.png",
+    verified: true,
+  },
+  {
+    id: 8,
+    name: "Arjun Kapoor",
+    rating: 5,
+    date: "April 2026",
+    review: "Purchased a diamond for my wife's anniversary. She was speechless! The quality is truly exceptional.",
+    avatar: "/placeholder-avatar-8.png",
+    verified: true,
+  },
+  {
+    id: 9,
+    name: "Sophie Williams",
+    rating: 4,
+    date: "April 2026",
+    review: "Great selection and fair pricing. The team guided me through every step of the process.",
+    avatar: "/placeholder-avatar-9.png",
+    verified: true,
+  },
+  {
+    id: 10,
+    name: "Kavita Nair",
+    rating: 5,
+    date: "April 2026",
+    review: "The custom jewelry design exceeded all my expectations. True craftsmanship at its finest.",
+    avatar: "/placeholder-avatar-10.png",
+    verified: true,
+  },
+  {
+    id: 11,
+    name: "Marcus Johnson",
+    rating: 5,
+    date: "April 2026",
+    review: "Outstanding customer service. They answered all my questions and helped me find the perfect diamond.",
+    avatar: "/placeholder-avatar-11.png",
+    verified: true,
+  },
+  {
+    id: 12,
+    name: "Deepak Joshi",
+    rating: 5,
+    date: "April 2026",
+    review: "Best investment I've made. The diamond's brilliance is unmatched. Thank you VMORA!",
+    avatar: "/placeholder-avatar-12.png",
     verified: true,
   },
 ];
@@ -125,7 +179,7 @@ const GoogleReviewsCarousel = () => {
               <StarIcon key={i} />
             ))}
             <span className="font-body text-muted-foreground text-sm ml-2">
-              5.0 Rating from hundreds of satisfied customers
+              4.8 Rating from hundreds of satisfied customers
             </span>
           </div>
         </motion.div>

@@ -38,13 +38,13 @@ const Index = () => {
           <CustomJewelrySection />
         </FadeInReveal>
         <FadeInReveal>
-          <DiamondSearchPreview />
+          <GoogleReviewsCarousel />
         </FadeInReveal>
+        {/* <FadeInReveal>
+          <DiamondSearchPreview />
+        </FadeInReveal> */}
         <FadeInReveal>
           <TrustSection />
-        </FadeInReveal>
-        <FadeInReveal>
-          <GoogleReviewsCarousel />
         </FadeInReveal>
         <DiamondJourney />
         <FadeInReveal>
