@@ -7,6 +7,7 @@ import EducationSection from "@/components/EducationSection";
 import BrandStory from "@/components/BrandStory";
 import Footer from "@/components/Footer";
 import TrustSection from "@/components/TrustSection";
+import GoogleReviewsCarousel from "@/components/GoogleReviewsCarousel";
 import DiamondJourney from "@/components/DiamondJourney";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
 import { motion } from "framer-motion";
@@ -41,6 +42,9 @@ const Index = () => {
         </FadeInReveal>
         <FadeInReveal>
           <TrustSection />
+        </FadeInReveal>
+        <FadeInReveal>
+          <GoogleReviewsCarousel />
         </FadeInReveal>
         <DiamondJourney />
         <FadeInReveal>
