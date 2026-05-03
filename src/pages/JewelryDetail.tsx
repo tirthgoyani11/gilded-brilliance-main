@@ -266,6 +266,22 @@ const JewelryDetail = () => {
     { icon: Wrench, label: "Custom Made" },
   ];
 
+  const getMetalBorderGradient = (metal: string) => {
+    switch (metal.toLowerCase()) {
+      case "silver":
+      case "platinum":
+      case "white gold":
+        return "from-[#b0b0b0] via-[#f0f0f0] to-[#8a8a8a] shadow-[0_4px_20px_rgba(176,176,176,0.2)]";
+      case "rose gold":
+      case "rose":
+        return "from-[#dca8a8] via-[#ffe3e3] to-[#ad7b7b] shadow-[0_4px_20px_rgba(220,168,168,0.2)]";
+      case "gold":
+      case "yellow gold":
+      default:
+        return "from-[#d4a943] via-[#f9e596] to-[#a67c00] shadow-[0_4px_20px_rgba(212,169,67,0.15)]";
+    }
+  };
+
   return (
     <SiteLayout>
       <section className="bg-background py-6 pb-32 md:pb-12 lg:py-12">
@@ -282,7 +298,7 @@ const JewelryDetail = () => {
 
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1.06fr)_minmax(390px,0.94fr)] lg:gap-12">
             <div className="space-y-4 min-w-0">
-              <div className="group relative p-[1.5px] rounded-[12px] bg-gradient-to-br from-[#d4a943] via-[#f9e596] to-[#a67c00] shadow-[0_4px_20px_rgba(212,169,67,0.15)]">
+              <div className={`group relative p-[1.5px] rounded-[12px] bg-gradient-to-br ${getMetalBorderGradient(selectedMetal)} transition-all duration-1000 ease-in-out`}>
                 <div className="relative overflow-hidden h-full w-full rounded-[10.5px] bg-white">
                 <div className="absolute left-3 top-3 z-10 flex flex-wrap gap-2">
                   {["Made to Order", "Certified Diamonds", "Free Insured Shipping"].map((badge) => (
