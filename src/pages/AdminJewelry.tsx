@@ -240,6 +240,91 @@ const compressImage = async (file: File): Promise<Blob> => {
   return finalBlob;
 };
 
+/**
+ * Native browser video compressor.
+ * Captures video frames to a canvas and encodes via MediaRecorder.
+ * Runs in real-time (a 10s video takes 10s to compress) but drastically reduces size.
+ */
+const compressVideo = async (file: File, onProgress?: (msg: string) => void): Promise<Blob> => {
+  if (!file.type.startsWith("video/")) return file;
+  
+  // Videos under 3MB are already small enough
+  if (file.size <= 3 * 1024 * 1024) return file;
+
+  return new Promise((resolve, reject) => {
+    onProgress?.("Optimizing video...");
+    const video = document.createElement("video");
+    video.src = URL.createObjectURL(file);
+    video.muted = true;
+    video.playsInline = true;
+
+    video.onloadedmetadata = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("Canvas compression not supported"));
+
+      // Target 800px max (perfect for web product loops) to save massive space
+      const maxWidth = 800;
+      let width = video.videoWidth;
+      let height = video.videoHeight;
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+      canvas.width = width;
+      canvas.height = height;
+
+      video.play().catch(reject);
+
+      // 24 FPS is cinematic standard and saves ~20% file size over 30 FPS
+      const stream = canvas.captureStream(24);
+      let mimeType = "video/webm;codecs=vp9";
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = "video/webm";
+      }
+
+      const recorder = new MediaRecorder(stream, {
+        mimeType,
+        // 500 Kbps target ensures a 20s video is ~1.2MB total
+        videoBitsPerSecond: 500000, 
+      });
+
+      const chunks: Blob[] = [];
+      recorder.ondataavailable = (e) => chunks.push(e.data);
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: mimeType });
+        console.log(`Video compressed: ${(file.size / 1024 / 1024).toFixed(1)}MB → ${(blob.size / 1024 / 1024).toFixed(1)}MB`);
+        // If compression somehow made it bigger or failed, return original (unlikely)
+        resolve(blob.size < file.size ? blob : file);
+      };
+
+      recorder.start();
+
+      const drawFrame = () => {
+        if (video.paused || video.ended) {
+          if (recorder.state === "recording") recorder.stop();
+          return;
+        }
+        ctx.drawImage(video, 0, 0, width, height);
+        
+        // Update progress occasionally
+        if (video.currentTime > 0 && Math.floor(video.currentTime * 10) % 10 === 0) {
+           const pct = Math.round((video.currentTime / video.duration) * 100);
+           onProgress?.(`Compressing video... ${pct}%`);
+        }
+        
+        requestAnimationFrame(drawFrame);
+      };
+
+      video.onplay = () => drawFrame();
+      video.onerror = reject;
+      video.onended = () => {
+        if (recorder.state === "recording") recorder.stop();
+      };
+    };
+  });
+};
+
 const uploadFileToSupabase = async (file: File | Blob, folder: "images" | "models", originalName?: string) => {
   
   const dataUrl = await new Promise<string>((resolve, reject) => {
@@ -555,8 +640,12 @@ const AdminJewelry = () => {
   const handleVideoUpload = async (file?: File) => {
     if (!file) return;
     try {
-      const videoPath = queueUpload(file, "images", file.name);
+      setStatus("Preparing video...");
+      const compressed = await compressVideo(file, setStatus);
+      setStatus("Generating preview...");
+      const videoPath = queueUpload(compressed, "images", file.name);
       setForm((prev) => ({ ...prev, videoUrl: videoPath }));
+      setStatus("");
     } catch (err) {
       setStatus(err instanceof Error ? err.message : "Failed to process video.");
     }
@@ -722,12 +811,42 @@ const AdminJewelry = () => {
               </div>
               <textarea value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} rows={3} placeholder="Description" className="rounded border border-border bg-background p-3 text-sm" />
               <div className="grid grid-cols-2 gap-3">
-                <input value={form.collection} onChange={(e) => setForm((prev) => ({ ...prev, collection: e.target.value }))} placeholder="Collection" className="h-10 rounded border border-border bg-background px-3 text-sm" />
-                <input value={form.stoneType} onChange={(e) => setForm((prev) => ({ ...prev, stoneType: e.target.value }))} placeholder="Stone type" className="h-10 rounded border border-border bg-background px-3 text-sm" />
+                <div>
+                  <input list="collections" value={form.collection} onChange={(e) => setForm((prev) => ({ ...prev, collection: e.target.value }))} placeholder="Collection" className="w-full h-10 rounded border border-border bg-background px-3 text-sm" />
+                  <datalist id="collections">
+                    <option value="Bridal Collection" />
+                    <option value="Everyday Essentials" />
+                    <option value="High Jewelry" />
+                    <option value="Tennis Collection" />
+                  </datalist>
+                </div>
+                <div>
+                  <input list="stone-types" value={form.stoneType} onChange={(e) => setForm((prev) => ({ ...prev, stoneType: e.target.value }))} placeholder="Stone type" className="w-full h-10 rounded border border-border bg-background px-3 text-sm" />
+                  <datalist id="stone-types">
+                    <option value="Natural Diamond" />
+                    <option value="Lab Grown Diamond" />
+                    <option value="Moissanite" />
+                    <option value="Sapphire" />
+                    <option value="Ruby" />
+                    <option value="Emerald" />
+                    <option value="No Stone" />
+                  </datalist>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <input value={form.diamondWeight} onChange={(e) => setForm((prev) => ({ ...prev, diamondWeight: e.target.value }))} placeholder="Diamond weight, e.g. 1.20 ctw" className="h-10 rounded border border-border bg-background px-3 text-sm" />
-                <input value={form.setting} onChange={(e) => setForm((prev) => ({ ...prev, setting: e.target.value }))} placeholder="Setting / style" className="h-10 rounded border border-border bg-background px-3 text-sm" />
+                <div>
+                  <input list="settings" value={form.setting} onChange={(e) => setForm((prev) => ({ ...prev, setting: e.target.value }))} placeholder="Setting / style" className="w-full h-10 rounded border border-border bg-background px-3 text-sm" />
+                  <datalist id="settings">
+                    <option value="Solitaire" />
+                    <option value="Halo" />
+                    <option value="Hidden Halo" />
+                    <option value="Pave" />
+                    <option value="Prong" />
+                    <option value="Bezel" />
+                    <option value="Three-Stone" />
+                  </datalist>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <select value={form.inventoryStatus} onChange={(e) => setForm((prev) => ({ ...prev, inventoryStatus: e.target.value as JewelryForm["inventoryStatus"] }))} className="h-10 rounded border border-border bg-background px-3 text-sm">
