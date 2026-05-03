@@ -12,13 +12,25 @@ const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 const ALLOWED_FOLDERS = new Set(["images", "models"]);
 
 const parseDataUrl = (dataUrl, fallbackType) => {
-  if (!dataUrl) return null;
-  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
-  if (!match) return null;
-  return {
-    contentType: match[1] || fallbackType || "application/octet-stream",
-    buffer: Buffer.from(match[2], "base64"),
-  };
+  if (!dataUrl || !dataUrl.startsWith("data:")) return null;
+  try {
+    const commaIndex = dataUrl.indexOf(",");
+    if (commaIndex === -1) return null;
+    
+    const meta = dataUrl.substring(0, commaIndex);
+    const base64Data = dataUrl.substring(commaIndex + 1);
+    
+    const mimeMatch = meta.match(/data:([^;]+)/);
+    const contentType = mimeMatch ? mimeMatch[1] : fallbackType || "application/octet-stream";
+    
+    return {
+      contentType,
+      buffer: Buffer.from(base64Data, "base64"),
+    };
+  } catch (err) {
+    console.error("DataURL Parse Error:", err);
+    return null;
+  }
 };
 
 const sanitizeFilename = (filename) =>
@@ -94,9 +106,18 @@ export async function handleUpload(req, res) {
     });
 
     if (!response.ok) {
-      const text = await response.text().catch(() => "");
-      console.error("Supabase Storage Error:", text);
-      return res.status(500).json({ message: "Supabase upload failed", details: text || response.statusText });
+      const text = await response.text().catch(() => "Unknown error");
+      console.error("Supabase Storage Error:", {
+        status: response.status,
+        statusText: response.statusText,
+        body: text,
+        url: uploadUrl.replace(SUPABASE_SERVICE_ROLE_KEY || "", "***")
+      });
+      return res.status(500).json({ 
+        message: "Supabase upload failed", 
+        details: text,
+        status: response.status
+      });
     }
 
     return res.status(200).json({
@@ -108,7 +129,8 @@ export async function handleUpload(req, res) {
     console.error("Upload Handler Exception:", error);
     return res.status(500).json({ 
       message: "Internal error during upload", 
-      error: error instanceof Error ? error.message : String(error) 
+      error: error instanceof Error ? error.message : String(error),
+      stack: process.env.NODE_ENV === "development" ? (error instanceof Error ? error.stack : undefined) : undefined
     });
   }
 }
