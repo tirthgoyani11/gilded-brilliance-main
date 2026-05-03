@@ -1,15 +1,30 @@
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Diamond } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 
 const luxuryEase = [0.16, 1, 0.3, 1] as const;
+const fionaEase = [0.3, 1, 0.3, 1] as const;
 
 const trustBadges = [
   { iconImage: "/icons/logo_only_IGI.png", label: "Independently Certified" },
   { iconImage: "/icons/customer-care_6012388.png", label: "From Source To You" },
   { iconImage: "/icons/360-degrees_8200057.png", label: "360° Diamond View" },
+];
+
+/* Fiona-style hero slides — each with its own image, headline, subtitle */
+const heroSlides = [
+  {
+    image: "/hero-vmora.png",
+    tagline: "Luxury Without Intermediaries",
+    title: "VMORA",
+    subtitle: "Crafted Brilliance",
+    description:
+      "Direct access to certified diamonds & sculpted jewelry. Custom creations sourced directly, delivered globally.",
+    cta: { label: "Shop Diamonds", href: "/diamonds", icon: true },
+    ctaSecondary: { label: "Explore Jewelry", href: "/jewelry" },
+  },
 ];
 
 const FloatingDiamonds = () => {
@@ -36,8 +51,31 @@ const FloatingDiamonds = () => {
   );
 };
 
+/** Fiona-style slide dots */
+const SlideDots = ({ count, active, onSelect }: { count: number; active: number; onSelect: (i: number) => void }) => {
+  if (count <= 1) return null;
+  return (
+    <div className="flex items-center gap-2">
+      {Array.from({ length: count }).map((_, i) => (
+        <button
+          key={i}
+          onClick={() => onSelect(i)}
+          className={`h-[3px] rounded-full transition-all duration-500 ${
+            i === active
+              ? "w-8 bg-foreground"
+              : "w-3 bg-foreground/20 hover:bg-foreground/40"
+          }`}
+        />
+      ))}
+    </div>
+  );
+};
+
 const HeroSection = () => {
   const containerRef = useRef<HTMLElement>(null);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const slide = heroSlides[activeSlide];
+
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end start"],
@@ -48,22 +86,36 @@ const HeroSection = () => {
   const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const contentOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
+  // Auto-advance if multiple slides
+  useEffect(() => {
+    if (heroSlides.length <= 1) return;
+    const t = setInterval(() => setActiveSlide((p) => (p + 1) % heroSlides.length), 6000);
+    return () => clearInterval(t);
+  }, []);
+
   return (
     <section
       ref={containerRef}
       className="relative flex min-h-[100svh] items-center overflow-hidden bg-[#FAFAFA]"
     >
-      {/* Background image with parallax */}
+      {/* Background image with parallax — Fiona uses full-bleed hero imagery */}
       <motion.div
         className="absolute inset-0 overflow-hidden"
         style={{ y: imageY, scale: imageScale }}
       >
-        <img
-          src="/hero-vmora.png"
-          alt="VMORA Luxury Diamond"
-          className="h-full w-full object-cover"
-        />
-        {/* Light overlay for text readability */}
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={slide.image}
+            src={slide.image}
+            alt="VMORA Luxury Diamond"
+            className="h-full w-full object-cover"
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.2, ease: fionaEase }}
+          />
+        </AnimatePresence>
+        {/* Gradient overlay — Fiona's approach: strong left fade for text legibility */}
         <div className="hero-video-overlay-light absolute inset-0" />
       </motion.div>
 
@@ -79,70 +131,74 @@ const HeroSection = () => {
         style={{ y: contentY, opacity: contentOpacity }}
       >
         <div className="max-w-2xl">
-          {/* Accent line + tagline */}
+          {/* Accent line + tagline — Fiona uses decorative lines beside subheadings */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 1.2, ease: luxuryEase, delay: 0.3 }}
+            transition={{ duration: 1, ease: fionaEase, delay: 0.3 }}
             className="mb-5 flex items-center gap-4"
           >
             <motion.span
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
-              transition={{ duration: 1, ease: luxuryEase, delay: 0.5 }}
-              className="inline-block h-[1.5px] w-10 origin-left bg-primary sm:w-14"
+              transition={{ duration: 0.8, ease: fionaEase, delay: 0.5 }}
+              className="inline-block h-[1.5px] w-10 origin-left bg-[#a97a3a] sm:w-14"
             />
-            <span className="font-accent text-sm italic tracking-[0.15em] text-primary sm:text-base lg:text-lg">
-              Luxury Without Intermediaries
+            <span className="font-accent text-sm italic tracking-[0.15em] text-[#a97a3a] sm:text-base lg:text-lg">
+              {slide.tagline}
             </span>
           </motion.div>
 
-          {/* Brand name */}
-          <motion.h1
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.4, ease: luxuryEase, delay: 0.5 }}
-            className="font-heading text-[3.5rem] leading-[1] tracking-tight text-foreground sm:text-7xl lg:text-[5.5rem]"
-          >
-            VMORA
-          </motion.h1>
+          {/* Brand name — Fiona heading scale: 7.4rem desktop */}
+          <AnimatePresence mode="wait">
+            <motion.h1
+              key={`title-${activeSlide}`}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 1, ease: fionaEase }}
+              className="font-heading text-[3.5rem] leading-[1] tracking-tight text-foreground sm:text-7xl lg:text-[5.5rem]"
+            >
+              {slide.title}
+            </motion.h1>
+          </AnimatePresence>
 
           {/* Subtitle */}
           <motion.p
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.2, ease: luxuryEase, delay: 0.7 }}
+            transition={{ duration: 1, ease: fionaEase, delay: 0.6 }}
             className="mt-1 font-accent text-2xl italic tracking-wide text-muted-foreground sm:text-3xl lg:text-4xl"
           >
-            Crafted Brilliance
+            {slide.subtitle}
           </motion.p>
 
           {/* Description */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1, ease: luxuryEase, delay: 0.9 }}
+            transition={{ duration: 0.8, ease: fionaEase, delay: 0.8 }}
             className="mt-6 max-w-lg text-[13px] leading-relaxed text-foreground/60 sm:mt-8 sm:text-sm lg:text-base"
           >
-            Direct access to certified diamonds & sculpted jewelry. Custom creations sourced directly, delivered globally. No middlemen. Just mastery.
+            {slide.description}
           </motion.p>
 
-          {/* CTA Buttons */}
+          {/* CTA Buttons — Fiona uses pill buttons (10rem radius) with 600 weight */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.2, ease: luxuryEase, delay: 1.1 }}
+            transition={{ duration: 1, ease: fionaEase, delay: 1 }}
             className="mt-8 flex flex-wrap gap-3 sm:mt-10 sm:gap-4"
           >
             <Button
               asChild
               variant="luxury"
               size="xl"
-              className="bg-foreground text-background border-0 group hover:bg-primary hover:text-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_30px_-4px_rgba(198,168,125,0.4)] transition-all duration-500"
+              className="rounded-[10rem] bg-[#0A0A0A] text-white border-0 group hover:bg-[#a97a3a] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.25)] hover:shadow-[0_8px_30px_-4px_rgba(169,122,58,0.35)] transition-all duration-500"
             >
-              <Link to="/diamonds">
-                <Diamond className="w-4 h-4 mr-2" />
-                Shop Diamonds
+              <Link to={slide.cta.href}>
+                {slide.cta.icon && <Diamond className="w-4 h-4 mr-2" />}
+                {slide.cta.label}
                 <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
             </Button>
@@ -150,10 +206,10 @@ const HeroSection = () => {
               asChild
               variant="luxury-outline"
               size="xl"
-              className="border-foreground/20 text-foreground backdrop-blur-sm group hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-500"
+              className="rounded-[10rem] border-foreground/20 text-foreground backdrop-blur-sm group hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-500"
             >
-              <Link to="/jewelry">
-                Explore Jewelry
+              <Link to={slide.ctaSecondary.href}>
+                {slide.ctaSecondary.label}
                 <ArrowRight className="w-4 h-4 ml-2 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1" />
               </Link>
             </Button>
@@ -161,7 +217,7 @@ const HeroSection = () => {
               asChild
               variant="luxury-outline"
               size="xl"
-              className="border-foreground/20 text-foreground backdrop-blur-sm group hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-500 hidden sm:flex"
+              className="rounded-[10rem] border-foreground/20 text-foreground backdrop-blur-sm group hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-500 hidden sm:flex"
             >
               <Link to="/custom-jewelry-generator">
                 Create Your Ring
@@ -170,17 +226,17 @@ const HeroSection = () => {
             </Button>
           </motion.div>
 
-          {/* Trust badges */}
+          {/* Trust badges — refined spacing */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1, ease: luxuryEase, delay: 1.5 }}
+            transition={{ duration: 0.8, ease: fionaEase, delay: 1.4 }}
             className="mt-12 sm:mt-16"
           >
             <div className="flex flex-wrap items-center gap-4 sm:gap-6">
               {trustBadges.map((badge, i) => (
                 <div key={badge.label} className="flex items-center gap-2 group">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full border border-foreground/8 bg-foreground/[0.03] transition-all duration-300 group-hover:border-primary/20 group-hover:bg-primary/5 sm:h-8 sm:w-8">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full border border-foreground/8 bg-foreground/[0.03] transition-all duration-300 group-hover:border-[#a97a3a]/20 group-hover:bg-[#a97a3a]/5 sm:h-8 sm:w-8">
                     <img
                       src={badge.iconImage}
                       alt={`${badge.label} icon`}
@@ -198,26 +254,38 @@ const HeroSection = () => {
               ))}
             </div>
           </motion.div>
+
+          {/* Slide dots — Fiona uses bottom navigation dots */}
+          {heroSlides.length > 1 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.6, duration: 0.6 }}
+              className="mt-8"
+            >
+              <SlideDots count={heroSlides.length} active={activeSlide} onSelect={setActiveSlide} />
+            </motion.div>
+          )}
         </div>
       </motion.div>
 
-      {/* Bottom gradient fade — blends into CategorySection */}
+      {/* Bottom gradient fade — seamless blend into CategorySection */}
       <div className="absolute bottom-0 left-0 right-0 h-40 z-[11] bg-gradient-to-t from-[#FAFAFA] via-[#FAFAFA]/60 to-transparent pointer-events-none" />
 
-      {/* Scroll indicator */}
+      {/* Scroll indicator — Fiona-style minimal */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 2, duration: 1 }}
+        transition={{ delay: 2, duration: 0.8 }}
         className="absolute bottom-12 left-1/2 z-[12] hidden -translate-x-1/2 flex-col items-center gap-2 md:flex"
       >
         <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          animate={{ y: [0, 6, 0] }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
           className="flex flex-col items-center gap-2"
         >
-          <span className="text-[8px] font-medium uppercase tracking-[0.3em] text-foreground/40">Scroll</span>
-          <div className="h-10 w-[1.5px] rounded-full bg-gradient-to-b from-foreground/30 via-foreground/10 to-transparent" />
+          <span className="text-[8px] font-semibold uppercase tracking-[0.3em] text-foreground/35">Scroll</span>
+          <div className="h-10 w-[1.5px] rounded-full bg-gradient-to-b from-foreground/25 via-foreground/8 to-transparent" />
         </motion.div>
       </motion.div>
     </section>
