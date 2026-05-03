@@ -2,7 +2,7 @@ import { ensureCoreTables, hasConfiguredDatabase, sql } from "../db.js";
 import { requireAdmin } from "../admin-auth.js";
 import { deleteLocalJewelryItem, listLocalJewelryItems, upsertLocalJewelryItem } from "../local-jewelry-store.js";
 import { cachePolicies, rejectIfCrossOriginWrite, setCommonSecurityHeaders, setCorsForRequest } from "../security.js";
-import { extractStoragePath, deleteStorageFile, hasSupabase, getSupabaseAdmin, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_IMAGE_BUCKET, SUPABASE_MODEL_BUCKET } from "../supabase-admin.js";
+import { extractStoragePath, deleteStorageFile, deleteStorageFiles, hasSupabase, getSupabaseAdmin, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_IMAGE_BUCKET, SUPABASE_MODEL_BUCKET } from "../supabase-admin.js";
 
 const JEWELRY_CATEGORIES = new Set(["Rings", "Necklaces", "Bracelets", "Earrings"]);
 const INVENTORY_STATUSES = new Set(["In Stock", "Made To Order", "Reserved", "Sold Out"]);
@@ -405,20 +405,15 @@ export async function handleJewelry(req, res) {
       const metalImages = normalizeMetalImages(item.metal_images, item.image_url);
       const galleryImages = normalizeGalleryImages(parseJsonField(item.gallery_images, []));
       
-      const filesToDelete = [
+      const allFileUrls = [
         ...Object.values(metalImages).flat(),
         ...galleryImages,
         item.video_url,
-        item.model_url
+        item.model_url,
       ].filter(Boolean);
 
-      for (const fileUrl of filesToDelete) {
-        const path = extractStoragePath(fileUrl);
-        if (path) {
-          const isModel = path.startsWith("models/");
-          await deleteSupabaseFile(path, isModel ? SUPABASE_MODEL_BUCKET : SUPABASE_IMAGE_BUCKET);
-        }
-      }
+      // Batch delete all associated files from Supabase Storage
+      await deleteStorageFiles(allFileUrls);
     }
 
     await sql`DELETE FROM jewelry_items WHERE id = ${id};`;

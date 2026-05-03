@@ -142,66 +142,105 @@ const readFileAsDataUrl = (file: File) =>
     reader.readAsDataURL(file);
   });
 
-const compressImage = async (file: File, maxWidth = 2048, initialQuality = 0.9): Promise<Blob> => {
+/**
+ * Smart image compressor — targets under 1MB while preserving jewelry detail.
+ * Uses progressive quality reduction and resolution scaling.
+ * Non-image files (GLB, video) pass through unchanged.
+ */
+const TARGET_SIZE = 1024 * 1024; // 1 MB
+
+const compressImage = async (file: File): Promise<Blob> => {
+  // Skip non-images (GLB models, videos, etc.)
   if (!file.type.startsWith("image/")) return file;
-  
-  // Keep original if it's already a reasonable size to preserve maximum detail
-  if (file.size < 1.5 * 1024 * 1024) return file;
-  
+
+  // Already under 1MB — keep original for maximum quality
+  if (file.size <= TARGET_SIZE) return file;
+
+  // Load the image into a canvas
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-      img.src = e.target?.result as string;
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = e.target?.result as string;
     };
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
 
   const canvas = document.createElement("canvas");
-  let width = img.width;
-  let height = img.height;
-
-  if (width > maxWidth) {
-    height = Math.round((height * maxWidth) / width);
-    width = maxWidth;
-  }
-
-  canvas.width = width;
-  canvas.height = height;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas context failed");
-  
-  // High-quality smoothing for sharp jewelry details
+
+  // High-quality rendering for sharp jewelry facets and metal textures
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(img, 0, 0, width, height);
 
-  let quality = initialQuality;
-  let blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Blob failed"))), "image/jpeg", quality);
-  });
+  /**
+   * Compression passes — start with highest quality, progressively reduce.
+   * Each pass tries a different resolution + quality combination.
+   * The first result under 1MB wins.
+   */
+  const passes: Array<{ maxWidth: number; quality: number }> = [
+    { maxWidth: 2048, quality: 0.92 }, // Best: 2K, near-lossless
+    { maxWidth: 2048, quality: 0.85 }, // 2K, slight compression
+    { maxWidth: 1600, quality: 0.85 }, // Reduced res, slight compression
+    { maxWidth: 1600, quality: 0.78 }, // Reduced res, moderate compression
+    { maxWidth: 1200, quality: 0.78 }, // Smaller, moderate compression
+    { maxWidth: 1200, quality: 0.70 }, // Smallest acceptable for product photos
+  ];
 
-  // Only reduce quality if it's still dangerously close to Vercel's limit
-  let attempts = 0;
-  while (blob.size > 2.5 * 1024 * 1024 && attempts < 2) {
-    quality -= 0.1;
-    if (quality < 0.6) break; // Never go below 0.6 to maintain professional look
-    blob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Blob failed"))), "image/jpeg", quality);
+  for (const { maxWidth, quality } of passes) {
+    let width = img.width;
+    let height = img.height;
+
+    if (width > maxWidth) {
+      height = Math.round((height * maxWidth) / width);
+      width = maxWidth;
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (b) => (b ? resolve(b) : reject(new Error("Blob creation failed"))),
+        "image/jpeg",
+        quality,
+      );
     });
-    attempts++;
+
+    // First result under 1MB wins — preserves best possible quality
+    if (blob.size <= TARGET_SIZE) {
+      console.log(
+        `Compressed: ${(file.size / 1024 / 1024).toFixed(1)}MB → ${(blob.size / 1024).toFixed(0)}KB (${width}×${height}, q=${quality})`,
+      );
+      return blob;
+    }
   }
 
-  return blob;
+  // Final fallback — force smallest acceptable size
+  canvas.width = Math.min(img.width, 1024);
+  canvas.height = Math.round((img.height * canvas.width) / img.width);
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  const finalBlob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("Final compression failed"))),
+      "image/jpeg",
+      0.65,
+    );
+  });
+
+  console.log(
+    `Compressed (final): ${(file.size / 1024 / 1024).toFixed(1)}MB → ${(finalBlob.size / 1024).toFixed(0)}KB`,
+  );
+  return finalBlob;
 };
 
 const uploadFileToSupabase = async (file: File | Blob, folder: "images" | "models", originalName?: string) => {
-  if (file.size > 4.4 * 1024 * 1024) {
-    throw new Error(`File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Even after compression, it exceeds the 4.5MB server limit.`);
-  }
   
   const dataUrl = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
