@@ -5,6 +5,8 @@ import { clearMaterialCache } from "@/lib/jewelry-render-materials";
 import type { LoadedModel } from "@/types/jewelry-model";
 import { JewelryEnvironment } from "./JewelryEnvironment";
 import { JewelryRenderModel } from "./JewelryRenderModel";
+import { ErrorBoundary } from "./ErrorBoundary";
+
 
 type JewelryModelViewerProps = {
   src: string;
@@ -79,45 +81,48 @@ const JewelryModelViewer = ({ src, title, className = "" }: JewelryModelViewerPr
   }, []);
 
   return (
-    <div className={`relative overflow-hidden rounded-[10px] border border-border bg-[#f0f0f0] ${className}`}>
-      {isLoading ? (
-        <div className="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center">
-          <span className="rounded-full border border-border bg-background/95 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground shadow-sm">
-            Loading 360 view
-          </span>
-        </div>
-      ) : null}
+    <div className={`relative overflow-hidden bg-white ${className}`}>
+        {isLoading ? (
+          <div className="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center">
+            <span className="rounded-full border border-border bg-background/95 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground shadow-sm">
+              Loading 360 view
+            </span>
+          </div>
+        ) : null}
 
-      <Canvas
-        aria-label={title}
-        camera={{ position: [0, 0, 4], fov: 45 }}
-        gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
-        dpr={dpr}
-        style={{ width: "100%", height: "100%" }}
-        className="touch-none"
-      >
-        <color attach="background" args={["#f0f0f0"]} />
-        <JewelryEnvironment />
+        <ErrorBoundary>
+          <Canvas
+            aria-label={title}
+            camera={{ position: [0, 0, 4], fov: 45 }}
+            gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
+            dpr={dpr}
+            style={{ width: "100%", height: "100%" }}
+            className="touch-none"
+          >
+            <color attach="background" args={["#ffffff"]} />
+          <JewelryEnvironment />
 
-        <Suspense fallback={<Loader />}>
-          <JewelryRenderModel
-            model={model}
-            metalColor={selectedMetal.color}
-            metalRoughness={DEFAULT_ROUGHNESS}
-            diamondColor={DEFAULT_DIAMOND_COLOR}
-            onLoad={handleModelLoaded}
+          <Suspense fallback={<Loader />}>
+            <JewelryRenderModel
+              model={model}
+              metalColor={selectedMetal.color}
+              metalRoughness={DEFAULT_ROUGHNESS}
+              diamondColor={DEFAULT_DIAMOND_COLOR}
+              onLoad={handleModelLoaded}
+            />
+          </Suspense>
+
+          <OrbitControls
+            makeDefault
+            autoRotate
+            autoRotateSpeed={0.8}
+            enablePan={false}
+            minDistance={1.5}
+            maxDistance={12}
           />
-        </Suspense>
+        </Canvas>
+      </ErrorBoundary>
 
-        <OrbitControls
-          makeDefault
-          autoRotate
-          autoRotateSpeed={0.8}
-          enablePan={false}
-          minDistance={1.5}
-          maxDistance={12}
-        />
-      </Canvas>
 
       <div className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-background/90 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-muted-foreground shadow-sm backdrop-blur">
         Drag to rotate

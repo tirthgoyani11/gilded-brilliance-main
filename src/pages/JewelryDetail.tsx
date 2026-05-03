@@ -282,7 +282,8 @@ const JewelryDetail = () => {
 
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1.06fr)_minmax(390px,0.94fr)] lg:gap-12">
             <div className="space-y-4 min-w-0">
-              <div className="relative overflow-hidden rounded-[10px] border border-border bg-muted">
+              <div className="group relative p-[1.5px] rounded-[12px] bg-gradient-to-br from-[#d4a943] via-[#f9e596] to-[#a67c00] shadow-[0_4px_20px_rgba(212,169,67,0.15)]">
+                <div className="relative overflow-hidden h-full w-full rounded-[10.5px] bg-white">
                 <div className="absolute left-3 top-3 z-10 flex flex-wrap gap-2">
                   {["Made to Order", "Certified Diamonds", "Free Insured Shipping"].map((badge) => (
                     <span key={badge} className="rounded-full bg-background/90 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-foreground shadow-sm backdrop-blur">
@@ -355,6 +356,7 @@ const JewelryDetail = () => {
                     </DialogContent>
                   </Dialog>
                 )}
+                </div>
               </div>
 
               <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/50">
