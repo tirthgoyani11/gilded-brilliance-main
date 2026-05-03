@@ -7,6 +7,34 @@ const JEWELRY_CATEGORIES = new Set(["Rings", "Necklaces", "Bracelets", "Earrings
 const INVENTORY_STATUSES = new Set(["In Stock", "Made To Order", "Reserved", "Sold Out"]);
 const METAL_OPTIONS = ["Silver", "Gold", "Rose Gold"];
 
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_IMAGE_BUCKET = process.env.SUPABASE_IMAGE_BUCKET || process.env.SUPABASE_BUCKET || "jewelry-assets";
+const SUPABASE_MODEL_BUCKET = process.env.SUPABASE_MODEL_BUCKET || process.env.SUPABASE_BUCKET || "jewelry-assets";
+
+const extractSupabasePath = (url) => {
+  if (!url || !SUPABASE_URL) return null;
+  const base = SUPABASE_URL.replace(/\/$/, "");
+  if (!url.startsWith(base)) return null;
+  const parts = url.split("/storage/v1/object/public/");
+  if (parts.length < 2) return null;
+  const pathParts = parts[1].split("/");
+  pathParts.shift(); // Remove bucket name
+  return pathParts.join("/");
+};
+
+const deleteSupabaseFile = async (path, bucket) => {
+  if (!path || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return;
+  const url = `${SUPABASE_URL.replace(/\/$/, "")}/storage/v1/object/${bucket}/${path}`;
+  await fetch(url, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+    },
+  }).catch(() => {});
+};
+
 const parseJsonField = (value, fallback) => {
   if (value == null) return fallback;
   if (typeof value === "string") {
@@ -293,6 +321,29 @@ export async function handleJewelry(req, res) {
   if (req.method === "DELETE") {
     const id = String(req.query?.id || "").trim();
     if (!id) return res.status(400).json({ message: "Missing item id" });
+
+    // Fetch item first to get file paths for cleanup
+    const [item] = await sql`SELECT * FROM jewelry_items WHERE id = ${id};`;
+    if (item) {
+      const metalImages = normalizeMetalImages(item.metal_images, item.image_url);
+      const galleryImages = normalizeGalleryImages(parseJsonField(item.gallery_images, []));
+      
+      const filesToDelete = [
+        ...Object.values(metalImages).flat(),
+        ...galleryImages,
+        item.video_url,
+        item.model_url
+      ].filter(Boolean);
+
+      for (const fileUrl of filesToDelete) {
+        const path = extractSupabasePath(fileUrl);
+        if (path) {
+          const isModel = path.startsWith("models/");
+          await deleteSupabaseFile(path, isModel ? SUPABASE_MODEL_BUCKET : SUPABASE_IMAGE_BUCKET);
+        }
+      }
+    }
+
     await sql`DELETE FROM jewelry_items WHERE id = ${id};`;
     return res.status(200).json({ deleted: true, id });
   }
