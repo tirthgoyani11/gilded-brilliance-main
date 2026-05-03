@@ -20,7 +20,13 @@ const footerGroups = {
   company: [
     { label: "About Vmora", to: "/about" },
     { label: "My Account", to: "/account" },
-    { label: "Privacy Policy", to: "/about" },
+  ],
+  policies: [
+    { label: "Shipping Policy", to: "/shipping-policy" },
+    { label: "Return Policy", to: "/return-policy" },
+    { label: "Exchange Policy", to: "/exchange-policy" },
+    { label: "Privacy Policy", to: "/privacy-policy" },
+    { label: "Terms & Conditions", to: "/terms-and-conditions" },
   ],
 };
 
@@ -33,7 +39,7 @@ const Footer = () => {
   return (
     <footer className="bg-[#0A0A0A] border-t border-white/5">
       <div className="container mx-auto px-6 lg:px-12 py-20">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-16">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-16">
           {/* Brand column */}
           <div className="col-span-2 md:col-span-2">
             <h4 className="font-heading text-2xl mb-3 text-white">VMORA</h4>
@@ -79,6 +85,16 @@ const Footer = () => {
             <p className="text-[10px] uppercase tracking-[0.18em] font-body font-medium text-white/60 mb-5">Company</p>
             <div className="space-y-3">
               {footerGroups.company.map((l) => (
+                <Link key={l.label} to={l.to} className="block text-xs font-body text-white/35 hover:text-[#C6A87D] luxury-transition">{l.label}</Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Policies */}
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.18em] font-body font-medium text-white/60 mb-5">Policies</p>
+            <div className="space-y-3">
+              {footerGroups.policies.map((l) => (
                 <Link key={l.label} to={l.to} className="block text-xs font-body text-white/35 hover:text-[#C6A87D] luxury-transition">{l.label}</Link>
               ))}
             </div>
