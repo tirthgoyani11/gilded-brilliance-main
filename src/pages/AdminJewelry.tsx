@@ -142,18 +142,68 @@ const readFileAsDataUrl = (file: File) =>
     reader.readAsDataURL(file);
   });
 
-const uploadFileToSupabase = async (file: File, folder: "images" | "models") => {
+const compressImage = async (file: File, maxWidth = 1600, quality = 0.8): Promise<Blob> => {
+  if (!file.type.startsWith("image/")) return file;
+  
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject(new Error("Canvas context failed"));
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error("Compression failed"));
+          },
+          "image/jpeg",
+          quality
+        );
+      };
+      img.onerror = () => reject(new Error("Image load failed"));
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => reject(new Error("File read failed"));
+    reader.readAsDataURL(file);
+  });
+};
+
+const uploadFileToSupabase = async (file: File | Blob, folder: "images" | "models", originalName?: string) => {
   if (file.size > 4.4 * 1024 * 1024) {
-    throw new Error(`File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max 4.4MB for Vercel Hobby plan.`);
+    throw new Error(`File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Even after compression, it exceeds the 4.5MB server limit.`);
   }
-  const dataUrl = await readFileAsDataUrl(file);
+  
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  const fileName = originalName || (file instanceof File ? file.name : `upload-${Date.now()}.jpg`);
+  const contentType = file.type || "image/jpeg";
+
   const response = await adminFetch(MEDIA_UPLOAD_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       dataUrl,
-      fileName: file.name,
-      contentType: file.type,
+      fileName,
+      contentType,
       folder,
     }),
   });
@@ -333,9 +383,12 @@ const AdminJewelry = () => {
   const handleMetalImageUpload = async (metal: (typeof metals)[number], files?: FileList | null) => {
     if (!files || files.length === 0) return;
 
-    setStatus("Uploading metal images...");
+    setStatus("Compressing and uploading...");
     try {
-      const uploaded = await Promise.all([...files].map((file) => uploadFileToSupabase(file, "images")));
+      const uploaded = await Promise.all([...files].map(async (file) => {
+        const compressed = file.type.startsWith("image/") ? await compressImage(file) : file;
+        return uploadFileToSupabase(compressed, "images", file.name);
+      }));
       const urls = uploaded.map((item) => item.url).filter(Boolean);
       setForm((prev) => {
         const nextImages = [...prev.metalImages[metal], ...urls].filter(Boolean);
@@ -357,9 +410,12 @@ const AdminJewelry = () => {
   const handleGalleryUpload = async (files?: FileList | null) => {
     if (!files || files.length === 0) return;
 
-    setStatus("Uploading gallery images...");
+    setStatus("Compressing and uploading...");
     try {
-      const uploaded = await Promise.all([...files].map((file) => uploadFileToSupabase(file, "images")));
+      const uploaded = await Promise.all([...files].map(async (file) => {
+        const compressed = file.type.startsWith("image/") ? await compressImage(file) : file;
+        return uploadFileToSupabase(compressed, "images", file.name);
+      }));
       const urls = uploaded.map((item) => item.url).filter(Boolean);
       setForm((prev) => ({
         ...prev,

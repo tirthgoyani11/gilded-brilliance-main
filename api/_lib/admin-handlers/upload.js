@@ -70,7 +70,7 @@ export async function handleUpload(req, res) {
   }
 
   if (parsed.buffer.length > MAX_UPLOAD_BYTES) {
-    return res.status(413).json({ message: "File too large" });
+    return res.status(413).json({ message: `File too large. Please keep files under 3MB.` });
   }
 
   const safeName = sanitizeFilename(String(fileName || ""));
@@ -78,28 +78,37 @@ export async function handleUpload(req, res) {
   const base = safeName.replace(ext, "");
   const key = `${targetFolder}/${base}-${crypto.randomUUID()}${ext}`;
 
-  const bucket = targetFolder === "models" ? SUPABASE_MODEL_BUCKET : SUPABASE_IMAGE_BUCKET;
-  const uploadUrl = `${SUPABASE_URL.replace(/\/$/, "")}/storage/v1/object/${bucket}/${key}`;
+  try {
+    const bucket = targetFolder === "models" ? SUPABASE_MODEL_BUCKET : SUPABASE_IMAGE_BUCKET;
+    const uploadUrl = `${SUPABASE_URL.replace(/\/$/, "")}/storage/v1/object/${bucket}/${key}`;
 
-  const response = await fetch(uploadUrl, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-      apikey: SUPABASE_SERVICE_ROLE_KEY,
-      "Content-Type": parsed.contentType || "application/octet-stream",
-      "x-upsert": "true",
-    },
-    body: parsed.buffer,
-  });
+    const response = await fetch(uploadUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        "Content-Type": parsed.contentType || "application/octet-stream",
+        "x-upsert": "true",
+      },
+      body: parsed.buffer,
+    });
 
-  if (!response.ok) {
-    const text = await response.text().catch(() => "");
-    return res.status(500).json({ message: "Supabase upload failed", details: text || undefined });
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      console.error("Supabase Storage Error:", text);
+      return res.status(500).json({ message: "Supabase upload failed", details: text || response.statusText });
+    }
+
+    return res.status(200).json({
+      url: buildPublicUrl(bucket, key),
+      path: key,
+      bucket,
+    });
+  } catch (error) {
+    console.error("Upload Handler Exception:", error);
+    return res.status(500).json({ 
+      message: "Internal error during upload", 
+      error: error instanceof Error ? error.message : String(error) 
+    });
   }
-
-  return res.status(200).json({
-    url: buildPublicUrl(bucket, key),
-    path: key,
-    bucket,
-  });
 }
