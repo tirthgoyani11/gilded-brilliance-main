@@ -104,6 +104,22 @@ export async function handleUpload(req, res) {
     });
   }
 
+  // ── Verify the key is actually a service_role key ───────────────────
+  try {
+    const parts = SUPABASE_SERVICE_ROLE_KEY.split(".");
+    if (parts.length >= 2) {
+      const payload = JSON.parse(Buffer.from(parts[1], "base64").toString());
+      if (payload.role !== "service_role") {
+        return res.status(500).json({
+          message: `Wrong Supabase key! Your key has role "${payload.role}" but needs "service_role".`,
+          hint: "Go to Supabase Dashboard → Settings → API → Copy the 'service_role' key (NOT the 'anon' key).",
+        });
+      }
+    }
+  } catch {
+    // If we can't decode it, proceed anyway
+  }
+
   // ── Parse & validate request body ───────────────────────────────────
   const { dataUrl, fileName, contentType, folder } = req.body || {};
   const targetFolder = String(folder || "").trim().toLowerCase();
