@@ -1,4 +1,5 @@
 import type { JewelryItem } from "@/types/diamond";
+import { getCurrencyConfig } from "@/lib/currency-store";
 import productRing from "@/assets/product-ring.jpg";
 import productEarrings from "@/assets/product-earrings.jpg";
 import productBracelet from "@/assets/product-bracelet.jpg";
@@ -154,12 +155,14 @@ export const fallbackJewelryItems: JewelryItem[] = [
   },
 ];
 
-export const formatJewelryPrice = (price: number) =>
-  new Intl.NumberFormat("en-US", {
+export const formatJewelryPrice = (price: number) => {
+  const { currency, rate } = getCurrencyConfig();
+  return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD",
+    currency,
     maximumFractionDigits: 0,
-  }).format(price || 0);
+  }).format((price || 0) * rate);
+};
 
 export const getJewelryMetalImages = (item: JewelryItem, metal: string) => {
   let value = item.metalImages?.[metal as keyof NonNullable<JewelryItem["metalImages"]>];

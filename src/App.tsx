@@ -8,6 +8,7 @@ import { StoreProvider } from "@/contexts/StoreContext";
 import { Analytics } from "@vercel/analytics/react";
 import ScrollToTop from "@/components/ScrollToTop";
 import RouteSeo from "@/components/RouteSeo";
+import { CurrencyProvider } from "@/components/CurrencyProvider";
 const Index = lazy(() => import("./pages/Index.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const Jewelry = lazy(() => import("./pages/Jewelry.tsx"));
@@ -40,8 +41,9 @@ const App = () => (
       <StoreProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <ScrollToTop />
+        <CurrencyProvider>
+          <BrowserRouter>
+            <ScrollToTop />
           <RouteSeo />
           <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm uppercase tracking-[0.12em] text-muted-foreground">Loading VMORA</div>}>
             <Routes>
@@ -71,7 +73,8 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
-        </BrowserRouter>
+          </BrowserRouter>
+        </CurrencyProvider>
       </StoreProvider>
     </TooltipProvider>
   </QueryClientProvider>
