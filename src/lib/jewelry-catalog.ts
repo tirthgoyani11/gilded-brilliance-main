@@ -162,7 +162,10 @@ export const formatJewelryPrice = (price: number) =>
   }).format(price || 0);
 
 export const getJewelryMetalImages = (item: JewelryItem, metal: string) => {
-  const value = item.metalImages?.[metal as keyof NonNullable<JewelryItem["metalImages"]>];
+  let value = item.metalImages?.[metal as keyof NonNullable<JewelryItem["metalImages"]>];
+  if ((!value || (Array.isArray(value) && value.length === 0)) && metal === "White Gold") {
+    value = item.metalImages?.["Silver"];
+  }
   if (Array.isArray(value)) return value.filter(Boolean);
   if (typeof value === "string" && value.trim()) return [value.trim()];
   return [];

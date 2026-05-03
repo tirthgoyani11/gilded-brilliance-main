@@ -7,11 +7,12 @@ import type { JewelryItem } from "@/types/diamond";
 
 const jewelryCategories = ["Rings", "Necklaces", "Bracelets", "Earrings"] as const;
 const inventoryStatuses = ["In Stock", "Made To Order", "Reserved", "Sold Out"] as const;
-const metals = ["Silver", "Gold", "Rose Gold"] as const;
+const metals = ["Silver", "Gold", "Rose Gold", "White Gold"] as const;
 const metalSwatches: Record<(typeof metals)[number], string> = {
   Silver: "#d8dde3",
   Gold: "#d4a943",
   "Rose Gold": "#c98c7a",
+  "White Gold": "#f5f5f5",
 };
 
 type JewelryForm = JewelryItem & {
@@ -24,6 +25,7 @@ type JewelryForm = JewelryItem & {
   tags: string;
   metalImages: Record<(typeof metals)[number], string[]>;
   galleryImages: string[];
+  pricing: Record<string, number>;
   videoUrl: string;
   modelUrl: string;
   inventoryStatus: "In Stock" | "Made To Order" | "Reserved" | "Sold Out";
@@ -50,7 +52,9 @@ const emptyForm: JewelryForm = {
     Silver: [],
     Gold: [],
     "Rose Gold": [],
+    "White Gold": [],
   },
+  pricing: {},
   galleryImages: [],
   videoUrl: "",
   modelUrl: "",
@@ -749,8 +753,41 @@ const AdminJewelry = () => {
                 </select>
                 <input value={form.subcategory} onChange={(e) => setForm((prev) => ({ ...prev, subcategory: e.target.value }))} placeholder="Subcategory, e.g. Tennis" className="h-10 rounded border border-border bg-background px-3 text-sm" />
               </div>
+              </div>
               <div className="grid grid-cols-2 gap-3">
-                <input type="number" min="0" value={form.price} onChange={(e) => setForm((prev) => ({ ...prev, price: Number(e.target.value) || 0 }))} placeholder="Price" className="h-10 rounded border border-border bg-background px-3 text-sm" />
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold uppercase text-muted-foreground">Base Price</label>
+                  <input type="number" min="0" value={form.price} onChange={(e) => setForm((prev) => ({ ...prev, price: Number(e.target.value) || 0 }))} placeholder="Base Price" className="h-10 rounded border border-border bg-background px-3 text-sm" />
+                </div>
+              </div>
+              <div className="rounded-[10px] border border-border bg-secondary/20 p-3">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Pricing Per Purity (Optional)</p>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {["10K", "14K", "18K", "22K"].map((purity) => (
+                    <div key={purity} className="flex flex-col gap-1">
+                       <label className="text-[10px] font-semibold text-muted-foreground">{purity} PRICE</label>
+                       <input 
+                         type="number" 
+                         min="0" 
+                         value={form.pricing?.[purity] || ""} 
+                         onChange={(e) => {
+                           const val = e.target.value;
+                           setForm((prev) => {
+                             const newPricing = { ...(prev.pricing || {}) };
+                             if (val === "") {
+                               delete newPricing[purity];
+                             } else {
+                               newPricing[purity] = Number(val);
+                             }
+                             return { ...prev, pricing: newPricing };
+                           });
+                         }} 
+                         placeholder="Auto (Uses Base)" 
+                         className="h-9 rounded border border-border bg-background px-3 text-sm" 
+                       />
+                    </div>
+                  ))}
+                </div>
               </div>
               <div className="rounded-[10px] border border-border bg-secondary/20 p-3">
                 <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Metal color images</p>

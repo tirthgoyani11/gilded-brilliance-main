@@ -306,7 +306,7 @@ const JewelryDetail = () => {
 
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1.06fr)_minmax(390px,0.94fr)] lg:gap-12">
             <div className="space-y-4 min-w-0">
-              <div className={`group relative p-[1.5px] rounded-[12px] bg-gradient-to-br ${getMetalBorderGradient(selectedMetal)} transition-all duration-1000 ease-in-out`}>
+              <div className={`group relative aspect-square w-full max-h-[500px] sm:max-h-[600px] p-[1.5px] rounded-[12px] bg-gradient-to-br ${getMetalBorderGradient(selectedMetal)} transition-all duration-1000 ease-in-out`}>
                 <div className="relative overflow-hidden h-full w-full rounded-[10.5px] bg-white">
                 <div className="absolute left-3 top-3 z-10 flex flex-wrap gap-2">
                   {["Made to Order", "Certified Diamonds", "Free Insured Shipping"].map((badge) => (
@@ -345,10 +345,10 @@ const JewelryDetail = () => {
                       </div>
                     }
                   >
-                    <JewelryModelViewer src={activeMedia.src} title={`${product.name} 360 view`} className="aspect-square max-h-[500px] h-full w-full sm:max-h-[600px]" />
+                    <JewelryModelViewer src={activeMedia.src} title={`${product.name} 360 view`} className="h-full w-full" />
                   </Suspense>
                 ) : activeMedia.type === "video" ? (
-                  <video src={activeMedia.src} autoPlay muted loop playsInline className="aspect-square max-h-[500px] h-full w-full bg-black object-contain sm:max-h-[600px]" />
+                  <video src={activeMedia.src} autoPlay muted loop playsInline className="h-full w-full bg-black object-contain" />
                 ) : (
                   <Dialog onOpenChange={(open) => { if (!open) setZoomLevel(1); }}>
                     <DialogTrigger asChild>
@@ -356,7 +356,7 @@ const JewelryDetail = () => {
                         <img
                           src={activeMedia.src}
                           alt={product.name}
-                          className="aspect-square max-h-[500px] h-full w-full object-contain p-4 transition duration-700 group-hover/btn:scale-[1.04] sm:max-h-[600px] sm:p-6"
+                          className="h-full w-full object-contain p-4 transition duration-700 group-hover/btn:scale-[1.04] sm:p-6"
                         />
                         <span className="absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-background/90 text-foreground shadow-md backdrop-blur">
                           <Search className="h-4 w-4" />
