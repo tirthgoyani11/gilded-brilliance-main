@@ -202,6 +202,11 @@ const compressImage = async (file: File): Promise<Blob> => {
 
     canvas.width = width;
     canvas.height = height;
+    
+    // Fill with white background first so transparent PNGs don't turn black when converted to JPEG
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, width, height);
+    
     ctx.drawImage(img, 0, 0, width, height);
 
     const blob = await new Promise<Blob>((resolve, reject) => {
@@ -224,6 +229,10 @@ const compressImage = async (file: File): Promise<Blob> => {
   // Final fallback — force smallest acceptable size
   canvas.width = Math.min(img.width, 1024);
   canvas.height = Math.round((img.height * canvas.width) / img.width);
+  
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
   const finalBlob = await new Promise<Blob>((resolve, reject) => {
