@@ -42,7 +42,9 @@ export interface JewelryItem {
     Silver?: string[];
     Gold?: string[];
     "Rose Gold"?: string[];
+    "White Gold"?: string[];
   };
+  pricing?: Record<string, number>;
   galleryImages?: string[];
   videoUrl?: string;
   modelUrl?: string;

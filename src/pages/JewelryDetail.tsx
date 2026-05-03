@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowRight,
@@ -54,7 +55,7 @@ type GalleryMedia = {
 
 const RECENTLY_VIEWED_KEY = "vmora_recent_jewelry";
 
-const purityOptions = ["14K", "18K", "22K"] as const;
+const purityOptions = ["10K", "14K", "18K", "22K"] as const;
 
 const estimatedDelivery = (item: JewelryItem) => {
   if (item.inventoryStatus === "In Stock") return "Ships in 2-4 business days";
@@ -171,6 +172,13 @@ const JewelryDetail = () => {
     galleryMedia.findIndex((m) => m.src === activeMedia.src && m.type === activeMedia.type)
   );
 
+  const getCurrentPrice = () => {
+    if (selectedMetal !== "Silver" && product.pricing && typeof product.pricing[selectedPurity] === "number") {
+      return product.pricing[selectedPurity];
+    }
+    return product.price;
+  };
+
   const handlePrevMedia = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     e?.preventDefault();
@@ -193,7 +201,7 @@ const JewelryDetail = () => {
         id: product.id,
         title: product.name,
         type: "jewelry",
-        price: product.price,
+        price: getCurrentPrice(),
         imageUrl: activeImage,
       });
     }
@@ -206,7 +214,7 @@ const JewelryDetail = () => {
         `I want details for ${product.name} (${product.id}).\n` +
         `Metal: ${selectedMetal}${purityText}\n` +
         `Quantity: ${quantity}\n` +
-        `Price: ${formatJewelryPrice(product.price)}\n` +
+        `Price: ${formatJewelryPrice(getCurrentPrice())}\n` +
         `Image: ${activeImage}\n` +
         (product.modelUrl ? `360 Model: Available on product page\n` : "") +
         `Estimated Delivery: ${delivery}\n\n` +
@@ -361,27 +369,39 @@ const JewelryDetail = () => {
                           <DialogTitle className="font-heading text-xl">{product.name}</DialogTitle>
                           <DialogDescription className="text-xs">{activeMedia.label}</DialogDescription>
                         </DialogHeader>
-                        <div className="flex items-center gap-2 pr-8">
-                           <button onClick={() => setZoomLevel(z => Math.max(1, z - 0.5))} className="rounded-full bg-secondary/50 p-2 hover:bg-secondary"><ZoomOut className="h-4 w-4" /></button>
-                           <span className="w-12 text-center text-xs font-semibold">{Math.round(zoomLevel * 100)}%</span>
-                           <button onClick={() => setZoomLevel(z => Math.min(3, z + 0.5))} className="rounded-full bg-secondary/50 p-2 hover:bg-secondary"><ZoomIn className="h-4 w-4" /></button>
-                        </div>
                       </div>
-                      <div className="relative h-[80vh] w-full overflow-auto bg-black/5" style={{ cursor: zoomLevel > 1 ? 'grab' : 'default' }}>
-                        <button onClick={handlePrevMedia} className="fixed left-4 top-1/2 z-50 -translate-y-1/2 rounded-full bg-background/90 p-3 shadow-lg hover:bg-background">
+                      <div className="relative h-[80vh] w-full bg-black/5">
+                        <button onClick={handlePrevMedia} className="absolute left-4 top-1/2 z-50 -translate-y-1/2 rounded-full bg-background/90 p-3 shadow-lg hover:bg-background">
                           <ChevronLeft className="h-6 w-6" />
                         </button>
-                        <button onClick={handleNextMedia} className="fixed right-4 top-1/2 z-50 -translate-y-1/2 rounded-full bg-background/90 p-3 shadow-lg hover:bg-background">
+                        <button onClick={handleNextMedia} className="absolute right-4 top-1/2 z-50 -translate-y-1/2 rounded-full bg-background/90 p-3 shadow-lg hover:bg-background">
                           <ChevronRight className="h-6 w-6" />
                         </button>
-                        <div className="flex min-h-full w-full items-center justify-center p-4">
-                          <img 
-                            src={activeMedia.src} 
-                            alt={product.name} 
-                            style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center' }}
-                            className="max-h-[75vh] w-auto max-w-none transition-transform duration-200 ease-out" 
-                          />
-                        </div>
+                        
+                        <TransformWrapper
+                          initialScale={1}
+                          minScale={1}
+                          maxScale={4}
+                          centerOnInit
+                          wheel={{ step: 0.1 }}
+                        >
+                          {({ zoomIn, zoomOut, resetTransform }) => (
+                            <>
+                              <div className="absolute right-4 top-4 z-50 flex items-center gap-2 rounded-full bg-background/90 p-1 shadow-md backdrop-blur">
+                                <button onClick={() => zoomOut()} className="rounded-full p-2 hover:bg-secondary"><ZoomOut className="h-4 w-4" /></button>
+                                <button onClick={() => resetTransform()} className="px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground">Reset</button>
+                                <button onClick={() => zoomIn()} className="rounded-full p-2 hover:bg-secondary"><ZoomIn className="h-4 w-4" /></button>
+                              </div>
+                              <TransformComponent wrapperClass="!w-full !h-full" contentClass="!w-full !h-full flex items-center justify-center">
+                                <img 
+                                  src={activeMedia.src} 
+                                  alt={product.name} 
+                                  className="max-h-[75vh] w-auto max-w-none object-contain" 
+                                />
+                              </TransformComponent>
+                            </>
+                          )}
+                        </TransformWrapper>
                       </div>
                     </DialogContent>
                   </Dialog>
@@ -462,7 +482,7 @@ const JewelryDetail = () => {
               <p className="mt-3 text-sm uppercase tracking-[0.14em] text-muted-foreground">
                 {product.category}{product.subcategory ? ` / ${product.subcategory}` : ""} / {selectedMetal}
               </p>
-              <p className="mt-5 font-heading text-3xl text-foreground">{formatJewelryPrice(product.price)}</p>
+              <p className="mt-5 font-heading text-3xl text-foreground">{formatJewelryPrice(getCurrentPrice())}</p>
               <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">{product.description}</p>
 
               <div className="mt-5 flex snap-x gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">

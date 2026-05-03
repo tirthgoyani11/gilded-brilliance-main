@@ -5,12 +5,14 @@ import productBracelet from "@/assets/product-bracelet.jpg";
 import productNecklace from "@/assets/product-necklace.jpg";
 
 export const jewelryCategories = ["All", "Rings", "Necklaces", "Bracelets", "Earrings"] as const;
-export const jewelryMetalOptions = ["Silver", "Gold", "Rose Gold"] as const;
+export const jewelryMetalOptions = ["Silver", "Gold", "Rose Gold", "White Gold"] as const;
 export const jewelryMetalSwatches: Record<(typeof jewelryMetalOptions)[number], string> = {
   Silver: "#e6e6e6",
   Gold: "#e3b868",
   "Rose Gold": "#d9a092",
+  "White Gold": "#f5f5f5",
 };
+
 
 export const categorySlugMap: Record<string, JewelryItem["category"]> = {
   rings: "Rings",

@@ -19,6 +19,7 @@ const DEFAULT_ROUGHNESS = 0.06;
 
 const metalOptions = [
   { label: "Silver", color: "#e6e6e6" },
+  { label: "White Gold", color: "#f5f5f5" },
   { label: "Gold", color: "#e3b868" }, // Soft, realistic 18K gold matching the photos
   { label: "Rose Gold", color: "#d9a092" },
 ];
