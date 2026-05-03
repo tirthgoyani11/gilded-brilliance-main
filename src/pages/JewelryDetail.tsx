@@ -315,6 +315,20 @@ const JewelryDetail = () => {
                   <ChevronRight className="h-5 w-5" />
                 </button>
 
+                {galleryMedia.some((m) => m.type === "model") && activeMedia.type !== "model" && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const modelMedia = galleryMedia.find((m) => m.type === "model");
+                      if (modelMedia) setSelectedMedia(modelMedia);
+                    }}
+                    className="absolute bottom-4 left-4 z-10 flex items-center gap-1.5 rounded-full bg-background/90 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground shadow-md backdrop-blur transition hover:bg-background hover:text-primary sm:bottom-6 sm:left-6"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    360° View
+                  </button>
+                )}
+
                 {activeMedia.type === "model" ? (
                   <Suspense
                     fallback={
