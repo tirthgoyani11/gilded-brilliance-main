@@ -1,11 +1,17 @@
 import { useState } from "react";
 import { X } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import { WHATSAPP_NUMBER } from "@/lib/diamond-utils";
 
 
 
 const WhatsAppFloat = () => {
   const [expanded, setExpanded] = useState(false);
+  const location = useLocation();
+
+  if (location.pathname.includes('/jewelry/product/')) {
+    return null;
+  }
 
   const openWhatsApp = () => {
     const message = encodeURIComponent(

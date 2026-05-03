@@ -251,7 +251,7 @@ const JewelryDetail = () => {
           </div>
 
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1.06fr)_minmax(390px,0.94fr)] lg:gap-12">
-            <div className="space-y-4">
+            <div className="space-y-4 min-w-0">
               <div className="relative overflow-hidden rounded-[10px] border border-border bg-muted">
                 <div className="absolute left-3 top-3 z-10 flex flex-wrap gap-2">
                   {["Made to Order", "Certified Diamonds", "Free Insured Shipping"].map((badge) => (
@@ -264,15 +264,15 @@ const JewelryDetail = () => {
                 {activeMedia.type === "model" ? (
                   <Suspense
                     fallback={
-                      <div className="flex aspect-square h-full w-full items-center justify-center bg-[#f5f2ec] text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                      <div className="flex aspect-square max-h-[400px] h-full w-full items-center justify-center bg-[#f5f2ec] text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:max-h-none">
                         Loading 360 view
                       </div>
                     }
                   >
-                    <JewelryModelViewer src={activeMedia.src} title={`${product.name} 360 view`} className="aspect-square h-full w-full" />
+                    <JewelryModelViewer src={activeMedia.src} title={`${product.name} 360 view`} className="aspect-square max-h-[400px] h-full w-full sm:max-h-none" />
                   </Suspense>
                 ) : activeMedia.type === "video" ? (
-                  <video src={activeMedia.src} autoPlay muted loop playsInline className="aspect-square h-full w-full bg-black object-contain" />
+                  <video src={activeMedia.src} autoPlay muted loop playsInline className="aspect-square max-h-[400px] h-full w-full bg-black object-contain sm:max-h-none" />
                 ) : (
                   <Dialog>
                     <DialogTrigger asChild>
@@ -280,7 +280,7 @@ const JewelryDetail = () => {
                         <img
                           src={activeMedia.src}
                           alt={product.name}
-                          className="aspect-square h-full w-full object-contain p-3 transition duration-700 group-hover:scale-[1.04] sm:p-6"
+                          className="aspect-square max-h-[400px] h-full w-full object-contain p-4 transition duration-700 group-hover:scale-[1.04] sm:max-h-none sm:p-6"
                         />
                         <span className="absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-background/90 text-foreground shadow-md backdrop-blur">
                           <Search className="h-4 w-4" />
@@ -298,7 +298,7 @@ const JewelryDetail = () => {
                 )}
               </div>
 
-              <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+              <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 {galleryMedia.map((media, index) => (
                   <button
                     key={`${media.type}-${media.src}-${index}`}
@@ -317,7 +317,7 @@ const JewelryDetail = () => {
                         <Play className="h-6 w-6" />
                       </span>
                     ) : (
-                      <img src={media.src} alt={`${product.name} ${media.label}`} className="h-full w-full object-contain p-1" />
+                      <img src={media.src} alt={`${product.name} ${media.label}`} className="h-full w-full object-cover" />
                     )}
                   </button>
                 ))}
@@ -325,7 +325,7 @@ const JewelryDetail = () => {
 
               <div className="rounded-[8px] border border-border bg-secondary/20 p-3">
                 <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Preview in Metal</p>
-                <div className="grid grid-cols-1 gap-2 min-[480px]:grid-cols-3">
+                <div className="flex snap-x gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                   {jewelryMetalOptions.map((metal) => (
                     <button
                       key={metal}
@@ -334,11 +334,11 @@ const JewelryDetail = () => {
                         setSelectedMetal(metal);
                         setSelectedMedia({ type: "image", src: getJewelryMetalImage(product, metal), label: metal });
                       }}
-                      className={`overflow-hidden rounded-[8px] border bg-background p-2 text-left transition ${
+                      className={`w-[110px] shrink-0 snap-center overflow-hidden rounded-[8px] border bg-background p-1.5 text-left transition sm:w-auto sm:p-2 ${
                         selectedMetal === metal ? "border-primary shadow-sm" : "border-border hover:border-primary/60"
                       }`}
                     >
-                      <img src={getJewelryMetalImage(product, metal)} alt={`${metal} ${product.name}`} className="aspect-square w-full object-contain" />
+                      <img src={getJewelryMetalImage(product, metal)} alt={`${metal} ${product.name}`} className="aspect-square w-full rounded-[4px] object-cover" />
                       <span className="mt-2 flex min-w-0 items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.08em]">
                         <span className="h-3 w-3 rounded-full border border-border" style={{ backgroundColor: jewelryMetalSwatches[metal] }} />
                         <span className="truncate">{metal}</span>
@@ -349,7 +349,7 @@ const JewelryDetail = () => {
               </div>
             </div>
 
-            <div>
+            <div className="min-w-0">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
                   <Gem className="h-4 w-4" />
@@ -374,24 +374,22 @@ const JewelryDetail = () => {
               <p className="mt-5 font-heading text-3xl text-foreground">{formatJewelryPrice(product.price)}</p>
               <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">{product.description}</p>
 
-              <div className="mt-5 grid gap-3 rounded-[8px] border border-border bg-secondary/20 p-4 sm:grid-cols-3">
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Status</p>
-                  <p className="mt-1 text-sm font-semibold">{product.inventoryStatus || "In Stock"}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Delivery</p>
-                  <p className="mt-1 text-sm font-semibold">{delivery}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Concierge</p>
-                  <p className="mt-1 text-sm font-semibold">Expert review included</p>
-                </div>
+              <div className="mt-5 flex snap-x gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                {[
+                  { label: "Status", value: product.inventoryStatus || "In Stock" },
+                  { label: "Delivery", value: delivery },
+                  { label: "Concierge", value: "Expert review included" }
+                ].map((info) => (
+                  <div key={info.label} className="w-[140px] shrink-0 snap-start rounded-[8px] border border-border bg-secondary/10 p-3 sm:w-auto sm:bg-secondary/20 sm:p-4">
+                    <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{info.label}</p>
+                    <p className="mt-1 text-sm font-semibold">{info.value}</p>
+                  </div>
+                ))}
               </div>
 
               <div className="mt-6">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Metal Colour</p>
-                <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-3">
+                <div className="flex snap-x gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                   {jewelryMetalOptions.map((metal) => (
                     <button
                       key={metal}
@@ -400,7 +398,7 @@ const JewelryDetail = () => {
                         setSelectedMetal(metal);
                         setSelectedMedia({ type: "image", src: getJewelryMetalImage(product, metal), label: metal });
                       }}
-                      className={`flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-[8px] border px-3 py-2 text-sm font-medium transition ${
+                      className={`flex w-[120px] shrink-0 snap-start flex-col items-center justify-center gap-1.5 rounded-[8px] border py-2 text-[10px] font-semibold uppercase tracking-[0.05em] transition sm:w-auto sm:flex-row sm:px-3 sm:text-sm sm:normal-case sm:tracking-normal ${
                         selectedMetal === metal ? "border-primary bg-primary/10" : "border-border hover:border-primary/60"
                       }`}
                     >
@@ -420,23 +418,23 @@ const JewelryDetail = () => {
                 ))}
               </div>
 
-              <div className="mt-6 flex flex-wrap items-center gap-3">
-                <div className="flex h-12 items-center rounded-[8px] border border-border">
-                  <button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} className="flex h-12 w-12 items-center justify-center">
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <span className="w-12 text-center text-sm font-semibold">{quantity}</span>
-                  <button type="button" onClick={() => setQuantity((value) => value + 1)} className="flex h-12 w-12 items-center justify-center">
-                    <Plus className="h-4 w-4" />
-                  </button>
+              <div className="mt-8 flex flex-col gap-3 sm:mt-6 sm:flex-row sm:flex-wrap sm:items-center">
+                <div className="flex w-full items-center gap-3 sm:w-auto">
+                  <div className="flex h-12 shrink-0 items-center rounded-[8px] border border-border">
+                    <button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} className="flex h-12 w-12 items-center justify-center transition active:bg-secondary/50">
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <span className="w-12 text-center text-sm font-semibold">{quantity}</span>
+                    <button type="button" onClick={() => setQuantity((value) => value + 1)} className="flex h-12 w-12 items-center justify-center transition active:bg-secondary/50">
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <Button variant="luxury" className="h-12 flex-1" onClick={handleAddToCart}>
+                    <ShoppingBag className="mr-2 h-4 w-4" />
+                    Add To Cart
+                  </Button>
                 </div>
-
-                <Button variant="luxury" className="h-12 flex-1 min-w-[220px]" onClick={handleAddToCart}>
-                  <ShoppingBag className="mr-2 h-4 w-4" />
-                  Add To Cart
-                </Button>
-
-                <Button variant="outline" className="h-12 min-w-[190px]" onClick={openWhatsApp}>
+                <Button variant="outline" className="h-12 w-full sm:min-w-[190px] sm:w-auto" onClick={openWhatsApp}>
                   <MessageCircle className="mr-2 h-4 w-4" />
                   Speak with Jewelry Expert
                 </Button>
@@ -532,7 +530,7 @@ const JewelryDetail = () => {
                 <h2 className="mt-1 font-heading text-3xl">Choose the Finish</h2>
               </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="flex snap-x gap-4 overflow-x-auto pb-4 sm:grid sm:grid-cols-3">
               {jewelryMetalOptions.map((metal) => (
                 <button
                   key={metal}
@@ -541,7 +539,7 @@ const JewelryDetail = () => {
                     setSelectedMetal(metal);
                     setSelectedMedia({ type: "image", src: getJewelryMetalImage(product, metal), label: metal });
                   }}
-                  className={`group rounded-[8px] border bg-card p-3 text-left transition hover:shadow-md ${
+                  className={`group w-[260px] shrink-0 snap-center rounded-[8px] border bg-card p-3 text-left transition hover:shadow-md sm:w-auto ${
                     selectedMetal === metal ? "border-primary" : "border-border"
                   }`}
                 >
@@ -562,12 +560,12 @@ const JewelryDetail = () => {
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Client Notes</p>
               <h2 className="mt-1 font-heading text-3xl">Loved for Everyday Brilliance</h2>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex snap-x gap-4 overflow-x-auto pb-4 sm:grid sm:grid-cols-2">
               {[
                 ["The concierge helped me choose the right metal and size before checkout.", "Anaya M."],
                 ["Beautiful finish, secure packaging, and the diamond sparkle was exactly what I hoped for.", "Rohan S."],
               ].map(([quote, name]) => (
-                <div key={name} className="rounded-[8px] border border-border p-4">
+                <div key={name} className="w-[300px] shrink-0 snap-center rounded-[8px] border border-border p-4 sm:w-auto">
                   <div className="mb-3 flex gap-1 text-primary">
                     {[0, 1, 2, 3, 4].map((star) => (
                       <Star key={star} className="h-4 w-4 fill-current" />
@@ -592,9 +590,9 @@ const JewelryDetail = () => {
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="flex snap-x gap-5 overflow-x-auto pb-4 sm:grid sm:grid-cols-2 lg:grid-cols-4">
                 {relatedItems.map((item) => (
-                  <Link key={item.id} to={`/jewelry/product/${encodeURIComponent(item.id)}`} className="group rounded-[8px] border border-border bg-card p-3 transition hover:shadow-md">
+                  <Link key={item.id} to={`/jewelry/product/${encodeURIComponent(item.id)}`} className="group w-[200px] shrink-0 snap-start rounded-[8px] border border-border bg-card p-3 transition hover:shadow-md sm:w-auto">
                     <img src={getJewelryMetalImage(item, item.metal)} alt={item.name} className="aspect-[4/3] w-full rounded-[6px] object-contain transition group-hover:scale-[1.02]" />
                     <p className="mt-3 font-heading text-xl">{item.name}</p>
                     <p className="mt-1 text-sm text-muted-foreground">{formatJewelryPrice(item.price)}</p>
@@ -627,8 +625,8 @@ const JewelryDetail = () => {
             <p className="truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{selectedMetal} / Qty {quantity}</p>
             <p className="font-heading text-lg">{formatJewelryPrice(product.price)}</p>
           </div>
-          <button type="button" onClick={openWhatsApp} className="flex h-11 w-11 items-center justify-center rounded-[8px] bg-[#25D366] text-white" aria-label="Speak with jewelry expert">
-            <MessageCircle className="h-4 w-4" />
+          <button type="button" onClick={openWhatsApp} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[8px] bg-[#25D366] text-white shadow-sm transition active:scale-95" aria-label="Speak with jewelry expert">
+            <img src="/whatsapp-icon.png" alt="WhatsApp" className="h-6 w-6 object-contain" />
           </button>
           <Button variant="luxury" size="sm" className="h-11 px-4" onClick={handleAddToCart}>
             Add to Cart
