@@ -82,18 +82,28 @@ const parseDataUrl = (dataUrl, fallbackType) => {
 };
 
 /**
- * Build a date-based sub-path for organized storage.
- * Example: "images/2026/05/ring-photo-a1b2c3d4.jpg"
+ * Build a date-based or SKU-based sub-path for organized storage.
+ * Example: "images/VMR-12345/ring-photo-a1b2c3d4.jpg"
  */
-const buildStoragePath = (folder, filename) => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
+const buildStoragePath = (folder, filename, skuId) => {
   const safe = sanitizeFilename(filename);
   const ext = path.extname(safe) || "";
   const base = safe.replace(ext, "");
+  
+  const idStr = generateId();
 
-  return `${folder}/${year}/${month}/${base}-${generateId()}${ext}`;
+  if (skuId && typeof skuId === "string") {
+    const safeSku = sanitizeFilename(skuId);
+    if (safeSku && safeSku !== "upload") {
+      return `${folder}/${safeSku}/${base}-${idStr}${ext}`;
+    }
+  }
+
+  // Fallback to year/month if no SKU provided
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  return `${folder}/${year}/${month}/${base}-${idStr}${ext}`;
 };
 
 // ---------------------------------------------------------------------------
@@ -122,7 +132,7 @@ export async function handleUpload(req, res) {
   }
 
   // ── Parse request body ──────────────────────────────────────────────
-  const { dataUrl, fileName, contentType, folder } = req.body || {};
+  const { dataUrl, fileName, contentType, folder, skuId } = req.body || {};
   const targetFolder = String(folder || "").trim().toLowerCase();
 
   if (!ALLOWED_FOLDERS.has(targetFolder)) {
@@ -161,7 +171,7 @@ export async function handleUpload(req, res) {
   }
 
   // ── Build organized storage path ────────────────────────────────────
-  const key = buildStoragePath(targetFolder, String(fileName || "upload"));
+  const key = buildStoragePath(targetFolder, String(fileName || "upload"), skuId);
   const bucket = targetFolder === "models" ? SUPABASE_MODEL_BUCKET : SUPABASE_IMAGE_BUCKET;
 
   // ── Upload to Supabase Storage ──────────────────────────────────────

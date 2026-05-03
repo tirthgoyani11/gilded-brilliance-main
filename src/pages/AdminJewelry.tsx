@@ -337,7 +337,7 @@ const compressVideo = async (file: File, onProgress?: (msg: string) => void): Pr
   });
 };
 
-const uploadFileToSupabase = async (file: File | Blob, folder: "images" | "models", originalName?: string) => {
+const uploadFileToSupabase = async (file: File | Blob, folder: "images" | "models", originalName?: string, skuId?: string) => {
   
   const dataUrl = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -357,6 +357,7 @@ const uploadFileToSupabase = async (file: File | Blob, folder: "images" | "model
       fileName,
       contentType,
       folder,
+      skuId,
     }),
   });
 
@@ -395,6 +396,7 @@ type PendingUpload = {
   file: Blob;
   folder: "images" | "models";
   originalName: string;
+  friendlyName: string;
 };
 
 const AdminJewelry = () => {
@@ -462,6 +464,18 @@ const AdminJewelry = () => {
     void loadJewelry({ category: "All", inventoryStatus: "All", query: "" });
   }, [loadJewelry]);
 
+  // Auto-generate SKU based on name if ID is blank
+  useEffect(() => {
+    if (!form.id && form.name && form.name.length >= 3) {
+      setForm((prev) => {
+        if (!prev.id) {
+          return { ...prev, id: createListingId(prev.name, prev.category) };
+        }
+        return prev;
+      });
+    }
+  }, [form.name, form.category]);
+
   const resetForm = () => {
     setForm(emptyForm);
     setPendingUploads(new Map());
@@ -503,9 +517,9 @@ const AdminJewelry = () => {
         
         for (const [localBlobUrl, uploadData] of pendingUploads.entries()) {
           currentUpload++;
-          setUploadProgress(`Uploading file ${currentUpload} of ${pendingUploads.size}...`);
+          setUploadProgress(`Uploading ${uploadData.friendlyName} (${currentUpload} of ${pendingUploads.size})...`);
           try {
-            const res = await uploadFileToSupabase(uploadData.file, uploadData.folder, uploadData.originalName);
+            const res = await uploadFileToSupabase(uploadData.file, uploadData.folder, uploadData.originalName, nextForm.id);
             uploadedUrls.set(localBlobUrl, res.url);
           } catch (err) {
             throw new Error(`Failed to upload ${uploadData.originalName}: ${err instanceof Error ? err.message : "Unknown error"}`);
@@ -597,11 +611,11 @@ const AdminJewelry = () => {
     void loadJewelry({ category: selectedCategory, inventoryStatus: selectedStatus, query: search });
   };
 
-  const queueUpload = (file: Blob, folder: "images" | "models", originalName: string) => {
+  const queueUpload = (file: Blob, folder: "images" | "models", originalName: string, friendlyName: string) => {
     const url = URL.createObjectURL(file);
     setPendingUploads((prev) => {
       const next = new Map(prev);
-      next.set(url, { file, folder, originalName });
+      next.set(url, { file, folder, originalName, friendlyName });
       return next;
     });
     return url;
@@ -613,7 +627,7 @@ const AdminJewelry = () => {
     try {
       const newUrls = await Promise.all([...files].map(async (file) => {
         const compressed = file.type.startsWith("image/") ? await compressImage(file) : file;
-        return queueUpload(compressed, "images", file.name);
+        return queueUpload(compressed, "images", file.name, `${metal} Image`);
       }));
       
       setForm((prev) => {
@@ -638,7 +652,7 @@ const AdminJewelry = () => {
     try {
       const newUrls = await Promise.all([...files].map(async (file) => {
         const compressed = file.type.startsWith("image/") ? await compressImage(file) : file;
-        return queueUpload(compressed, "images", file.name);
+        return queueUpload(compressed, "images", file.name, `Gallery Image`);
       }));
       
       setForm((prev) => ({
@@ -656,7 +670,7 @@ const AdminJewelry = () => {
       setStatus("Preparing video...");
       const compressed = await compressVideo(file, setStatus);
       setStatus("Generating preview...");
-      const videoPath = queueUpload(compressed, "images", file.name);
+      const videoPath = queueUpload(compressed, "images", file.name, `Video`);
       setForm((prev) => ({ ...prev, videoUrl: videoPath }));
       setStatus("");
     } catch (err) {
@@ -672,7 +686,7 @@ const AdminJewelry = () => {
       return;
     }
     try {
-      const modelPath = queueUpload(file, "models", file.name);
+      const modelPath = queueUpload(file, "models", file.name, `3D Model`);
       setForm((prev) => ({ ...prev, modelUrl: modelPath }));
     } catch (err) {
       setStatus(err instanceof Error ? err.message : "Failed to process 360 model.");
