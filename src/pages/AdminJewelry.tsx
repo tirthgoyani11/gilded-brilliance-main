@@ -758,30 +758,53 @@ const AdminJewelry = () => {
                 </div>
               </div>
               <div className="rounded-[10px] border border-border bg-secondary/20 p-3">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Pricing Per Purity (Optional)</p>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  {["10K", "14K", "18K", "22K"].map((purity) => (
-                    <div key={purity} className="flex flex-col gap-1">
-                       <label className="text-[10px] font-semibold text-muted-foreground">{purity} PRICE</label>
-                       <input 
-                         type="number" 
-                         min="0" 
-                         value={form.pricing?.[purity] || ""} 
-                         onChange={(e) => {
-                           const val = e.target.value;
-                           setForm((prev) => {
-                             const newPricing = { ...(prev.pricing || {}) };
-                             if (val === "") {
-                               delete newPricing[purity];
-                             } else {
-                               newPricing[purity] = Number(val);
-                             }
-                             return { ...prev, pricing: newPricing };
-                           });
-                         }} 
-                         placeholder="Auto (Uses Base)" 
-                         className="h-9 rounded border border-border bg-background px-3 text-sm" 
-                       />
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Detailed Pricing (Overrides Base Price)</p>
+                <div className="space-y-4">
+                  {metals.map((metal) => (
+                    <div key={metal} className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                      <div className="col-span-full mb-[-4px]">
+                        <p className="text-xs font-semibold text-muted-foreground">{metal}</p>
+                      </div>
+                      {metal === "Silver" ? (
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] font-semibold text-muted-foreground">PRICE</label>
+                          <input 
+                            type="number" min="0" value={form.pricing?.["Silver"] || ""} 
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setForm((prev) => {
+                                const newPricing = { ...(prev.pricing || {}) };
+                                if (val === "") delete newPricing["Silver"];
+                                else newPricing["Silver"] = Number(val);
+                                return { ...prev, pricing: newPricing };
+                              });
+                            }} 
+                            placeholder="Auto" className="h-9 rounded border border-border bg-background px-3 text-sm" 
+                          />
+                        </div>
+                      ) : (
+                        ["10K", "14K", "18K", "22K"].map((purity) => {
+                          const key = `${metal} ${purity}`;
+                          return (
+                            <div key={key} className="flex flex-col gap-1">
+                              <label className="text-[10px] font-semibold text-muted-foreground">{purity} PRICE</label>
+                              <input 
+                                type="number" min="0" value={form.pricing?.[key] ?? form.pricing?.[purity] ?? ""} 
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setForm((prev) => {
+                                    const newPricing = { ...(prev.pricing || {}) };
+                                    if (val === "") delete newPricing[key];
+                                    else newPricing[key] = Number(val);
+                                    return { ...prev, pricing: newPricing };
+                                  });
+                                }} 
+                                placeholder="Auto" className="h-9 rounded border border-border bg-background px-3 text-sm" 
+                              />
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
                   ))}
                 </div>

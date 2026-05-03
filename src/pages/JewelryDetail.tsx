@@ -173,7 +173,15 @@ const JewelryDetail = () => {
   );
 
   const getCurrentPrice = () => {
-    if (selectedMetal !== "Silver" && product.pricing && typeof product.pricing[selectedPurity] === "number") {
+    if (selectedMetal === "Silver") {
+      return product.pricing?.["Silver"] || product.price;
+    }
+    const comboKey = `${selectedMetal} ${selectedPurity}`;
+    if (product.pricing && typeof product.pricing[comboKey] === "number") {
+      return product.pricing[comboKey];
+    }
+    // Backward compatibility for generic purity keys
+    if (product.pricing && typeof product.pricing[selectedPurity] === "number") {
       return product.pricing[selectedPurity];
     }
     return product.price;
