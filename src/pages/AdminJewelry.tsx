@@ -751,11 +751,33 @@ const AdminJewelry = () => {
                 </select>
                 <input value={form.subcategory} onChange={(e) => setForm((prev) => ({ ...prev, subcategory: e.target.value }))} placeholder="Subcategory, e.g. Tennis" className="h-10 rounded border border-border bg-background px-3 text-sm" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold uppercase text-muted-foreground">Base Price</label>
-                  <input type="number" min="0" value={form.price} onChange={(e) => setForm((prev) => ({ ...prev, price: Number(e.target.value) || 0 }))} placeholder="Base Price" className="h-10 rounded border border-border bg-background px-3 text-sm" />
+                  <label className="text-xs font-semibold uppercase text-muted-foreground">Silver Metal Cost (Base)</label>
+                  <input type="number" min="0" value={form.pricing?.["baseSilver"] || ""} onChange={(e) => {
+                    const val = Number(e.target.value) || 0;
+                    setForm((prev) => {
+                      const newPricing = { ...(prev.pricing || {}) };
+                      newPricing["baseSilver"] = val;
+                      return { ...prev, pricing: newPricing, price: val + (newPricing["designCost"] || 0) };
+                    });
+                  }} placeholder="e.g. 5000" className="h-10 rounded border border-border bg-background px-3 text-sm" />
                 </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold uppercase text-muted-foreground">Design & Diamond Cost</label>
+                  <input type="number" min="0" value={form.pricing?.["designCost"] || ""} onChange={(e) => {
+                    const val = Number(e.target.value) || 0;
+                    setForm((prev) => {
+                      const newPricing = { ...(prev.pricing || {}) };
+                      newPricing["designCost"] = val;
+                      return { ...prev, pricing: newPricing, price: (newPricing["baseSilver"] || 0) + val };
+                    });
+                  }} placeholder="e.g. 8000" className="h-10 rounded border border-border bg-background px-3 text-sm" />
+                </div>
+              </div>
+              <div className="mb-2 flex items-center justify-between text-sm rounded bg-primary/5 px-3 py-2 border border-primary/10">
+                <span className="text-muted-foreground font-medium">Calculated Silver Price (Total):</span>
+                <span className="font-semibold text-primary">{formatPrice(form.price)}</span>
               </div>
               <div className="rounded-[10px] border border-border bg-secondary/20 p-3">
                 <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Detailed Pricing (Overrides Base Price)</p>
@@ -784,6 +806,11 @@ const AdminJewelry = () => {
                         </div>
                       ) : (
                         ["10K", "14K", "18K", "22K"].map((purity) => {
+                          const rawMultipliers: Record<string, number> = { "10K": 4.2, "14K": 6.2, "18K": 8.5, "22K": 10.5 };
+                          const finalMultiplier = rawMultipliers[purity] * 1.05; // 1.05 safety buffer
+                          const baseSilver = form.pricing?.["baseSilver"] ?? form.price;
+                          const designCost = form.pricing?.["designCost"] ?? 0;
+                          const autoPrice = Math.round((baseSilver * finalMultiplier) + designCost);
                           const key = `${metal} ${purity}`;
                           return (
                             <div key={key} className="flex flex-col gap-1">
@@ -799,7 +826,7 @@ const AdminJewelry = () => {
                                     return { ...prev, pricing: newPricing };
                                   });
                                 }} 
-                                placeholder="Auto" className="h-9 rounded border border-border bg-background px-3 text-sm" 
+                                placeholder={`Auto (${formatPrice(autoPrice)})`} className="h-9 rounded border border-border bg-background px-3 text-sm" 
                               />
                             </div>
                           );
