@@ -3,6 +3,12 @@ import path from "node:path";
 import { requireAdmin } from "../admin-auth.js";
 import { cachePolicies, rejectIfCrossOriginWrite, setCommonSecurityHeaders, setCorsForRequest } from "../security.js";
 
+// Polyfill randomUUID for older Node.js versions
+const generateId = () => {
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  return crypto.randomBytes(16).toString("hex");
+};
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const SUPABASE_IMAGE_BUCKET = process.env.SUPABASE_IMAGE_BUCKET || process.env.SUPABASE_BUCKET || "jewelry-assets";
@@ -65,6 +71,13 @@ export async function handleUpload(req, res) {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
+  if (typeof fetch !== "function") {
+    return res.status(500).json({ 
+      message: "Server environment error", 
+      details: "The 'fetch' API is missing. Please upgrade to Node.js 18 or higher." 
+    });
+  }
+
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     return res.status(500).json({ message: "Supabase upload is not configured" });
   }
@@ -88,7 +101,7 @@ export async function handleUpload(req, res) {
   const safeName = sanitizeFilename(String(fileName || ""));
   const ext = path.extname(safeName) || "";
   const base = safeName.replace(ext, "");
-  const key = `${targetFolder}/${base}-${crypto.randomUUID()}${ext}`;
+  const key = `${targetFolder}/${base}-${generateId()}${ext}`;
 
   try {
     const bucket = targetFolder === "models" ? SUPABASE_MODEL_BUCKET : SUPABASE_IMAGE_BUCKET;
