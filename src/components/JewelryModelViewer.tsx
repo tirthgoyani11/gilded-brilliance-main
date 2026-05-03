@@ -15,7 +15,7 @@ type JewelryModelViewerProps = {
 };
 
 const DEFAULT_DIAMOND_COLOR = "#ffffff";
-const DEFAULT_ROUGHNESS = 0.05;
+const DEFAULT_ROUGHNESS = 0.18;
 
 const metalOptions = [
   { label: "Silver", color: "#e6e6e6" },

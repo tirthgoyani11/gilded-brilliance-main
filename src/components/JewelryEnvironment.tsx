@@ -4,7 +4,7 @@ const HDRI_URL = "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/brown_pho
 
 export function JewelryEnvironment() {
   return (
-    <Environment resolution={1024} files={HDRI_URL} background={false} environmentIntensity={1.5}>
+    <Environment resolution={1024} files={HDRI_URL} background={false} environmentIntensity={1.5} blur={0.15}>
       <group>
         <Lightformer intensity={0.6} color="white" rotation-x={Math.PI / 2} position={[0, 5, 0]} scale={[6, 6, 1]} form="ring" />
         <Lightformer intensity={2.2} color="white" rotation-x={Math.PI / 2} position={[0, 5, -2]} scale={[1, 1, 1]} form="circle" />
