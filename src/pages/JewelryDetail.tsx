@@ -185,8 +185,7 @@ const JewelryDetail = () => {
       return product.pricing[selectedPurity];
     }
     // Auto-calculate using Stability Pricing System
-    const rawMultipliers: Record<string, number> = { "10K": 4.2, "14K": 6.2, "18K": 8.5, "22K": 10.5 };
-    const finalMultiplier = rawMultipliers[selectedPurity] * 1.05; // 1.05 safety buffer
+    const finalMultiplier = (pricingSettings.multipliers[selectedPurity] || 1) * pricingSettings.safetyBuffer;
     
     const baseSilver = product.pricing?.["baseSilver"] ?? product.price;
     const designCost = product.pricing?.["designCost"] ?? 0;

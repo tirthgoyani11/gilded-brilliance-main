@@ -5,6 +5,7 @@ import { adminFetch } from "@/lib/admin";
 import { Button } from "@/components/ui/button";
 import type { JewelryItem } from "@/types/diamond";
 import { formatJewelryPrice } from "@/lib/jewelry-catalog";
+import { usePricingSettings } from "@/hooks/usePricingSettings";
 
 const jewelryCategories = ["Rings", "Necklaces", "Bracelets", "Earrings"] as const;
 const inventoryStatuses = ["In Stock", "Made To Order", "Reserved", "Sold Out"] as const;
@@ -405,6 +406,7 @@ const AdminJewelry = () => {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [uploadProgress, setUploadProgress] = useState("");
+  const { settings: pricingSettings, savePricingSettings } = usePricingSettings();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -732,6 +734,36 @@ const AdminJewelry = () => {
           ))}
         </div>
 
+        {/* Global Pricing Rules Manager */}
+        <div className="rounded-[12px] border border-border bg-secondary/10 p-5">
+          <div className="mb-4">
+            <h2 className="font-heading text-xl">Global Pricing Multipliers</h2>
+            <p className="text-sm text-muted-foreground">Adjust the algorithmic markup rates for your gold purities. These globally drive the 'Auto' prices.</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-5">
+            {["10K", "14K", "18K", "22K"].map((k) => (
+              <div key={k} className="flex flex-col gap-1">
+                <label className="text-[10px] font-semibold text-muted-foreground">{k} Multiplier</label>
+                <input 
+                  type="number" step="0.1"
+                  value={pricingSettings.multipliers[k] || 0}
+                  onChange={(e) => savePricingSettings({ ...pricingSettings, multipliers: { ...pricingSettings.multipliers, [k]: Number(e.target.value) } })}
+                  className="h-9 rounded border border-border bg-background px-3 text-sm"
+                />
+              </div>
+            ))}
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-semibold text-primary">Safety Buffer (e.g. 1.05 = +5%)</label>
+              <input 
+                type="number" step="0.01"
+                value={pricingSettings.safetyBuffer || 1}
+                onChange={(e) => savePricingSettings({ ...pricingSettings, safetyBuffer: Number(e.target.value) })}
+                className="h-9 rounded border border-primary/40 bg-background px-3 text-sm"
+              />
+            </div>
+          </div>
+        </div>
+
         <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
           <div className="rounded-[12px] border border-border bg-background p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
@@ -806,8 +838,7 @@ const AdminJewelry = () => {
                         </div>
                       ) : (
                         ["10K", "14K", "18K", "22K"].map((purity) => {
-                          const rawMultipliers: Record<string, number> = { "10K": 4.2, "14K": 6.2, "18K": 8.5, "22K": 10.5 };
-                          const finalMultiplier = rawMultipliers[purity] * 1.05; // 1.05 safety buffer
+                          const finalMultiplier = (pricingSettings.multipliers[purity] || 1) * pricingSettings.safetyBuffer;
                           const baseSilver = form.pricing?.["baseSilver"] ?? form.price;
                           const designCost = form.pricing?.["designCost"] ?? 0;
                           const autoPrice = Math.round((baseSilver * finalMultiplier) + designCost);
