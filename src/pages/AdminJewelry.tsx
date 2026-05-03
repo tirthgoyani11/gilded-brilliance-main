@@ -225,7 +225,14 @@ const uploadFileToSupabase = async (file: File | Blob, folder: "images" | "model
   });
 
   if (!response.ok) {
-    const payload = await response.json().catch(() => null);
+    const text = await response.text().catch(() => "");
+    let payload = null;
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = { message: "Raw server response", details: text };
+    }
+    
     console.error("Admin API Error Payload:", payload);
     const msg = payload?.message || payload?.error || response.statusText || "Server error";
     const details = payload?.details || payload?.error || payload?.hint || "";
