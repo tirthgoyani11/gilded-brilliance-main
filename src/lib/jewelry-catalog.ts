@@ -160,7 +160,8 @@ export const formatJewelryPrice = (price: number) => {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format((price || 0) * rate);
 };
 

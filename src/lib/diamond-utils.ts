@@ -6,7 +6,7 @@ export const WHATSAPP_NUMBER = "+919830551558";
 
 export const currency = (value: number) => {
   const { currency: code, rate } = getCurrencyConfig();
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: code, maximumFractionDigits: 0 }).format(value * rate);
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: code, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value * rate);
 };
 
 export const certificateLink = (diamond: Diamond) => {
