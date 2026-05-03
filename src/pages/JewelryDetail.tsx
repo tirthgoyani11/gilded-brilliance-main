@@ -38,8 +38,10 @@ import {
   categoryToSlug,
   fallbackJewelryItems,
   formatJewelryPrice,
+  calculateJewelryPrice,
   getJewelryMetalImages,
   getJewelryMetalImage,
+  getJewelryHoverImage,
   jewelryMetalOptions,
   jewelryMetalSwatches,
   loadJewelryItems,
@@ -742,7 +744,7 @@ const JewelryDetail = () => {
                   <Link key={item.id} to={`/jewelry/product/${encodeURIComponent(item.id)}`} className="group w-[200px] shrink-0 snap-start rounded-[8px] border border-border bg-card p-3 transition hover:shadow-md sm:w-auto">
                     <img src={getJewelryMetalImage(item, item.metal)} alt={item.name} className="aspect-[4/3] w-full rounded-[6px] object-contain transition group-hover:scale-[1.02]" />
                     <p className="mt-3 font-heading text-xl">{item.name}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">{formatJewelryPrice(item.price)}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{formatJewelryPrice(calculateJewelryPrice(item, item.metal, "10K", pricingSettings))}</p>
                   </Link>
                 ))}
               </div>
@@ -757,7 +759,7 @@ const JewelryDetail = () => {
                   <Link key={item.id} to={`/jewelry/product/${encodeURIComponent(item.id)}`} className="rounded-[8px] border border-border bg-card p-3 transition hover:shadow-md">
                     <img src={getJewelryMetalImage(item, item.metal)} alt={item.name} className="aspect-[4/3] w-full rounded-[6px] object-contain" />
                     <p className="mt-3 font-heading text-xl">{item.name}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">{formatJewelryPrice(item.price)}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{formatJewelryPrice(calculateJewelryPrice(item, item.metal, "10K", pricingSettings))}</p>
                   </Link>
                 ))}
               </div>
@@ -770,7 +772,7 @@ const JewelryDetail = () => {
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{selectedMetal} / Qty {quantity}</p>
-            <p className="font-heading text-lg">{formatJewelryPrice(product.price)}</p>
+            <p className="font-heading text-lg">{formatJewelryPrice(getCurrentPrice())}</p>
           </div>
           <button type="button" onClick={openWhatsApp} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[8px] bg-[#25D366] text-white shadow-sm transition active:scale-95" aria-label="Speak with jewelry expert">
             <img src="/whatsapp-icon.png" alt="WhatsApp" className="h-6 w-6 object-contain" />
