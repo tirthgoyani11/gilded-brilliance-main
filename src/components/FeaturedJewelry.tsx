@@ -22,7 +22,7 @@ const ProductCard = ({ item, badge }: { item: JewelryItem; badge?: string }) => 
   const hasAlt = Boolean(hoverImg && hoverImg !== mainImg);
 
   return (
-    <Link to={`/jewelry/item/${item.id}`} className="group block">
+    <Link to={`/jewelry/product/${item.id}`} className="group block">
       <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-secondary/30 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.1)] transition-shadow duration-500 group-hover:shadow-[0_16px_40px_-12px_rgba(0,0,0,0.18)]">
         {/* Badge */}
         {badge && (

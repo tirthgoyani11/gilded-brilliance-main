@@ -39,7 +39,7 @@ const Wishlist = () => {
                   <p className="text-sm text-muted-foreground mb-2">{j.category}</p>
                   <p className="font-medium mb-3">{formatJewelryPrice(j.price)}</p>
                   <div className="flex gap-3 text-sm">
-                    <Link className="text-primary underline" to={`/jewelry/${j.category.toLowerCase()}/${j.id}`}>View</Link>
+                    <Link className="text-primary underline" to={`/jewelry/product/${j.id}`}>View</Link>
                     <button className="text-destructive underline" onClick={() => toggleWishlist(j.id)}>Remove</button>
                   </div>
                 </div>

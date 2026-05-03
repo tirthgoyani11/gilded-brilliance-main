@@ -19,7 +19,7 @@ const SmallCard = ({ item }: { item: JewelryItem }) => {
   const hasAlt = Boolean(hoverImg && hoverImg !== mainImg);
 
   return (
-    <Link to={`/jewelry/item/${item.id}`} className="group block">
+    <Link to={`/jewelry/product/${item.id}`} className="group block">
       <div className="relative aspect-square overflow-hidden rounded-2xl bg-secondary/30 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.1)] transition-shadow duration-500 group-hover:shadow-[0_14px_36px_-12px_rgba(0,0,0,0.18)]">
         <img
           src={mainImg}
@@ -120,7 +120,7 @@ const TopSellingJewelry = () => {
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
           >
-            <Link to={`/jewelry/item/${heroItem.id}`} className="group block">
+            <Link to={`/jewelry/product/${heroItem.id}`} className="group block">
               <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-secondary/30 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.12)] transition-shadow duration-500 group-hover:shadow-[0_20px_50px_-16px_rgba(0,0,0,0.22)]">
                 {/* Bestseller badge */}
                 <div className="absolute left-4 top-4 z-10 flex items-center gap-1.5 rounded-full border border-primary/15 bg-background/90 px-3 py-1.5 backdrop-blur-md">
