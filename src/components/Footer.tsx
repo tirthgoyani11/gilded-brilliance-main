@@ -115,7 +115,7 @@ const Footer = () => {
             <span className="text-white/20">·</span>
             <a href="https://x.com/vmorajewels" target="_blank" rel="noreferrer" className="hover:text-[#C6A87D] luxury-transition">X</a>
             <span className="text-white/20">·</span>
-            <a href="https://www.instagram.com/vmorajewels" target="_blank" rel="noreferrer" className="hover:text-[#C6A87D] luxury-transition">Instagram</a>
+            <a href="https://www.instagram.com/vmorajewels?igsh=MWtobzY3MmJ6a2UxNA==" target="_blank" rel="noreferrer" className="hover:text-[#C6A87D] luxury-transition">Instagram</a>
             <span className="text-white/20">·</span>
             <a href="https://www.linkedin.com/company/vmorajewels" target="_blank" rel="noreferrer" className="hover:text-[#C6A87D] luxury-transition">LinkedIn</a>
             <span className="text-white/20">·</span>
