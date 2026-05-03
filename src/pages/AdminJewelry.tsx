@@ -753,7 +753,6 @@ const AdminJewelry = () => {
                 </select>
                 <input value={form.subcategory} onChange={(e) => setForm((prev) => ({ ...prev, subcategory: e.target.value }))} placeholder="Subcategory, e.g. Tennis" className="h-10 rounded border border-border bg-background px-3 text-sm" />
               </div>
-              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-semibold uppercase text-muted-foreground">Base Price</label>
