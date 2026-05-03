@@ -234,6 +234,18 @@ const uploadFileToSupabase = async (file: File | Blob, folder: "images" | "model
     }
     
     console.error("Admin API Error Payload:", payload);
+
+    // If the server returned SQL fix instructions, display them prominently
+    if (payload?.fix) {
+      console.error(
+        "%c⚠️ SUPABASE FIX REQUIRED — Run this SQL in your Supabase SQL Editor:",
+        "color: #ff6b35; font-weight: bold; font-size: 14px;"
+      );
+      (Array.isArray(payload.fix) ? payload.fix : [payload.fix]).forEach((sql: string) => {
+        console.error(`%c${sql}`, "color: #4ecdc4; font-family: monospace; font-size: 12px;");
+      });
+    }
+
     const msg = payload?.message || payload?.error || response.statusText || "Server error";
     const details = payload?.details || payload?.error || payload?.hint || "";
     throw new Error(`${msg}${details ? `: ${details}` : ""}`);
