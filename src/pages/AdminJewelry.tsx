@@ -736,9 +736,9 @@ const AdminJewelry = () => {
           </div>
         </div>
 
-        {status || uploadProgress ? (
+        {status ? (
           <p className="rounded border border-border bg-secondary/30 p-3 text-sm text-primary">
-            {uploadProgress || status}
+            {status}
           </p>
         ) : null}
 
@@ -1084,6 +1084,12 @@ const AdminJewelry = () => {
                   Featured
                 </label>
               </div>
+              {uploadProgress ? (
+                <div className="mb-2 flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm font-medium text-primary">
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+                  {uploadProgress}
+                </div>
+              ) : null}
               <div className="flex gap-2 pt-2">
                 <Button variant="luxury" onClick={() => void saveJewelry()} disabled={saving}>
                   {saving ? "Processing..." : isEditing ? "Update Listing" : "Save Listing"}
