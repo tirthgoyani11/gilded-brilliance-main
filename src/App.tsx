@@ -9,6 +9,7 @@ import { Analytics } from "@vercel/analytics/react";
 import ScrollToTop from "@/components/ScrollToTop";
 import RouteSeo from "@/components/RouteSeo";
 import { CurrencyProvider } from "@/components/CurrencyProvider";
+import RouteErrorBoundary from "@/components/RouteErrorBoundary";
 const Index = lazy(() => import("./pages/Index.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const Jewelry = lazy(() => import("./pages/Jewelry.tsx"));
@@ -52,42 +53,44 @@ const App = () => (
           <BrowserRouter>
             <ScrollToTop />
           <RouteSeo />
-          <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm uppercase tracking-[0.12em] text-muted-foreground">Loading VMORA</div>}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/jewelry" element={<Jewelry />} />
-              <Route path="/jewelry/:categorySlug" element={<Jewelry />} />
-              <Route path="/jewelry/product/:productId" element={<JewelryDetail />} />
-              <Route path="/design-line-up" element={<Navigate to="/jewelry" replace />} />
-              <Route path="/custom-jewelry-generator" element={<CustomJewelryGenerator />} />
-              <Route path="/diamonds" element={<Diamonds />} />
-              <Route path="/diamond/:stoneId" element={<DiamondDetail />} />
-              <Route path="/education" element={<Education />} />
-              <Route path="/certificate-verification" element={<CertificateVerification />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/wishlist" element={<Wishlist />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/account" element={<Account />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/import" element={<AdminImport />} />
-              <Route path="/admin/content" element={<AdminContent />} />
-              <Route path="/admin/listings" element={<AdminListings />} />
-              <Route path="/admin/jewelry" element={<AdminJewelry />} />
-              <Route path="/admin/history" element={<AdminHistory />} />
-              <Route path="/compare" element={<Compare />} />
-              
-              {/* Policies */}
-              <Route path="/shipping-policy" element={<ShippingPolicy />} />
-              <Route path="/return-policy" element={<ReturnPolicy />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-              <Route path="/exchange-policy" element={<ExchangePolicy />} />
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
+          <RouteErrorBoundary>
+            <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm uppercase tracking-[0.12em] text-muted-foreground">Loading VMORA</div>}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/jewelry" element={<Jewelry />} />
+                <Route path="/jewelry/:categorySlug" element={<Jewelry />} />
+                <Route path="/jewelry/product/:productId" element={<JewelryDetail />} />
+                <Route path="/design-line-up" element={<Navigate to="/jewelry" replace />} />
+                <Route path="/custom-jewelry-generator" element={<CustomJewelryGenerator />} />
+                <Route path="/diamonds" element={<Diamonds />} />
+                <Route path="/diamond/:stoneId" element={<DiamondDetail />} />
+                <Route path="/education" element={<Education />} />
+                <Route path="/certificate-verification" element={<CertificateVerification />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/wishlist" element={<Wishlist />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/account" element={<Account />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/import" element={<AdminImport />} />
+                <Route path="/admin/content" element={<AdminContent />} />
+                <Route path="/admin/listings" element={<AdminListings />} />
+                <Route path="/admin/jewelry" element={<AdminJewelry />} />
+                <Route path="/admin/history" element={<AdminHistory />} />
+                <Route path="/compare" element={<Compare />} />
+                
+                {/* Policies */}
+                <Route path="/shipping-policy" element={<ShippingPolicy />} />
+                <Route path="/return-policy" element={<ReturnPolicy />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+                <Route path="/exchange-policy" element={<ExchangePolicy />} />
+                
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </RouteErrorBoundary>
           </BrowserRouter>
         </CurrencyProvider>
       </StoreProvider>
