@@ -1,0 +1,164 @@
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
+
+type SeoEntry = {
+  title: string;
+  description: string;
+  keywords?: string;
+  noindex?: boolean;
+};
+
+const SEO_BY_PATH: Record<string, SeoEntry> = {
+  "/": {
+    title: "VMORA Jewels | Certified Diamonds & Fine Jewelry",
+    description: "Explore certified loose diamonds and bespoke jewelry from VMORA Jewels with transparent pricing and expert guidance in Surat, Mumbai, India, and worldwide.",
+    keywords: "vmora jewels, vmora, v.mora, v mora, vieroa, loose diamond search, jewellery search, custom jewellery search, trusted jeweller in surat, jeweller in mumbai, india diamonds, worldwide diamond shipping",
+  },
+  "/jewelry": {
+    title: "Jewelry Collection | Fine Jewelry Designs | VMORA Jewels",
+    description: "Discover VMORA Jewels jewelry collection featuring rings, pendants, bracelets, earrings, and bespoke design inspiration.",
+    keywords: "vmora jewelry, vmora jewels, fine jewelry india, diamond jewelry designs, bespoke jewelry",
+  },
+  "/diamonds": {
+    title: "Loose Diamonds | Certified Natural & Lab-Grown Diamonds | VMORA Jewels",
+    description: "Browse certified loose diamonds by shape, color, clarity, carat, and price with transparent filters and premium guidance from VMORA Jewels.",
+    keywords: "loose diamonds, certified diamonds, natural diamonds, lab grown diamonds, diamond search, diamond filters, diamond sellers in surat, diamond sellers in mumbai",
+  },
+  "/education": {
+    title: "Diamond Education Guide | 4Cs, Certification, and Buying Tips | VMORA",
+    description: "Learn diamond cut, color, clarity, and carat with practical buying guidance and certification confidence from VMORA experts.",
+    keywords: "diamond education, 4cs diamond, diamond certification guide, how to buy diamonds, cut color clarity carat",
+  },
+  "/certificate-verification": {
+    title: "Certificate Verification | Verify Your Diamond Report | VMORA",
+    description: "Verify diamond certification details quickly and confidently before you buy with VMORA certificate verification.",
+    keywords: "diamond certificate verification, IGI verification, GIA verification, verify diamond report",
+  },
+  "/about": {
+    title: "About VMORA | Luxury Diamond House and Bespoke Design",
+    description: "Discover VMORA's approach to certified diamond sourcing, bespoke craftsmanship, and transparent luxury buying experiences.",
+    keywords: "about vmora, trusted jewellery brand india, trusted diamond seller surat, trusted jeweller mumbai",
+  },
+  "/design-line-up": {
+    title: "Jewelry Collection | Fine Jewelry Designs | VMORA Jewels",
+    description: "Discover VMORA Jewels jewelry collection featuring rings, necklaces, bracelets, and earrings.",
+    keywords: "vmora jewelry, rings necklaces bracelets earrings, fine jewelry india",
+  },
+  "/custom-jewelry-generator": {
+    title: "Custom Jewelry Generator | Build Your Bespoke Concept | VMORA",
+    description: "Create your custom jewelry concept by selecting style direction and diamond preferences with VMORA's bespoke workflow.",
+    keywords: "custom jewellery, custom jewelry search, bespoke jewellery india, design your jewelry",
+  },
+  "/blog": {
+    title: "VMORA Blog | Diamond Insights and Luxury Jewelry Guidance",
+    description: "Read practical insights on diamonds, certification, and premium jewelry decisions from VMORA.",
+    keywords: "diamond blog, jewelry blog, diamond buying tips, luxury jewelry insights",
+  },
+  "/compare": {
+    title: "Compare Diamonds | Side-by-Side Stone Comparison | VMORA",
+    description: "Compare selected diamonds side-by-side by shape, carat, color, clarity, cut, and price.",
+    noindex: true,
+  },
+  "/wishlist": {
+    title: "Wishlist | Saved Diamond and Jewelry Picks | VMORA",
+    description: "Review and manage your saved diamond and jewelry selections.",
+    noindex: true,
+  },
+  "/cart": {
+    title: "Cart | Review Your Selected Items | VMORA",
+    description: "Review your selected items and proceed with your VMORA purchase flow.",
+    noindex: true,
+  },
+  "/checkout": {
+    title: "Checkout | Secure Order Completion | VMORA",
+    description: "Securely complete your VMORA order with transparent fulfillment and support.",
+    noindex: true,
+  },
+  "/account": {
+    title: "My Account | Orders, Wishlist, and Preferences | VMORA",
+    description: "Manage your account, order activity, and saved preferences.",
+    noindex: true,
+  },
+};
+
+const DEFAULT_SEO: SeoEntry = {
+  title: "VMORA Jewels | Certified Diamonds & Fine Jewelry",
+  description: "Discover certified diamonds, custom jewelry, and premium buying guidance from VMORA Jewels.",
+  keywords: "vmora jewels, vmora, diamonds, loose diamonds, custom jewelry, jewellery search, india",
+};
+
+const upsertMeta = (selector: string, attrs: Record<string, string>, content: string) => {
+  let meta = document.head.querySelector(selector) as HTMLMetaElement | null;
+  if (!meta) {
+    meta = document.createElement("meta");
+    Object.entries(attrs).forEach(([key, value]) => meta?.setAttribute(key, value));
+    document.head.appendChild(meta);
+  }
+  meta.setAttribute("content", content);
+};
+
+const upsertCanonical = (href: string) => {
+  let canonical = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+  if (!canonical) {
+    canonical = document.createElement("link");
+    canonical.setAttribute("rel", "canonical");
+    document.head.appendChild(canonical);
+  }
+  canonical.setAttribute("href", href);
+};
+
+const RouteSeo = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    const path = location.pathname;
+    const dynamicDiamond: SeoEntry | null = path.startsWith("/diamond/")
+      ? {
+          title: "Diamond Details | Certified Stone Specifications | VMORA",
+          description: "View detailed diamond specifications, media, and certification information before selection.",
+        }
+      : null;
+    const dynamicJewelry: SeoEntry | null = path.startsWith("/jewelry/product/")
+      ? {
+          title: "Jewelry Product Details | VMORA Jewels",
+          description: "View VMORA jewelry details, stone information, metal, price, and purchase options.",
+        }
+      : path.startsWith("/jewelry/")
+        ? {
+            title: "Jewelry Collection | Rings, Earrings, Necklaces, Bracelets | VMORA",
+            description: "Shop VMORA jewelry collections with category filters, refined product cards, and detailed listings.",
+          }
+        : null;
+
+    const matched = SEO_BY_PATH[path] || null;
+    const seo: SeoEntry =
+      dynamicDiamond ||
+      dynamicJewelry ||
+      matched ||
+      (path.startsWith("/admin")
+        ? {
+            title: "VMORA",
+            description: "Private administration route.",
+            noindex: true,
+          }
+        : DEFAULT_SEO);
+
+    const origin = window.location.origin || "https://www.vmorajewels.com";
+    const canonicalUrl = `${origin}${path}${location.search || ""}`;
+
+    document.title = seo.title;
+    upsertMeta('meta[name="description"]', { name: "description" }, seo.description);
+    upsertMeta('meta[property="og:title"]', { property: "og:title" }, seo.title);
+    upsertMeta('meta[property="og:description"]', { property: "og:description" }, seo.description);
+    upsertMeta('meta[property="og:url"]', { property: "og:url" }, canonicalUrl);
+    upsertMeta('meta[name="keywords"]', { name: "keywords" }, seo.keywords || DEFAULT_SEO.keywords || "");
+    upsertMeta('meta[name="twitter:title"]', { name: "twitter:title" }, seo.title);
+    upsertMeta('meta[name="twitter:description"]', { name: "twitter:description" }, seo.description);
+    upsertMeta('meta[name="robots"]', { name: "robots" }, seo.noindex ? "noindex, nofollow" : "index, follow");
+    upsertCanonical(canonicalUrl);
+  }, [location.pathname, location.search]);
+
+  return null;
+};
+
+export default RouteSeo;

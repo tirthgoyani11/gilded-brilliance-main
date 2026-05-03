@@ -1,0 +1,655 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { BadgeCheck, Copy, Edit3, Eye, EyeOff, Plus, RotateCcw, Search, Sparkles, Trash2, Upload } from "lucide-react";
+import AdminLayout from "@/components/AdminLayout";
+import { adminFetch } from "@/lib/admin";
+import { Button } from "@/components/ui/button";
+import type { JewelryItem } from "@/types/diamond";
+
+const jewelryCategories = ["Rings", "Necklaces", "Bracelets", "Earrings"] as const;
+const inventoryStatuses = ["In Stock", "Made To Order", "Reserved", "Sold Out"] as const;
+const metals = ["Silver", "Gold", "Rose Gold"] as const;
+const metalSwatches: Record<(typeof metals)[number], string> = {
+  Silver: "#d8dde3",
+  Gold: "#d4a943",
+  "Rose Gold": "#c98c7a",
+};
+
+type JewelryForm = JewelryItem & {
+  subcategory: string;
+  description: string;
+  collection: string;
+  stoneType: string;
+  diamondWeight: string;
+  setting: string;
+  tags: string;
+  metalImages: Record<(typeof metals)[number], string>;
+  galleryImages: string[];
+  videoUrl: string;
+  modelUrl: string;
+  inventoryStatus: "In Stock" | "Made To Order" | "Reserved" | "Sold Out";
+  sortOrder: number;
+  isFeatured: boolean;
+  isActive: boolean;
+};
+
+const emptyForm: JewelryForm = {
+  id: "",
+  name: "",
+  category: "Rings",
+  subcategory: "",
+  metal: "Silver",
+  price: 0,
+  imageUrl: "",
+  description: "",
+  collection: "",
+  stoneType: "Natural Diamond",
+  diamondWeight: "",
+  setting: "",
+  tags: "",
+  metalImages: {
+    Silver: "",
+    Gold: "",
+    "Rose Gold": "",
+  },
+  galleryImages: [],
+  videoUrl: "",
+  modelUrl: "",
+  inventoryStatus: "In Stock",
+  sortOrder: 0,
+  isFeatured: false,
+  isActive: true,
+};
+
+const categoryDescriptions: Record<(typeof jewelryCategories)[number], string> = {
+  Rings: "Engagement, wedding, eternity, stackable, cocktail, and fashion rings.",
+  Necklaces: "Diamond pendants, tennis necklaces, chains, initials, and statement layers.",
+  Bracelets: "Tennis bracelets, bangles, cuffs, stackable lines, and daily diamond essentials.",
+  Earrings: "Studs, hoops, drops, huggies, solitaire pairs, and occasion earrings.",
+};
+
+const toForm = (item: JewelryItem): JewelryForm => ({
+  ...emptyForm,
+  ...item,
+  subcategory: item.subcategory || "",
+  description: item.description || "",
+  collection: item.collection || "",
+  stoneType: item.stoneType || "",
+  diamondWeight: item.diamondWeight || "",
+  setting: item.setting || "",
+  tags: item.tags || "",
+  metalImages: {
+    Silver: item.metalImages?.Silver || item.imageUrl || "",
+    Gold: item.metalImages?.Gold || item.imageUrl || "",
+    "Rose Gold": item.metalImages?.["Rose Gold"] || item.imageUrl || "",
+  },
+  galleryImages: Array.isArray(item.galleryImages) ? item.galleryImages : [],
+  videoUrl: item.videoUrl || "",
+  modelUrl: item.modelUrl || "",
+  inventoryStatus: item.inventoryStatus || "In Stock",
+  sortOrder: Number(item.sortOrder || 0),
+  isFeatured: item.isFeatured === true,
+  isActive: item.isActive !== false,
+});
+
+const createListingId = (name: string, category: string) => {
+  const base = `${category}-${name || "jewelry"}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 44);
+  return `${base || "jewelry"}-${Date.now().toString(36)}`;
+};
+
+const formatPrice = (price: number) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(price || 0);
+
+type LoadJewelryOptions = {
+  category?: string;
+  inventoryStatus?: string;
+  query?: string;
+};
+
+const readFileAsDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+
+const AdminJewelry = () => {
+  const [items, setItems] = useState<JewelryItem[]>([]);
+  const [form, setForm] = useState<JewelryForm>(emptyForm);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedStatus, setSelectedStatus] = useState("All");
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const isEditing = useMemo(() => items.some((item) => item.id === form.id), [form.id, items]);
+
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const item of items) {
+      counts.set(item.category, (counts.get(item.category) || 0) + 1);
+    }
+    return counts;
+  }, [items]);
+
+  const featuredCount = useMemo(() => items.filter((item) => item.isFeatured).length, [items]);
+  const activeCount = useMemo(() => items.filter((item) => item.isActive !== false).length, [items]);
+
+  const loadJewelry = useCallback(async (options: LoadJewelryOptions = {}) => {
+    const categoryFilter = options.category ?? "All";
+    const statusFilter = options.inventoryStatus ?? "All";
+    const searchFilter = options.query ?? "";
+
+    setLoading(true);
+    setStatus("");
+    try {
+      const url = new URL("/api/admin-jewelry", window.location.origin);
+      if (categoryFilter !== "All") url.searchParams.set("category", categoryFilter);
+      if (statusFilter !== "All") url.searchParams.set("status", statusFilter);
+      if (searchFilter.trim()) url.searchParams.set("search", searchFilter.trim());
+
+      const response = await adminFetch(url.toString());
+      if (response.status === 401) {
+        setStatus("Unauthorized: enter a valid admin token.");
+        setItems([]);
+        return;
+      }
+      if (!response.ok) {
+        setStatus("Failed to load jewelry listings.");
+        setItems([]);
+        return;
+      }
+
+      const payload = await response.json();
+      setItems(Array.isArray(payload?.items) ? payload.items : []);
+    } catch {
+      setStatus("Failed to load jewelry listings.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadJewelry({ category: "All", inventoryStatus: "All", query: "" });
+  }, [loadJewelry]);
+
+  const resetForm = () => {
+    setForm(emptyForm);
+    setStatus("");
+  };
+
+  const saveJewelry = async () => {
+    const nextForm = {
+      ...form,
+      id: form.id.trim() || createListingId(form.name, form.category),
+      price: Number(form.price) || 0,
+      sortOrder: Number(form.sortOrder) || 0,
+      imageUrl: form.metalImages.Silver || form.metalImages.Gold || form.metalImages["Rose Gold"] || form.imageUrl,
+    };
+
+    if (!nextForm.name.trim()) {
+      setStatus("Product name is required.");
+      return;
+    }
+
+    if (metals.some((metal) => !nextForm.metalImages[metal]?.trim())) {
+      setStatus("Please add an image for Silver, Gold, and Rose Gold.");
+      return;
+    }
+
+    setSaving(true);
+    setStatus("");
+
+    try {
+      const exists = items.some((item) => item.id === nextForm.id);
+      const response = await adminFetch("/api/admin-jewelry", {
+        method: exists ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nextForm),
+      });
+
+      if (response.status === 401) {
+        setStatus("Unauthorized: enter a valid admin token.");
+        return;
+      }
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        setStatus(payload?.message || "Failed to save jewelry listing.");
+        return;
+      }
+
+      setForm(emptyForm);
+      setStatus(exists ? "Jewelry listing updated." : "Jewelry listing created.");
+      await loadJewelry({ category: selectedCategory, inventoryStatus: selectedStatus, query: search });
+    } catch {
+      setStatus("Failed to save jewelry listing.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteJewelry = async (item: JewelryItem) => {
+    if (!window.confirm(`Delete ${item.name}? This cannot be undone.`)) return;
+
+    try {
+      const response = await adminFetch(`/api/admin-jewelry?id=${encodeURIComponent(item.id)}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        setStatus("Failed to delete jewelry listing.");
+        return;
+      }
+      setStatus("Jewelry listing deleted.");
+      if (form.id === item.id) resetForm();
+      await loadJewelry({ category: selectedCategory, inventoryStatus: selectedStatus, query: search });
+    } catch {
+      setStatus("Failed to delete jewelry listing.");
+    }
+  };
+
+  const duplicateJewelry = (item: JewelryItem) => {
+    setForm({
+      ...toForm(item),
+      id: createListingId(`${item.name} copy`, item.category),
+      name: `${item.name} Copy`,
+      isActive: false,
+      isFeatured: false,
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleSearchSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    void loadJewelry({ category: selectedCategory, inventoryStatus: selectedStatus, query: search });
+  };
+
+  const handleMetalImageUpload = async (metal: (typeof metals)[number], file?: File) => {
+    if (!file) return;
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      setForm((prev) => ({
+        ...prev,
+        imageUrl: metal === "Silver" ? dataUrl : prev.imageUrl,
+        metalImages: {
+          ...prev.metalImages,
+          [metal]: dataUrl,
+        },
+      }));
+    } catch {
+      setStatus("Failed to read uploaded image.");
+    }
+  };
+
+  const handleGalleryUpload = async (files?: FileList | null) => {
+    if (!files || files.length === 0) return;
+    try {
+      const uploaded = await Promise.all([...files].map(readFileAsDataUrl));
+      setForm((prev) => ({
+        ...prev,
+        galleryImages: [...prev.galleryImages, ...uploaded],
+      }));
+    } catch {
+      setStatus("Failed to read gallery images.");
+    }
+  };
+
+  const handleVideoUpload = async (file?: File) => {
+    if (!file) return;
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      setForm((prev) => ({ ...prev, videoUrl: dataUrl }));
+    } catch {
+      setStatus("Failed to read uploaded video.");
+    }
+  };
+
+  const handleModelUpload = async (file?: File) => {
+    if (!file) return;
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    if (ext !== "glb" && ext !== "gltf") {
+      setStatus("Please upload a .glb or .gltf jewelry model.");
+      return;
+    }
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      setForm((prev) => ({ ...prev, modelUrl: dataUrl }));
+    } catch {
+      setStatus("Failed to read uploaded 360 model.");
+    }
+  };
+
+  return (
+    <AdminLayout>
+      <section className="space-y-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="mb-2 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+              <Sparkles className="h-4 w-4" />
+              Fine Jewelry Catalog
+            </p>
+            <h1 className="font-heading text-3xl">Jewelry Listings</h1>
+            <p className="max-w-3xl text-muted-foreground">
+              Build a luxury catalog with Blue Nile-style categories: rings, necklaces, bracelets, and earrings.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => void loadJewelry({ category: selectedCategory, inventoryStatus: selectedStatus, query: search })} disabled={loading}>
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Refresh
+            </Button>
+            <Button onClick={resetForm} variant="luxury">
+              <Plus className="mr-2 h-4 w-4" />
+              New Listing
+            </Button>
+          </div>
+        </div>
+
+        {status ? <p className="rounded border border-border bg-secondary/30 p-3 text-sm text-primary">{status}</p> : null}
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {jewelryCategories.map((category) => (
+            <button
+              key={category}
+              onClick={() => {
+                setSelectedCategory(category);
+                void loadJewelry({ category, inventoryStatus: selectedStatus, query: search });
+              }}
+              className={`rounded-[12px] border p-4 text-left transition-colors ${
+                selectedCategory === category ? "border-primary bg-primary/10" : "border-border bg-background hover:bg-secondary/40"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <p className="font-heading text-xl">{category}</p>
+                <span className="rounded-full border border-border bg-background px-2 py-0.5 text-xs text-muted-foreground">
+                  {categoryCounts.get(category) || 0}
+                </span>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">{categoryDescriptions[category]}</p>
+            </button>
+          ))}
+        </div>
+
+        <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
+          <div className="rounded-[12px] border border-border bg-background p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="font-heading text-xl">{isEditing ? "Edit Listing" : "Add Listing"}</h2>
+                <p className="text-sm text-muted-foreground">Use polished product detail for premium buying decisions.</p>
+              </div>
+              {form.isActive ? <Eye className="h-5 w-5 text-primary" /> : <EyeOff className="h-5 w-5 text-muted-foreground" />}
+            </div>
+
+            <div className="grid gap-3">
+              <input value={form.id} onChange={(e) => setForm((prev) => ({ ...prev, id: e.target.value }))} placeholder="Listing ID, auto-generated when blank" className="h-10 rounded border border-border bg-background px-3 text-sm" />
+              <input value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Product name" className="h-10 rounded border border-border bg-background px-3 text-sm" />
+              <div className="grid grid-cols-2 gap-3">
+                <select value={form.category} onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value as JewelryForm["category"] }))} className="h-10 rounded border border-border bg-background px-3 text-sm">
+                  {jewelryCategories.map((category) => <option key={category}>{category}</option>)}
+                </select>
+                <input value={form.subcategory} onChange={(e) => setForm((prev) => ({ ...prev, subcategory: e.target.value }))} placeholder="Subcategory, e.g. Tennis" className="h-10 rounded border border-border bg-background px-3 text-sm" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <input type="number" min="0" value={form.price} onChange={(e) => setForm((prev) => ({ ...prev, price: Number(e.target.value) || 0 }))} placeholder="Price" className="h-10 rounded border border-border bg-background px-3 text-sm" />
+              </div>
+              <div className="rounded-[10px] border border-border bg-secondary/20 p-3">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Metal color images</p>
+                <div className="grid gap-3">
+                  {metals.map((metal) => (
+                    <div key={metal} className="rounded border border-border bg-background p-3">
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className="h-4 w-4 rounded-full border border-border" style={{ backgroundColor: metalSwatches[metal] }} />
+                        <p className="text-sm font-medium">{metal}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          value={form.metalImages[metal]}
+                          onChange={(e) => {
+                            const image = e.target.value;
+                            setForm((prev) => ({
+                              ...prev,
+                              imageUrl: metal === "Silver" ? image : prev.imageUrl,
+                              metalImages: { ...prev.metalImages, [metal]: image },
+                            }));
+                          }}
+                          placeholder={`${metal} image URL or uploaded file`}
+                          className="h-10 min-w-0 flex-1 rounded border border-border bg-background px-3 text-sm"
+                        />
+                        <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded border border-border px-3 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground">
+                          <Upload className="h-4 w-4" />
+                          Upload
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => void handleMetalImageUpload(metal, e.target.files?.[0])}
+                          />
+                        </label>
+                      </div>
+                      {form.metalImages[metal] ? (
+                        <img src={form.metalImages[metal]} alt={`${metal} preview`} className="mt-2 h-20 w-full rounded border border-border object-cover" />
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <textarea value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} rows={3} placeholder="Description" className="rounded border border-border bg-background p-3 text-sm" />
+              <div className="grid grid-cols-2 gap-3">
+                <input value={form.collection} onChange={(e) => setForm((prev) => ({ ...prev, collection: e.target.value }))} placeholder="Collection" className="h-10 rounded border border-border bg-background px-3 text-sm" />
+                <input value={form.stoneType} onChange={(e) => setForm((prev) => ({ ...prev, stoneType: e.target.value }))} placeholder="Stone type" className="h-10 rounded border border-border bg-background px-3 text-sm" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <input value={form.diamondWeight} onChange={(e) => setForm((prev) => ({ ...prev, diamondWeight: e.target.value }))} placeholder="Diamond weight, e.g. 1.20 ctw" className="h-10 rounded border border-border bg-background px-3 text-sm" />
+                <input value={form.setting} onChange={(e) => setForm((prev) => ({ ...prev, setting: e.target.value }))} placeholder="Setting / style" className="h-10 rounded border border-border bg-background px-3 text-sm" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <select value={form.inventoryStatus} onChange={(e) => setForm((prev) => ({ ...prev, inventoryStatus: e.target.value as JewelryForm["inventoryStatus"] }))} className="h-10 rounded border border-border bg-background px-3 text-sm">
+                  {inventoryStatuses.map((item) => <option key={item}>{item}</option>)}
+                </select>
+                <input type="number" value={form.sortOrder} onChange={(e) => setForm((prev) => ({ ...prev, sortOrder: Number(e.target.value) || 0 }))} placeholder="Sort order" className="h-10 rounded border border-border bg-background px-3 text-sm" />
+              </div>
+              <input value={form.tags} onChange={(e) => setForm((prev) => ({ ...prev, tags: e.target.value }))} placeholder="Tags, e.g. best-seller, bridal, gift" className="h-10 rounded border border-border bg-background px-3 text-sm" />
+              <div className="rounded-[10px] border border-border bg-secondary/20 p-3">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Extra gallery images</p>
+                  <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded border border-border bg-background px-3 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground">
+                    <Upload className="h-4 w-4" />
+                    Upload
+                    <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => void handleGalleryUpload(e.target.files)} />
+                  </label>
+                </div>
+                <textarea
+                  value={form.galleryImages.join("\n")}
+                  onChange={(e) => setForm((prev) => ({ ...prev, galleryImages: e.target.value.split("\n").map((item) => item.trim()).filter(Boolean) }))}
+                  rows={3}
+                  placeholder="Optional: one extra image URL per line"
+                  className="w-full rounded border border-border bg-background p-3 text-sm"
+                />
+                {form.galleryImages.length > 0 ? (
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    {form.galleryImages.slice(0, 6).map((image, index) => (
+                      <img key={`${image}-${index}`} src={image} alt={`Gallery ${index + 1}`} className="h-16 w-full rounded border border-border object-cover" />
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+              <div className="rounded-[10px] border border-border bg-secondary/20 p-3">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Product video</p>
+                <div className="flex gap-2">
+                  <input
+                    value={form.videoUrl}
+                    onChange={(e) => setForm((prev) => ({ ...prev, videoUrl: e.target.value }))}
+                    placeholder="Video URL or uploaded video"
+                    className="h-10 min-w-0 flex-1 rounded border border-border bg-background px-3 text-sm"
+                  />
+                  <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded border border-border bg-background px-3 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground">
+                    <Upload className="h-4 w-4" />
+                    Upload
+                    <input type="file" accept="video/*" className="hidden" onChange={(e) => void handleVideoUpload(e.target.files?.[0])} />
+                  </label>
+                </div>
+              </div>
+              <div className="rounded-[10px] border border-border bg-secondary/20 p-3">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">360 jewelry model</p>
+                <div className="flex gap-2">
+                  <input
+                    value={form.modelUrl}
+                    onChange={(e) => setForm((prev) => ({ ...prev, modelUrl: e.target.value }))}
+                    placeholder="GLB/GLTF URL or uploaded 360 model"
+                    className="h-10 min-w-0 flex-1 rounded border border-border bg-background px-3 text-sm"
+                  />
+                  <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded border border-border bg-background px-3 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground">
+                    <Upload className="h-4 w-4" />
+                    Upload
+                    <input type="file" accept=".glb,.gltf,model/gltf-binary,model/gltf+json" className="hidden" onChange={(e) => void handleModelUpload(e.target.files?.[0])} />
+                  </label>
+                </div>
+                {form.modelUrl ? (
+                  <p className="mt-2 text-xs text-primary">360 model attached. Customers will see an interactive 360 view.</p>
+                ) : (
+                  <p className="mt-2 text-xs text-muted-foreground">Optional: upload a compressed .glb for best mobile performance.</p>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-4 text-sm">
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={form.isActive} onChange={(e) => setForm((prev) => ({ ...prev, isActive: e.target.checked }))} />
+                  Active on website
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm((prev) => ({ ...prev, isFeatured: e.target.checked }))} />
+                  Featured
+                </label>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button onClick={() => void saveJewelry()} disabled={saving} className="flex-1">
+                  {saving ? "Saving..." : isEditing ? "Update Listing" : "Create Listing"}
+                </Button>
+                <Button variant="outline" onClick={resetForm}>Clear</Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid gap-3 rounded-[12px] border border-border bg-background p-4 lg:grid-cols-[1fr_180px_170px]">
+              <form onSubmit={handleSearchSubmit} className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, metal, collection, tags..." className="h-10 w-full rounded border border-border bg-background pl-9 pr-3 text-sm" />
+              </form>
+              <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="h-10 rounded border border-border bg-background px-3 text-sm">
+                <option>All</option>
+                {jewelryCategories.map((category) => <option key={category}>{category}</option>)}
+              </select>
+              <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} className="h-10 rounded border border-border bg-background px-3 text-sm">
+                <option>All</option>
+                {inventoryStatuses.map((item) => <option key={item}>{item}</option>)}
+              </select>
+              <div className="flex gap-2 lg:col-span-3">
+                <Button type="button" onClick={() => void loadJewelry({ category: selectedCategory, inventoryStatus: selectedStatus, query: search })} className="h-10">Apply Filters</Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setSearch("");
+                    setSelectedCategory("All");
+                    setSelectedStatus("All");
+                    void loadJewelry({ category: "All", inventoryStatus: "All", query: "" });
+                  }}
+                  className="h-10"
+                >
+                  Reset
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-[12px] border border-border bg-secondary/30 p-4">
+                <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Total</p>
+                <p className="font-heading text-3xl">{items.length}</p>
+              </div>
+              <div className="rounded-[12px] border border-border bg-secondary/30 p-4">
+                <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Active</p>
+                <p className="font-heading text-3xl">{activeCount}</p>
+              </div>
+              <div className="rounded-[12px] border border-border bg-secondary/30 p-4">
+                <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Featured</p>
+                <p className="font-heading text-3xl">{featuredCount}</p>
+              </div>
+            </div>
+
+            <div className="overflow-hidden rounded-[12px] border border-border bg-background">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="border-b border-border bg-secondary/30 text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                    <tr>
+                      <th className="px-4 py-3">Product</th>
+                      <th className="px-4 py-3">Category</th>
+                      <th className="px-4 py-3">Details</th>
+                      <th className="px-4 py-3">Price</th>
+                      <th className="px-4 py-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {loading ? (
+                      <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Loading jewelry listings...</td></tr>
+                    ) : items.length === 0 ? (
+                      <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No jewelry listings found.</td></tr>
+                    ) : (
+                      items.map((item) => (
+                        <tr key={item.id} className="hover:bg-secondary/10">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <img src={item.imageUrl} alt={item.name} className="h-14 w-14 rounded border border-border object-cover" />
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <p className="font-medium">{item.name}</p>
+                                  {item.isFeatured ? <BadgeCheck className="h-4 w-4 text-primary" /> : null}
+                                </div>
+                                <p className="text-xs text-muted-foreground">{item.id}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <p>{item.category}</p>
+                            <p className="text-xs text-muted-foreground">{item.subcategory || item.collection || "Fine jewelry"}</p>
+                          </td>
+                          <td className="px-4 py-3">
+                            <p>{item.metal}</p>
+                            <p className="text-xs text-muted-foreground">{item.inventoryStatus || "In Stock"}{item.diamondWeight ? ` • ${item.diamondWeight}` : ""}{item.modelUrl ? " • 360" : ""}</p>
+                          </td>
+                          <td className="px-4 py-3 font-medium">{formatPrice(item.price)}</td>
+                          <td className="px-4 py-3">
+                            <div className="flex justify-end gap-1">
+                              <Button size="sm" variant="ghost" onClick={() => { setForm(toForm(item)); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+                                <Edit3 className="h-4 w-4" />
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={() => duplicateJewelry(item)}>
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={() => void deleteJewelry(item)} className="text-destructive hover:bg-destructive/10 hover:text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </AdminLayout>
+  );
+};
+
+export default AdminJewelry;
