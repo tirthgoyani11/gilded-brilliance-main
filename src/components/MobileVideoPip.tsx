@@ -41,8 +41,8 @@ const MobileVideoPip = ({ src, title }: MobileVideoPipProps) => {
       <div
         className={
           isExpanded
-            ? "relative w-full max-w-[430px] overflow-hidden rounded-[10px] border border-white/20 bg-black shadow-2xl"
-            : "relative overflow-hidden rounded-[8px] border border-white/20 bg-black shadow-2xl"
+            ? "relative w-full max-w-[430px] overflow-hidden rounded-[10px] border border-border bg-white shadow-2xl"
+            : "relative overflow-hidden rounded-[8px] border border-border bg-white shadow-2xl"
         }
       >
         <video
@@ -52,7 +52,7 @@ const MobileVideoPip = ({ src, title }: MobileVideoPipProps) => {
           muted
           loop
           playsInline
-          className="aspect-video w-full bg-black object-contain"
+          className="aspect-square w-full bg-white object-cover"
         />
         <button
           type="button"
