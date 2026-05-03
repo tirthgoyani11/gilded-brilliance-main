@@ -17,13 +17,23 @@ export const initCurrency = async (): Promise<void> => {
     const locale = navigator.language || "";
     
     let currency = "USD";
-    if (tz === "Asia/Kolkata" || locale.endsWith("-IN")) currency = "INR";
-    else if (tz.startsWith("Europe/London") || locale.endsWith("-GB")) currency = "GBP";
-    else if (tz.startsWith("Europe/") || locale.endsWith("-FR") || locale.endsWith("-DE")) currency = "EUR";
-    else if (tz.startsWith("Australia/") || locale.endsWith("-AU")) currency = "AUD";
-    else if (tz.startsWith("America/Toronto") || tz.startsWith("America/Vancouver") || locale.endsWith("-CA")) currency = "CAD";
-    else if (tz.startsWith("Asia/Dubai") || locale.endsWith("-AE")) currency = "AED";
-    else if (tz.startsWith("Asia/Singapore") || locale.endsWith("-SG")) currency = "SGD";
+    
+    // Check timezone first, as it's more accurate than language preference
+    if (tz === "Asia/Kolkata" || tz === "Asia/Calcutta") currency = "INR";
+    else if (tz.startsWith("Europe/London")) currency = "GBP";
+    else if (tz.startsWith("Europe/")) currency = "EUR";
+    else if (tz.startsWith("Australia/")) currency = "AUD";
+    else if (tz.startsWith("America/Toronto") || tz.startsWith("America/Vancouver")) currency = "CAD";
+    else if (tz.startsWith("Asia/Dubai")) currency = "AED";
+    else if (tz.startsWith("Asia/Singapore")) currency = "SGD";
+    // Fallback to locale if timezone didn't match a specific currency
+    else if (locale.endsWith("-IN")) currency = "INR";
+    else if (locale.endsWith("-GB")) currency = "GBP";
+    else if (locale.endsWith("-FR") || locale.endsWith("-DE")) currency = "EUR";
+    else if (locale.endsWith("-AU")) currency = "AUD";
+    else if (locale.endsWith("-CA")) currency = "CAD";
+    else if (locale.endsWith("-AE")) currency = "AED";
+    else if (locale.endsWith("-SG")) currency = "SGD";
 
     if (currency === "INR") {
       config = { currency: "INR", rate: 1 };
