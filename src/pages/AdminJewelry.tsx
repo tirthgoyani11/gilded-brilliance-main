@@ -485,15 +485,14 @@ const AdminJewelry = () => {
   };
 
   const saveJewelry = async () => {
-    const primarySilver = pickPrimaryImage(form.metalImages.Silver);
-    const primaryGold = pickPrimaryImage(form.metalImages.Gold);
-    const primaryRose = pickPrimaryImage(form.metalImages["Rose Gold"]);
+    const primaryImage = metals.map(m => pickPrimaryImage(form.metalImages[m])).find(Boolean) || form.imageUrl;
+    
     const nextForm = {
       ...form,
       id: form.id.trim() || createListingId(form.name, form.category),
       price: Number(form.price) || 0,
       sortOrder: Number(form.sortOrder) || 0,
-      imageUrl: primarySilver || primaryGold || primaryRose || form.imageUrl,
+      imageUrl: primaryImage,
     };
 
     if (!nextForm.name.trim()) {
@@ -537,11 +536,12 @@ const AdminJewelry = () => {
         // Helper to replace local blob URLs with real Supabase URLs
         const replaceUrl = (url: string) => uploadedUrls.get(url) || url;
 
-        nextForm.metalImages = {
-          Silver: nextForm.metalImages.Silver.map(replaceUrl),
-          Gold: nextForm.metalImages.Gold.map(replaceUrl),
-          "Rose Gold": nextForm.metalImages["Rose Gold"].map(replaceUrl),
-        };
+        const updatedMetalImages: any = {};
+        metals.forEach(m => {
+          updatedMetalImages[m] = nextForm.metalImages[m]?.map(replaceUrl) || [];
+        });
+        
+        nextForm.metalImages = updatedMetalImages;
         nextForm.galleryImages = nextForm.galleryImages.map(replaceUrl);
         nextForm.videoUrl = replaceUrl(nextForm.videoUrl);
         nextForm.modelUrl = replaceUrl(nextForm.modelUrl);
