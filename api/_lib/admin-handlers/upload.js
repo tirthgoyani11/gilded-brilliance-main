@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import path from "node:path";
+import { createClient } from "@supabase/supabase-js";
 import { requireAdmin } from "../admin-auth.js";
 import { cachePolicies, rejectIfCrossOriginWrite, setCommonSecurityHeaders, setCorsForRequest } from "../security.js";
 
@@ -11,15 +12,28 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const SUPABASE_IMAGE_BUCKET = process.env.SUPABASE_IMAGE_BUCKET || process.env.SUPABASE_BUCKET || "jewelry-assets";
 const SUPABASE_MODEL_BUCKET = process.env.SUPABASE_MODEL_BUCKET || process.env.SUPABASE_BUCKET || "jewelry-assets";
 
-const MAX_UPLOAD_BYTES = 15 * 1024 * 1024; // 15 MB raw binary limit
+const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 const ALLOWED_FOLDERS = new Set(["images", "models"]);
 
-// Allowed MIME types for security (only images, 3D models, videos)
+// Allowed MIME types for security
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml", "image/avif",
   "model/gltf-binary", "application/octet-stream",
   "video/mp4", "video/webm", "video/quicktime",
 ]);
+
+// ---------------------------------------------------------------------------
+// Supabase Admin Client (service_role bypasses RLS)
+// ---------------------------------------------------------------------------
+let _supabaseAdmin = null;
+const getSupabaseAdmin = () => {
+  if (_supabaseAdmin) return _supabaseAdmin;
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return null;
+  _supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  return _supabaseAdmin;
+};
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -58,45 +72,6 @@ const sanitizeFilename = (filename) =>
     .replace(/^-+|-+$/g, "")
     .slice(0, 80) || "upload";
 
-const buildPublicUrl = (bucket, filePath) => {
-  const base = SUPABASE_URL?.replace(/\/$/, "") || "";
-  return `${base}/storage/v1/object/public/${bucket}/${filePath}`;
-};
-
-/**
- * Ensure the target bucket exists and is publicly readable.
- * Uses the Supabase Admin Storage API. Silently succeeds if already exists.
- */
-const ensureBucketExists = async (bucketId) => {
-  const base = SUPABASE_URL.replace(/\/$/, "");
-  const headers = {
-    Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-    apikey: SUPABASE_SERVICE_ROLE_KEY,
-    "Content-Type": "application/json",
-  };
-
-  // Try to create the bucket (idempotent — 409 means it already exists)
-  const createRes = await fetch(`${base}/storage/v1/bucket`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ id: bucketId, name: bucketId, public: true }),
-  });
-
-  if (createRes.ok) {
-    console.log(`Bucket "${bucketId}" created successfully.`);
-  } else if (createRes.status === 409) {
-    // Bucket already exists — make sure it's public
-    await fetch(`${base}/storage/v1/bucket/${bucketId}`, {
-      method: "PUT",
-      headers,
-      body: JSON.stringify({ public: true }),
-    }).catch(() => {});
-  } else {
-    const text = await createRes.text().catch(() => "");
-    console.warn(`Bucket "${bucketId}" ensure failed (${createRes.status}):`, text);
-  }
-};
-
 // ---------------------------------------------------------------------------
 // Handler
 // ---------------------------------------------------------------------------
@@ -121,7 +96,8 @@ export async function handleUpload(req, res) {
   }
 
   // ── Environment checks ──────────────────────────────────────────────
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) {
     return res.status(500).json({
       message: "Supabase upload is not configured",
       hint: "Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Vercel environment variables.",
@@ -145,7 +121,7 @@ export async function handleUpload(req, res) {
   if (!ALLOWED_MIME_TYPES.has(parsed.contentType)) {
     return res.status(400).json({
       message: `File type "${parsed.contentType}" is not allowed.`,
-      hint: "Allowed types: JPEG, PNG, WebP, GIF, SVG, GLB, MP4, WebM.",
+      hint: "Allowed: JPEG, PNG, WebP, GIF, SVG, GLB, MP4, WebM.",
     });
   }
 
@@ -160,58 +136,32 @@ export async function handleUpload(req, res) {
   const ext = path.extname(safeName) || "";
   const base = safeName.replace(ext, "");
   const key = `${targetFolder}/${base}-${generateId()}${ext}`;
+  const bucket = targetFolder === "models" ? SUPABASE_MODEL_BUCKET : SUPABASE_IMAGE_BUCKET;
 
   try {
-    const bucket = targetFolder === "models" ? SUPABASE_MODEL_BUCKET : SUPABASE_IMAGE_BUCKET;
-    const supabaseBase = SUPABASE_URL.replace(/\/$/, "");
-
-    // Ensure the bucket exists and is public before uploading
-    await ensureBucketExists(bucket);
-
-    // ── Upload via Supabase Storage Admin API ─────────────────────────
-    const uploadUrl = `${supabaseBase}/storage/v1/object/${bucket}/${key}`;
-    const response = await fetch(uploadUrl, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        apikey: SUPABASE_SERVICE_ROLE_KEY,
-        "Content-Type": parsed.contentType || "application/octet-stream",
-        "x-upsert": "true",
-      },
-      body: parsed.buffer,
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => "Unknown error");
-      console.error("Supabase Storage Upload Error:", {
-        status: response.status,
-        body: errorText,
-        bucket,
-        key,
+    // ── Upload using official Supabase client (bypasses RLS) ──────────
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(key, parsed.buffer, {
+        contentType: parsed.contentType,
+        upsert: true,
       });
 
-      // If still getting RLS error, provide actionable fix instructions
-      if (response.status === 403 || errorText.includes("row-level security")) {
-        return res.status(500).json({
-          message: "Supabase Storage permission denied",
-          details: "Row Level Security (RLS) is blocking uploads. Please run this SQL in your Supabase SQL Editor:",
-          fix: [
-            `CREATE POLICY "service_role_all" ON storage.objects FOR ALL TO service_role USING (bucket_id = '${bucket}') WITH CHECK (bucket_id = '${bucket}');`,
-            `-- Or disable RLS on storage.objects: ALTER TABLE storage.objects DISABLE ROW LEVEL SECURITY;`,
-          ],
-        });
-      }
-
+    if (error) {
+      console.error("Supabase Storage Upload Error:", error);
       return res.status(500).json({
         message: "Supabase upload failed",
-        details: errorText,
-        status: response.status,
+        details: error.message || String(error),
       });
     }
 
+    // Build public URL
+    const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(key);
+    const publicUrl = publicUrlData?.publicUrl || "";
+
     return res.status(200).json({
-      url: buildPublicUrl(bucket, key),
-      path: key,
+      url: publicUrl,
+      path: data?.path || key,
       bucket,
     });
   } catch (error) {
