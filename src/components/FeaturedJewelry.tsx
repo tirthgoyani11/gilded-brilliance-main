@@ -3,22 +3,28 @@ import { motion, useInView } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Heart, ArrowRight, Sparkles } from "lucide-react";
 import type { JewelryItem } from "@/types/diamond";
-import { loadJewelryItems, formatJewelryPrice, getJewelryMetalImage } from "@/lib/jewelry-catalog";
+import { loadJewelryItems, formatJewelryPrice, getJewelryMetalImage, fallbackJewelryItems } from "@/lib/jewelry-catalog";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+const pickFeatured = (all: JewelryItem[]) => {
+  const featured = all.filter((i) => i.isFeatured && i.isActive !== false);
+  if (featured.length < 4) {
+    const rest = all.filter((i) => !i.isFeatured && i.isActive !== false);
+    featured.push(...rest.slice(0, 4 - featured.length));
+  }
+  return featured.slice(0, 8);
+};
 
 const FeaturedJewelry = () => {
-  const [items, setItems] = useState<JewelryItem[]>([]);
+  const [items, setItems] = useState<JewelryItem[]>(() => pickFeatured(fallbackJewelryItems));
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-80px" });
 
   useEffect(() => {
     loadJewelryItems().then((all) => {
-      const featured = all.filter((i) => i.isFeatured && i.isActive !== false);
-      // If fewer than 4 featured, pad with other active items
-      if (featured.length < 4) {
-        const rest = all.filter((i) => !i.isFeatured && i.isActive !== false);
-        featured.push(...rest.slice(0, 4 - featured.length));
-      }
-      setItems(featured.slice(0, 8));
+      setItems(pickFeatured(all));
+      // Refresh GSAP ScrollTrigger after layout shift from data load
+      setTimeout(() => ScrollTrigger.refresh(), 200);
     });
   }, []);
 

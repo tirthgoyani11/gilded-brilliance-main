@@ -44,6 +44,7 @@ const DiamondJourney = () => {
           end: "+=3000",
           scrub: 1, 
           pin: true,
+          invalidateOnRefresh: true,
         },
       });
 
@@ -76,9 +77,10 @@ const DiamondJourney = () => {
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top top",
-          end: "+=2000", // slightly shorter scroll space needed for mobile vertically stacked
+          end: "+=2000",
           scrub: 1,
           pin: true,
+          invalidateOnRefresh: true,
         },
       });
 

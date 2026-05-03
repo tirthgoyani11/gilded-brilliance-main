@@ -3,19 +3,24 @@ import { motion, useInView } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Heart, TrendingUp, ArrowRight } from "lucide-react";
 import type { JewelryItem } from "@/types/diamond";
-import { loadJewelryItems, formatJewelryPrice, getJewelryMetalImage } from "@/lib/jewelry-catalog";
+import { loadJewelryItems, formatJewelryPrice, getJewelryMetalImage, fallbackJewelryItems } from "@/lib/jewelry-catalog";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+const pickTopSelling = (all: JewelryItem[]) => {
+  const active = all.filter((i) => i.isActive !== false);
+  const sorted = [...active].sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999) || b.price - a.price);
+  return sorted.slice(0, 6);
+};
 
 const TopSellingJewelry = () => {
-  const [items, setItems] = useState<JewelryItem[]>([]);
+  const [items, setItems] = useState<JewelryItem[]>(() => pickTopSelling(fallbackJewelryItems));
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-80px" });
 
   useEffect(() => {
     loadJewelryItems().then((all) => {
-      const active = all.filter((i) => i.isActive !== false);
-      // Sort by sortOrder (lower = higher priority), then by price (higher first) for "top selling" feel
-      const sorted = [...active].sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999) || b.price - a.price);
-      setItems(sorted.slice(0, 6));
+      setItems(pickTopSelling(all));
+      setTimeout(() => ScrollTrigger.refresh(), 200);
     });
   }, []);
 
