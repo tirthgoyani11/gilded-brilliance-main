@@ -78,6 +78,7 @@ const TopSellingJewelry = () => {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-80px" });
   const { settings: pricingSettings } = usePricingSettings();
+  const { toggleWishlist, isWishlisted } = useStore();
 
   useEffect(() => {
     loadJewelryItems().then((all) => {
