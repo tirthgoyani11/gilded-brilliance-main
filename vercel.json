@@ -23,6 +23,15 @@
     }
   ],
   "rewrites": [
+    { "source": "/api/admin-stats", "destination": "/api/admin-router?action=stats" },
+    { "source": "/api/admin-upload", "destination": "/api/admin-router?action=upload" },
+    { "source": "/api/admin-content", "destination": "/api/admin-router?action=content" },
+    { "source": "/api/admin-jewelry", "destination": "/api/admin-router?action=jewelry" },
+    { "source": "/api/admin-diamonds-list", "destination": "/api/admin-router?action=diamonds-list" },
+    { "source": "/api/admin-diamonds-delete", "destination": "/api/admin-router?action=diamonds-delete" },
+    { "source": "/api/admin-imports", "destination": "/api/admin-router?action=imports" },
+    { "source": "/api/admin-import-revert", "destination": "/api/admin-router?action=import-revert" },
+    { "source": "/api/import-diamonds", "destination": "/api/admin-router?action=import-diamonds" },
     {
       "source": "/api/(.*)",
       "destination": "/api/$1"

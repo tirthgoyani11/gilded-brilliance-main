@@ -1,11 +1,11 @@
-import { createImportLog, ensureCoreTables, sql } from "./_lib/db.js";
-import { requireAdmin } from "./_lib/admin-auth.js";
+import { createImportLog, ensureCoreTables, sql } from "../db.js";
+import { requireAdmin } from "../admin-auth.js";
 
 const normalizeLab = (value) => (value === "lab-grown" ? "lab-grown" : "natural");
 const normalizeCert = (value) => (String(value).toUpperCase().includes("GIA") ? "GIA" : "IGI");
 const stoneImageUrl = (stoneId) => `https://v3601514.v360.in/imaged/${encodeURIComponent(stoneId)}/still.jpg`;
 
-export default async function handler(req, res) {
+export async function handleImportDiamonds(req, res) {
   try {
     await ensureCoreTables();
 
@@ -32,9 +32,7 @@ export default async function handler(req, res) {
 
     for (const d of diamonds) {
       const normalizedStoneId = String(d.stoneId || "").trim();
-      if (!normalizedStoneId) {
-        continue;
-      }
+      if (!normalizedStoneId) continue;
 
       const exists = await sql`SELECT stone_id FROM diamonds WHERE stone_id = ${normalizedStoneId} LIMIT 1;`;
 
@@ -44,51 +42,27 @@ export default async function handler(req, res) {
           fluorescence, price, ratio, depth_pct, table_pct, measurements, cert_lab,
           cert_number, cert_link, image_url, video_url, v360_stone_id, updated_at
         ) VALUES (
-          ${normalizedStoneId},
-          ${normalizeLab(d.type)},
-          ${String(d.shape)},
-          ${Number(d.carat) || 0},
-          ${String(d.color)},
-          ${String(d.clarity)},
-          ${String(d.cut || "N/A")},
-          ${String(d.polish)},
-          ${String(d.symmetry)},
-          ${String(d.fluorescence || "None")},
-          ${Number(d.price) || 0},
-          ${Number(d.ratio) || 1},
-          ${Number(d.depthPct) || 0},
-          ${Number(d.tablePct) || 0},
-          ${String(d.measurements || "")},
-          ${normalizeCert(d.certLab || d.certNumber || "")},
-          ${String(d.certNumber)},
-          ${d.certLink ? String(d.certLink) : null},
-          ${stoneImageUrl(normalizedStoneId)},
-          ${d.videoUrl ? String(d.videoUrl) : null},
-          ${normalizedStoneId},
-          NOW()
+          ${normalizedStoneId}, ${normalizeLab(d.type)}, ${String(d.shape)},
+          ${Number(d.carat) || 0}, ${String(d.color)}, ${String(d.clarity)},
+          ${String(d.cut || "N/A")}, ${String(d.polish)}, ${String(d.symmetry)},
+          ${String(d.fluorescence || "None")}, ${Number(d.price) || 0},
+          ${Number(d.ratio) || 1}, ${Number(d.depthPct) || 0}, ${Number(d.tablePct) || 0},
+          ${String(d.measurements || "")}, ${normalizeCert(d.certLab || d.certNumber || "")},
+          ${String(d.certNumber)}, ${d.certLink ? String(d.certLink) : null},
+          ${stoneImageUrl(normalizedStoneId)}, ${d.videoUrl ? String(d.videoUrl) : null},
+          ${normalizedStoneId}, NOW()
         )
         ON CONFLICT (stone_id)
         DO UPDATE SET
-          type = EXCLUDED.type,
-          shape = EXCLUDED.shape,
-          carat = EXCLUDED.carat,
-          color = EXCLUDED.color,
-          clarity = EXCLUDED.clarity,
-          cut = EXCLUDED.cut,
-          polish = EXCLUDED.polish,
-          symmetry = EXCLUDED.symmetry,
-          fluorescence = EXCLUDED.fluorescence,
-          price = EXCLUDED.price,
-          ratio = EXCLUDED.ratio,
-          depth_pct = EXCLUDED.depth_pct,
-          table_pct = EXCLUDED.table_pct,
-          measurements = EXCLUDED.measurements,
-          cert_lab = EXCLUDED.cert_lab,
-          cert_number = EXCLUDED.cert_number,
-          cert_link = EXCLUDED.cert_link,
-          image_url = EXCLUDED.image_url,
-          video_url = EXCLUDED.video_url,
-          v360_stone_id = EXCLUDED.v360_stone_id,
+          type = EXCLUDED.type, shape = EXCLUDED.shape, carat = EXCLUDED.carat,
+          color = EXCLUDED.color, clarity = EXCLUDED.clarity, cut = EXCLUDED.cut,
+          polish = EXCLUDED.polish, symmetry = EXCLUDED.symmetry,
+          fluorescence = EXCLUDED.fluorescence, price = EXCLUDED.price,
+          ratio = EXCLUDED.ratio, depth_pct = EXCLUDED.depth_pct,
+          table_pct = EXCLUDED.table_pct, measurements = EXCLUDED.measurements,
+          cert_lab = EXCLUDED.cert_lab, cert_number = EXCLUDED.cert_number,
+          cert_link = EXCLUDED.cert_link, image_url = EXCLUDED.image_url,
+          video_url = EXCLUDED.video_url, v360_stone_id = EXCLUDED.v360_stone_id,
           updated_at = NOW();
       `;
 
