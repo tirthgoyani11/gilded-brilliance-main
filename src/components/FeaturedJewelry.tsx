@@ -3,7 +3,7 @@ import { motion, useInView } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Heart, ArrowRight, Sparkles } from "lucide-react";
 import type { JewelryItem } from "@/types/diamond";
-import { loadJewelryItems, formatJewelryPrice, getJewelryMetalImage, fallbackJewelryItems } from "@/lib/jewelry-catalog";
+import { loadJewelryItems, formatJewelryPrice, getJewelryMetalImage, getJewelryHoverImage, fallbackJewelryItems } from "@/lib/jewelry-catalog";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 const pickFeatured = (all: JewelryItem[]) => {
@@ -15,6 +15,63 @@ const pickFeatured = (all: JewelryItem[]) => {
   return featured.slice(0, 8);
 };
 
+/** Product card with crossfade hover to alternate image */
+const ProductCard = ({ item, badge }: { item: JewelryItem; badge?: string }) => {
+  const mainImg = getJewelryMetalImage(item, item.metal);
+  const hoverImg = getJewelryHoverImage(item, item.metal);
+  const hasAlt = Boolean(hoverImg && hoverImg !== mainImg);
+
+  return (
+    <Link to={`/jewelry/item/${item.id}`} className="group block">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-secondary/30 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.1)] transition-shadow duration-500 group-hover:shadow-[0_16px_40px_-12px_rgba(0,0,0,0.18)]">
+        {/* Badge */}
+        {badge && (
+          <div className="absolute left-3 top-3 z-10 rounded-md border border-primary/10 bg-background/90 px-2.5 py-1 backdrop-blur-md">
+            <span className="text-[9px] font-semibold uppercase tracking-[0.15em] text-primary">{badge}</span>
+          </div>
+        )}
+        {/* Main image */}
+        <img
+          src={mainImg}
+          alt={item.name}
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${hasAlt ? "group-hover:opacity-0" : ""}`}
+          loading="lazy"
+        />
+        {/* Hover image (different metal/angle) */}
+        {hasAlt && (
+          <img
+            src={hoverImg}
+            alt={`${item.name} – alternate view`}
+            className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+            loading="lazy"
+          />
+        )}
+        {/* Wishlist */}
+        <button
+          className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-border/30 bg-white/80 opacity-0 shadow-sm backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white group-hover:opacity-100"
+          onClick={(e) => e.preventDefault()}
+        >
+          <Heart className="h-3.5 w-3.5 text-foreground" />
+        </button>
+        {/* Gradient overlay on hover */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+        {/* Gold border on hover */}
+        <div className="pointer-events-none absolute inset-0 rounded-2xl border-[1.5px] border-transparent transition-colors duration-500 group-hover:border-primary/25" />
+      </div>
+      {/* Info */}
+      <div className="mt-4 space-y-1">
+        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+          {item.category} {item.subcategory ? `· ${item.subcategory}` : ""}
+        </p>
+        <h3 className="line-clamp-1 font-heading text-sm text-foreground transition-colors duration-300 group-hover:text-primary">
+          {item.name}
+        </h3>
+        <p className="text-sm font-medium tabular-nums text-foreground">{formatJewelryPrice(item.price)}</p>
+      </div>
+    </Link>
+  );
+};
+
 const FeaturedJewelry = () => {
   const [items, setItems] = useState<JewelryItem[]>(() => pickFeatured(fallbackJewelryItems));
   const sectionRef = useRef(null);
@@ -23,7 +80,6 @@ const FeaturedJewelry = () => {
   useEffect(() => {
     loadJewelryItems().then((all) => {
       setItems(pickFeatured(all));
-      // Refresh GSAP ScrollTrigger after layout shift from data load
       setTimeout(() => ScrollTrigger.refresh(), 200);
     });
   }, []);
@@ -80,48 +136,12 @@ const FeaturedJewelry = () => {
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.15 + i * 0.1 }}
             >
-              <Link to={`/jewelry/item/${item.id}`} className="group block">
-                <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-secondary/30 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.1)] transition-all duration-500 group-hover:shadow-[0_16px_40px_-12px_rgba(0,0,0,0.18)]">
-                  {/* Featured badge on first item */}
-                  {i === 0 && (
-                    <div className="absolute left-3 top-3 z-10 rounded-md border border-primary/10 bg-background/90 px-2.5 py-1 backdrop-blur-md">
-                      <span className="text-[9px] font-semibold uppercase tracking-[0.15em] text-primary">✦ Featured</span>
-                    </div>
-                  )}
-                  <img
-                    src={getJewelryMetalImage(item, item.metal)}
-                    alt={item.name}
-                    className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                    loading="lazy"
-                  />
-                  {/* Wishlist */}
-                  <button
-                    className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-border/30 bg-white/80 opacity-0 shadow-sm backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white group-hover:opacity-100"
-                    onClick={(e) => e.preventDefault()}
-                  >
-                    <Heart className="h-3.5 w-3.5 text-foreground" />
-                  </button>
-                  {/* Gradient overlay on hover */}
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                  {/* Gold border on hover */}
-                  <div className="pointer-events-none absolute inset-0 rounded-2xl border-[1.5px] border-transparent transition-colors duration-500 group-hover:border-primary/25" />
-                </div>
-                {/* Info */}
-                <div className="mt-4 space-y-1">
-                  <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-                    {item.category} {item.subcategory ? `· ${item.subcategory}` : ""}
-                  </p>
-                  <h3 className="line-clamp-1 font-heading text-sm text-foreground transition-colors duration-300 group-hover:text-primary">
-                    {item.name}
-                  </h3>
-                  <p className="text-sm font-medium tabular-nums text-foreground">{formatJewelryPrice(item.price)}</p>
-                </div>
-              </Link>
+              <ProductCard item={item} badge={i === 0 ? "✦ Featured" : undefined} />
             </motion.div>
           ))}
         </div>
 
-        {/* Second row if we have more than 4 */}
+        {/* Second row */}
         {items.length > 4 && (
           <div className="mt-5 grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4 lg:gap-7">
             {items.slice(4, 8).map((item, i) => (
@@ -131,33 +151,7 @@ const FeaturedJewelry = () => {
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.5 + i * 0.1 }}
               >
-                <Link to={`/jewelry/item/${item.id}`} className="group block">
-                  <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-secondary/30 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.1)] transition-all duration-500 group-hover:shadow-[0_16px_40px_-12px_rgba(0,0,0,0.18)]">
-                    <img
-                      src={getJewelryMetalImage(item, item.metal)}
-                      alt={item.name}
-                      className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                      loading="lazy"
-                    />
-                    <button
-                      className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-border/30 bg-white/80 opacity-0 shadow-sm backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white group-hover:opacity-100"
-                      onClick={(e) => e.preventDefault()}
-                    >
-                      <Heart className="h-3.5 w-3.5 text-foreground" />
-                    </button>
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                    <div className="pointer-events-none absolute inset-0 rounded-2xl border-[1.5px] border-transparent transition-colors duration-500 group-hover:border-primary/25" />
-                  </div>
-                  <div className="mt-4 space-y-1">
-                    <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-                      {item.category} {item.subcategory ? `· ${item.subcategory}` : ""}
-                    </p>
-                    <h3 className="line-clamp-1 font-heading text-sm text-foreground transition-colors duration-300 group-hover:text-primary">
-                      {item.name}
-                    </h3>
-                    <p className="text-sm font-medium tabular-nums text-foreground">{formatJewelryPrice(item.price)}</p>
-                  </div>
-                </Link>
+                <ProductCard item={item} />
               </motion.div>
             ))}
           </div>
