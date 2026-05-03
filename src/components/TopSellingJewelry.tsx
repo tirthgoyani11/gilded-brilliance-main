@@ -3,13 +3,56 @@ import { motion, useInView } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Heart, TrendingUp, ArrowRight } from "lucide-react";
 import type { JewelryItem } from "@/types/diamond";
-import { loadJewelryItems, formatJewelryPrice, getJewelryMetalImage, fallbackJewelryItems } from "@/lib/jewelry-catalog";
+import { loadJewelryItems, formatJewelryPrice, getJewelryMetalImage, getJewelryHoverImage, fallbackJewelryItems } from "@/lib/jewelry-catalog";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 const pickTopSelling = (all: JewelryItem[]) => {
   const active = all.filter((i) => i.isActive !== false);
   const sorted = [...active].sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999) || b.price - a.price);
   return sorted.slice(0, 6);
+};
+
+/** Small product card with crossfade hover */
+const SmallCard = ({ item }: { item: JewelryItem }) => {
+  const mainImg = getJewelryMetalImage(item, item.metal);
+  const hoverImg = getJewelryHoverImage(item, item.metal);
+  const hasAlt = Boolean(hoverImg && hoverImg !== mainImg);
+
+  return (
+    <Link to={`/jewelry/item/${item.id}`} className="group block">
+      <div className="relative aspect-square overflow-hidden rounded-2xl bg-secondary/30 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.1)] transition-shadow duration-500 group-hover:shadow-[0_14px_36px_-12px_rgba(0,0,0,0.18)]">
+        <img
+          src={mainImg}
+          alt={item.name}
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${hasAlt ? "group-hover:opacity-0" : ""}`}
+          loading="lazy"
+        />
+        {hasAlt && (
+          <img
+            src={hoverImg}
+            alt={`${item.name} – alternate view`}
+            className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+            loading="lazy"
+          />
+        )}
+        <button
+          className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-border/30 bg-white/80 opacity-0 shadow-sm backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white group-hover:opacity-100"
+          onClick={(e) => e.preventDefault()}
+        >
+          <Heart className="h-3 w-3 text-foreground" />
+        </button>
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+        <div className="pointer-events-none absolute inset-0 rounded-2xl border-[1.5px] border-transparent transition-colors duration-500 group-hover:border-primary/25" />
+      </div>
+      <div className="mt-3 space-y-0.5">
+        <p className="text-[9px] uppercase tracking-[0.12em] text-muted-foreground">{item.category}</p>
+        <h3 className="line-clamp-1 font-heading text-xs text-foreground transition-colors duration-300 group-hover:text-primary sm:text-sm">
+          {item.name}
+        </h3>
+        <p className="text-xs font-medium tabular-nums text-foreground sm:text-sm">{formatJewelryPrice(item.price)}</p>
+      </div>
+    </Link>
+  );
 };
 
 const TopSellingJewelry = () => {
@@ -26,9 +69,11 @@ const TopSellingJewelry = () => {
 
   if (items.length === 0) return null;
 
-  // Split into hero (first item) and grid (rest)
   const heroItem = items[0];
   const gridItems = items.slice(1, 5);
+  const heroMainImg = getJewelryMetalImage(heroItem, heroItem.metal);
+  const heroHoverImg = getJewelryHoverImage(heroItem, heroItem.metal);
+  const heroHasAlt = Boolean(heroHoverImg && heroHoverImg !== heroMainImg);
 
   return (
     <section ref={sectionRef} className="relative overflow-hidden bg-[#F7F2EA] py-20 lg:py-28">
@@ -69,25 +114,35 @@ const TopSellingJewelry = () => {
 
         {/* Asymmetric Layout: Hero + Grid */}
         <div className="grid gap-5 lg:grid-cols-2 lg:gap-7">
-          {/* Hero Card (Large) */}
+          {/* Hero Card */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
           >
             <Link to={`/jewelry/item/${heroItem.id}`} className="group block">
-              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-secondary/30 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.12)] transition-all duration-500 group-hover:shadow-[0_20px_50px_-16px_rgba(0,0,0,0.22)]">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-secondary/30 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.12)] transition-shadow duration-500 group-hover:shadow-[0_20px_50px_-16px_rgba(0,0,0,0.22)]">
                 {/* Bestseller badge */}
                 <div className="absolute left-4 top-4 z-10 flex items-center gap-1.5 rounded-full border border-primary/15 bg-background/90 px-3 py-1.5 backdrop-blur-md">
                   <span className="text-xs font-semibold text-primary">★</span>
                   <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground">Bestseller</span>
                 </div>
+                {/* Main image */}
                 <img
-                  src={getJewelryMetalImage(heroItem, heroItem.metal)}
+                  src={heroMainImg}
                   alt={heroItem.name}
-                  className="h-full w-full object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
+                  className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-600 ${heroHasAlt ? "group-hover:opacity-0" : ""}`}
                   loading="lazy"
                 />
+                {/* Hover alternate image */}
+                {heroHasAlt && (
+                  <img
+                    src={heroHoverImg}
+                    alt={`${heroItem.name} – alternate view`}
+                    className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-600 group-hover:opacity-100"
+                    loading="lazy"
+                  />
+                )}
                 {/* Wishlist */}
                 <button
                   className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-border/30 bg-white/80 opacity-0 shadow-sm backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white group-hover:opacity-100"
@@ -124,31 +179,7 @@ const TopSellingJewelry = () => {
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.3 + i * 0.1 }}
               >
-                <Link to={`/jewelry/item/${item.id}`} className="group block">
-                  <div className="relative aspect-square overflow-hidden rounded-2xl bg-secondary/30 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.1)] transition-all duration-500 group-hover:shadow-[0_14px_36px_-12px_rgba(0,0,0,0.18)]">
-                    <img
-                      src={getJewelryMetalImage(item, item.metal)}
-                      alt={item.name}
-                      className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                      loading="lazy"
-                    />
-                    <button
-                      className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-border/30 bg-white/80 opacity-0 shadow-sm backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white group-hover:opacity-100"
-                      onClick={(e) => e.preventDefault()}
-                    >
-                      <Heart className="h-3 w-3 text-foreground" />
-                    </button>
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                    <div className="pointer-events-none absolute inset-0 rounded-2xl border-[1.5px] border-transparent transition-colors duration-500 group-hover:border-primary/25" />
-                  </div>
-                  <div className="mt-3 space-y-0.5">
-                    <p className="text-[9px] uppercase tracking-[0.12em] text-muted-foreground">{item.category}</p>
-                    <h3 className="line-clamp-1 font-heading text-xs text-foreground transition-colors duration-300 group-hover:text-primary sm:text-sm">
-                      {item.name}
-                    </h3>
-                    <p className="text-xs font-medium tabular-nums text-foreground sm:text-sm">{formatJewelryPrice(item.price)}</p>
-                  </div>
-                </Link>
+                <SmallCard item={item} />
               </motion.div>
             ))}
           </div>

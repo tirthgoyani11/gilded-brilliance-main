@@ -83,11 +83,11 @@ const CategorySection = () => {
               transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1], delay: 0.12 + i * 0.08 }}
             >
               <Link to={cat.href} className="group block">
-                <div className="relative aspect-[4/5] overflow-hidden rounded-2xl shadow-[0_4px_16px_-6px_rgba(0,0,0,0.1)] transition-all duration-500 group-hover:shadow-[0_16px_40px_-14px_rgba(0,0,0,0.2)]">
+                <div className="relative aspect-[4/5] overflow-hidden rounded-2xl shadow-[0_4px_16px_-6px_rgba(0,0,0,0.1)] transition-shadow duration-500 group-hover:shadow-[0_16px_40px_-14px_rgba(0,0,0,0.2)]">
                   <img
                     src={getImage(cat.name)}
                     alt={cat.name}
-                    className="h-full w-full object-cover brightness-[1.08] contrast-[1.03] transition-transform duration-700 ease-out group-hover:scale-110"
+                    className="h-full w-full object-cover brightness-[1.08] contrast-[1.03] transition-all duration-500 ease-out group-hover:brightness-[1.15]"
                     loading="lazy"
                   />
                   {/* Dark gradient */}
