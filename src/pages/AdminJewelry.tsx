@@ -821,7 +821,12 @@ const AdminJewelry = () => {
                       </div>
                       {metal === "Silver" ? (
                         <div className="flex flex-col gap-1">
-                          <label className="text-[10px] font-semibold text-muted-foreground">PRICE</label>
+                          <div className="flex items-center justify-between">
+                            <label className="text-[10px] font-semibold text-muted-foreground">PRICE</label>
+                            {!form.pricing?.["Silver"] && (
+                              <span className="text-[9px] font-medium text-primary">Auto: {formatPrice(form.price)}</span>
+                            )}
+                          </div>
                           <input 
                             type="number" min="0" value={form.pricing?.["Silver"] || ""} 
                             onChange={(e) => {
@@ -833,7 +838,7 @@ const AdminJewelry = () => {
                                 return { ...prev, pricing: newPricing };
                               });
                             }} 
-                            placeholder="Auto" className="h-9 rounded border border-border bg-background px-3 text-sm" 
+                            placeholder="Custom Override" className="h-9 rounded border border-border bg-background px-3 text-sm" 
                           />
                         </div>
                       ) : (
@@ -845,7 +850,12 @@ const AdminJewelry = () => {
                           const key = `${metal} ${purity}`;
                           return (
                             <div key={key} className="flex flex-col gap-1">
-                              <label className="text-[10px] font-semibold text-muted-foreground">{purity} PRICE</label>
+                              <div className="flex items-center justify-between">
+                                <label className="text-[10px] font-semibold text-muted-foreground">{purity} PRICE</label>
+                                {!form.pricing?.[key] && !form.pricing?.[purity] && (
+                                  <span className="text-[9px] font-medium text-primary">Auto: {formatPrice(autoPrice)}</span>
+                                )}
+                              </div>
                               <input 
                                 type="number" min="0" value={form.pricing?.[key] ?? form.pricing?.[purity] ?? ""} 
                                 onChange={(e) => {
@@ -857,7 +867,7 @@ const AdminJewelry = () => {
                                     return { ...prev, pricing: newPricing };
                                   });
                                 }} 
-                                placeholder={`Auto (${formatPrice(autoPrice)})`} className="h-9 rounded border border-border bg-background px-3 text-sm" 
+                                placeholder="Custom Override" className="h-9 rounded border border-border bg-background px-3 text-sm" 
                               />
                             </div>
                           );
