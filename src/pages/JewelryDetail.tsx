@@ -166,10 +166,10 @@ const JewelryDetail = () => {
     .filter((item): item is JewelryItem => Boolean(item))
     .slice(0, 4);
 
-  const activeMediaIndex = useMemo(() => {
-    const idx = galleryMedia.findIndex((m) => m.src === activeMedia.src && m.type === activeMedia.type);
-    return Math.max(0, idx);
-  }, [galleryMedia, activeMedia]);
+  const activeMediaIndex = Math.max(
+    0,
+    galleryMedia.findIndex((m) => m.src === activeMedia.src && m.type === activeMedia.type)
+  );
 
   const handlePrevMedia = (e?: React.MouseEvent) => {
     e?.stopPropagation();
