@@ -1,10 +1,13 @@
 import { useEffect, useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Heart, ArrowRight, Sparkles } from "lucide-react";
+import { Heart, ArrowRight, Sparkles, ShoppingBag } from "lucide-react";
 import type { JewelryItem } from "@/types/diamond";
 import { loadJewelryItems, formatJewelryPrice, getJewelryMetalImage, getJewelryHoverImage, fallbackJewelryItems } from "@/lib/jewelry-catalog";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+const luxuryEase = [0.16, 1, 0.3, 1] as const;
+const fionaEase = [0.3, 1, 0.3, 1] as const;
 
 const pickFeatured = (all: JewelryItem[]) => {
   const featured = all.filter((i) => i.isFeatured && i.isActive !== false);
@@ -15,7 +18,7 @@ const pickFeatured = (all: JewelryItem[]) => {
   return featured.slice(0, 8);
 };
 
-/** Product card with crossfade hover to alternate image */
+/** Fiona-inspired product card with crossfade hover, pill badges, and bold pricing */
 const ProductCard = ({ item, badge }: { item: JewelryItem; badge?: string }) => {
   const mainImg = getJewelryMetalImage(item, item.metal);
   const hoverImg = getJewelryHoverImage(item, item.metal);
@@ -23,50 +26,64 @@ const ProductCard = ({ item, badge }: { item: JewelryItem; badge?: string }) => 
 
   return (
     <Link to={`/jewelry/product/${item.id}`} className="group block">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-secondary/30 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.1)] transition-shadow duration-500 group-hover:shadow-[0_16px_40px_-12px_rgba(0,0,0,0.18)]">
-        {/* Badge */}
+      {/* Image container — Fiona uses 1rem radius, soft shadow, 1s image transitions */}
+      <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-[#F6F6F6] transition-all duration-500 group-hover:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.15)]">
+        {/* Pill badge — Fiona style: 4rem radius, bold weight, compact */}
         {badge && (
-          <div className="absolute left-3 top-3 z-10 rounded-md border border-primary/10 bg-background/90 px-2.5 py-1 backdrop-blur-md">
-            <span className="text-[9px] font-semibold uppercase tracking-[0.15em] text-primary">{badge}</span>
+          <div className="absolute left-2.5 top-2.5 z-10 rounded-full bg-[#a97a3a] px-2.5 py-[3px] shadow-sm">
+            <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-white">{badge}</span>
           </div>
         )}
-        {/* Main image */}
+
+        {/* Main image — 1s crossfade like Fiona's --duration-image */}
         <img
           src={mainImg}
           alt={item.name}
-          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${hasAlt ? "group-hover:opacity-0" : ""}`}
+          className={`absolute inset-0 h-full w-full object-cover transition-all duration-[1000ms] ease-[cubic-bezier(0.3,1,0.3,1)] ${hasAlt ? "group-hover:opacity-0 group-hover:scale-105" : "group-hover:scale-[1.03]"}`}
           loading="lazy"
         />
-        {/* Hover image (different metal/angle) */}
+        {/* Hover image */}
         {hasAlt && (
           <img
             src={hoverImg}
             alt={`${item.name} – alternate view`}
-            className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+            className="absolute inset-0 h-full w-full object-cover opacity-0 scale-[1.02] transition-all duration-[1000ms] ease-[cubic-bezier(0.3,1,0.3,1)] group-hover:opacity-100 group-hover:scale-100"
             loading="lazy"
           />
         )}
-        {/* Wishlist */}
+
+        {/* Wishlist button — appears on hover */}
         <button
-          className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-border/30 bg-white/80 opacity-0 shadow-sm backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white group-hover:opacity-100"
+          className="absolute right-2.5 top-2.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white opacity-0 shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-all duration-300 hover:scale-110 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] group-hover:opacity-100"
           onClick={(e) => e.preventDefault()}
         >
-          <Heart className="h-3.5 w-3.5 text-foreground" />
+          <Heart className="h-3.5 w-3.5 text-[#072835]" />
         </button>
-        {/* Gradient overlay on hover */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-        {/* Gold border on hover */}
-        <div className="pointer-events-none absolute inset-0 rounded-2xl border-[1.5px] border-transparent transition-colors duration-500 group-hover:border-primary/25" />
+
+        {/* Quick add button — slides up on hover (Fiona pattern) */}
+        <div className="absolute inset-x-3 bottom-3 z-10 translate-y-3 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.3,1,0.3,1)] group-hover:translate-y-0 group-hover:opacity-100">
+          <div className="flex h-10 items-center justify-center rounded-[10rem] bg-black text-white shadow-[0_4px_16px_rgba(0,0,0,0.2)] transition-colors duration-300 hover:bg-[#072835]">
+            <ShoppingBag className="mr-1.5 h-3.5 w-3.5" />
+            <span className="text-[11px] font-semibold tracking-[0.04em]">Quick View</span>
+          </div>
+        </div>
+
+        {/* Subtle inner border on hover */}
+        <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-black/[0.04] transition-all duration-500 group-hover:ring-[#a97a3a]/20" />
       </div>
-      {/* Info */}
-      <div className="mt-4 space-y-1">
-        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+
+      {/* Product info — Fiona style: tight spacing, serif title, bold price */}
+      <div className="mt-3 space-y-1 px-0.5">
+        {/* Category — small caps, muted */}
+        <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-[#516971]">
           {item.category} {item.subcategory ? `· ${item.subcategory}` : ""}
         </p>
-        <h3 className="line-clamp-1 font-heading text-sm text-foreground transition-colors duration-300 group-hover:text-primary">
+        {/* Product name — Fiona uses Figtree 600 for card titles */}
+        <h3 className="line-clamp-1 text-[13px] font-semibold leading-snug text-[#0A0A0A] transition-colors duration-300 group-hover:text-[#a97a3a]">
           {item.name}
         </h3>
-        <p className="text-sm font-medium tabular-nums text-foreground">{formatJewelryPrice(item.price)}</p>
+        {/* Price — Fiona uses font-weight: 700 for prices */}
+        <p className="text-sm font-bold tabular-nums text-[#0A0A0A]">{formatJewelryPrice(item.price)}</p>
       </div>
     </Link>
   );
@@ -87,69 +104,72 @@ const FeaturedJewelry = () => {
   if (items.length === 0) return null;
 
   return (
-    <section ref={sectionRef} className="relative overflow-hidden bg-background pt-10 pb-10 lg:pt-14 lg:pb-14">
-      {/* Decorative gradient orbs */}
-      <div className="pointer-events-none absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary/[0.03] blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-40 -left-40 h-[400px] w-[400px] rounded-full bg-primary/[0.04] blur-3xl" />
+    <section ref={sectionRef} className="relative overflow-hidden bg-white pt-16 pb-14 lg:pt-20 lg:pb-18">
+      {/* Subtle background texture */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(169,122,58,0.03)_0%,transparent_50%),radial-gradient(circle_at_80%_20%,rgba(169,122,58,0.02)_0%,transparent_50%)]" />
       
       <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-12">
-        {/* Header */}
-        <div className="mb-14 flex flex-col items-center text-center sm:flex-row sm:items-end sm:justify-between sm:text-left">
+        {/* Section Header — Fiona style: centered subheading + serif heading */}
+        <div className="mb-12 flex flex-col items-center text-center sm:flex-row sm:items-end sm:justify-between sm:text-left lg:mb-14">
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.7, ease: fionaEase }}
           >
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1">
-              <Sparkles className="h-3 w-3 text-primary" />
-              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">Featured Collection</span>
+            {/* Subheading badge */}
+            <div className="mb-4 inline-flex items-center gap-2">
+              <span className="h-[1px] w-6 bg-[#a97a3a]" />
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a97a3a]">Featured Collection</span>
+              <span className="h-[1px] w-6 bg-[#a97a3a]" />
             </div>
-            <h2 className="font-heading text-3xl leading-tight text-foreground sm:text-4xl lg:text-5xl">
+            {/* Heading — Fraunces-style serif, proper hierarchy */}
+            <h2 className="font-heading text-3xl leading-[1.15] text-[#0A0A0A] sm:text-4xl lg:text-[2.8rem]">
               Curated For You
             </h2>
-            <p className="mt-3 max-w-md text-sm text-muted-foreground sm:text-base">
+            <p className="mt-3 max-w-md text-[13px] leading-relaxed text-[#516971] sm:text-sm">
               Handpicked pieces chosen for their exceptional craftsmanship and timeless appeal.
             </p>
           </motion.div>
+
           <motion.div
             initial={{ opacity: 0 }}
             animate={isInView ? { opacity: 1 } : {}}
-            transition={{ duration: 0.6, delay: 0.3 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
             className="mt-6 sm:mt-0"
           >
             <Link
               to="/jewelry"
-              className="group inline-flex items-center gap-2 rounded-full border border-primary/20 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-primary transition-all duration-300 hover:border-primary/40 hover:bg-primary/5"
+              className="group inline-flex items-center gap-2 rounded-[10rem] border border-[#0A0A0A] px-6 py-2.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#0A0A0A] transition-all duration-400 hover:bg-[#0A0A0A] hover:text-white"
             >
               View All
-              <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+              <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
             </Link>
           </motion.div>
         </div>
 
-        {/* Product Grid */}
-        <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4 lg:gap-7">
+        {/* Product Grid — Fiona uses even 4-col with consistent gaps */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
           {items.slice(0, 4).map((item, i) => (
             <motion.div
               key={item.id}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 24 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.15 + i * 0.1 }}
+              transition={{ duration: 0.7, ease: fionaEase, delay: 0.1 + i * 0.08 }}
             >
-              <ProductCard item={item} badge={i === 0 ? "✦ Featured" : undefined} />
+              <ProductCard item={item} badge={i === 0 ? "Featured" : undefined} />
             </motion.div>
           ))}
         </div>
 
         {/* Second row */}
         {items.length > 4 && (
-          <div className="mt-5 grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4 lg:gap-7">
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:mt-4 sm:gap-4 lg:grid-cols-4 lg:gap-5">
             {items.slice(4, 8).map((item, i) => (
               <motion.div
                 key={item.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 24 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.5 + i * 0.1 }}
+                transition={{ duration: 0.7, ease: fionaEase, delay: 0.4 + i * 0.08 }}
               >
                 <ProductCard item={item} />
               </motion.div>
