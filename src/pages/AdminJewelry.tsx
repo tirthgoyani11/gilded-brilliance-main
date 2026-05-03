@@ -143,6 +143,9 @@ const readFileAsDataUrl = (file: File) =>
   });
 
 const uploadFileToSupabase = async (file: File, folder: "images" | "models") => {
+  if (file.size > 4.4 * 1024 * 1024) {
+    throw new Error(`File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max 4.4MB for Vercel Hobby plan.`);
+  }
   const dataUrl = await readFileAsDataUrl(file);
   const response = await adminFetch(MEDIA_UPLOAD_ENDPOINT, {
     method: "POST",
@@ -346,8 +349,8 @@ const AdminJewelry = () => {
         };
       });
       setStatus("");
-    } catch {
-      setStatus("Failed to upload metal images.");
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Failed to upload metal images.");
     }
   };
 
@@ -363,8 +366,8 @@ const AdminJewelry = () => {
         galleryImages: [...prev.galleryImages, ...urls],
       }));
       setStatus("");
-    } catch {
-      setStatus("Failed to upload gallery images.");
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Failed to upload gallery images.");
     }
   };
 
@@ -376,8 +379,8 @@ const AdminJewelry = () => {
       const videoPath = uploaded.url || uploaded.path;
       setForm((prev) => ({ ...prev, videoUrl: videoPath }));
       setStatus("");
-    } catch {
-      setStatus("Failed to upload video.");
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Failed to upload video.");
     }
   };
 
@@ -394,8 +397,8 @@ const AdminJewelry = () => {
       const modelPath = uploaded.url || uploaded.path;
       setForm((prev) => ({ ...prev, modelUrl: modelPath }));
       setStatus("");
-    } catch {
-      setStatus("Failed to upload 360 model.");
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Failed to upload 360 model.");
     }
   };
 
