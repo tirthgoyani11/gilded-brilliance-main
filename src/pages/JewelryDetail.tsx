@@ -44,6 +44,7 @@ import {
   jewelryMetalSwatches,
   loadJewelryItems,
 } from "@/lib/jewelry-catalog";
+import { usePricingSettings } from "@/hooks/usePricingSettings";
 
 const JewelryModelViewer = lazy(() => import("@/components/JewelryModelViewer"));
 
@@ -84,6 +85,7 @@ const JewelryDetail = () => {
   const [selectedPurity, setSelectedPurity] = useState<(typeof purityOptions)[number]>("18K");
   const [selectedMedia, setSelectedMedia] = useState<GalleryMedia | null>(null);
   const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>([]);
+  const { settings: pricingSettings } = usePricingSettings();
   const [zoomLevel, setZoomLevel] = useState(1);
 
   useEffect(() => {
