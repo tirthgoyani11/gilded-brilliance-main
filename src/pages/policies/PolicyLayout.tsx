@@ -9,9 +9,6 @@ const POLICY_LINKS = [
   { name: "Privacy Policy", path: "/privacy-policy" },
   { name: "Terms & Conditions", path: "/terms-and-conditions" },
   { name: "Returns & Exchanges", path: "/exchange-policy" },
-  { name: "Warranty & Jewellery Care", path: "/jewelry-care" },
-  { name: "GDPR Compliance Policy", path: "/gdpr-compliance-policy" },
-  { name: "Customisation Policy", path: "/customisation-policy" },
 ];
 
 export default function PolicyLayout({ children, title }: { children: React.ReactNode; title: string }) {

@@ -39,7 +39,7 @@ export default function ShippingPolicy() {
       <div className="mt-8">
         <h5 className="font-medium text-lg uppercase tracking-widest text-vmora-black mb-4">4. Order Tracking & Support</h5>
         <p>
-          You can track your order using the link provided in your shipment confirmation email. If you experience any delays or issues with your delivery, our concierge team is available to assist you at <a href="mailto:care@vmorajewels.com" className="underline">care@vmorajewels.com</a> or <a href="tel:+919876543210" className="underline">+91 98765 43210</a>.
+          You can track your order using the link provided in your shipment confirmation email. If you experience any delays or issues with your delivery, our concierge team is available to assist you at <a href="mailto:care@vmorajewels.com" className="underline">care@vmorajewels.com</a> or <a href="tel:+919830551558" className="underline">+91 98305 51558</a>.
         </p>
       </div>
       

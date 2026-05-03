@@ -50,7 +50,7 @@ export default function ExchangePolicy() {
         <p>
           We're here to help! For any questions related to returns or exchanges, feel free to reach out:<br/>
           Email: <a href="mailto:care@vmorajewels.com" className="underline">care@vmorajewels.com</a> <br/>
-          Phone: <a href="tel:+919876543210" className="underline">+91 98765 43210</a>
+          Phone: <a href="tel:+919830551558" className="underline">+91 98305 51558</a>
         </p>
       </div>
 
