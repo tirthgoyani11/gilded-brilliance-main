@@ -227,28 +227,20 @@ const uploadFileToSupabase = async (file: File | Blob, folder: "images" | "model
   if (!response.ok) {
     const text = await response.text().catch(() => "");
     let payload = null;
-    try {
-      payload = JSON.parse(text);
-    } catch {
-      payload = { message: "Raw server response", details: text };
-    }
+    try { payload = JSON.parse(text); } catch { payload = { message: text || response.statusText }; }
     
-    console.error("Admin API Error Payload:", payload);
-
-    // If the server returned SQL fix instructions, display them prominently
+    console.error("Upload Error:", payload);
+    if (payload?.strategies) {
+      console.error("%c⚠️ All upload strategies failed:", "color:#ff6b35;font-weight:bold;font-size:14px");
+      payload.strategies.forEach((s: string) => console.error(`  → ${s}`));
+      console.error(`%cBucket: "${payload.bucket}"`, "color:#4ecdc4;font-size:13px");
+    }
     if (payload?.fix) {
-      console.error(
-        "%c⚠️ SUPABASE FIX REQUIRED — Run this SQL in your Supabase SQL Editor:",
-        "color: #ff6b35; font-weight: bold; font-size: 14px;"
-      );
-      (Array.isArray(payload.fix) ? payload.fix : [payload.fix]).forEach((sql: string) => {
-        console.error(`%c${sql}`, "color: #4ecdc4; font-family: monospace; font-size: 12px;");
-      });
+      console.error("%c📋 FIX:", "color:#ff6b35;font-weight:bold", payload.fix);
     }
 
-    const msg = payload?.message || payload?.error || response.statusText || "Server error";
-    const details = payload?.details || payload?.error || payload?.hint || "";
-    throw new Error(`${msg}${details ? `: ${details}` : ""}`);
+    const msg = payload?.message || "Upload failed";
+    throw new Error(msg);
   }
 
   const payload = await response.json();
