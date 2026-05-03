@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Gem, LayoutDashboard, Upload, List, History, FileText, LogOut, Loader2, ShieldCheck } from "lucide-react";
+import { Gem, LayoutDashboard, Upload, List, History, FileText, LogOut, Loader2, ShieldCheck, Menu, X } from "lucide-react";
 import { getAdminToken, setAdminToken, clearAdminToken, adminFetch } from "@/lib/admin";
 import { Button } from "@/components/ui/button";
 
@@ -19,6 +19,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isVerifying, setIsVerifying] = useState(true);
   const [error, setError] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
 
   const verifyToken = async (currentToken: string) => {
@@ -126,12 +127,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-[hsl(var(--secondary)/0.3)] flex">
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-background border-r border-border flex flex-col fixed inset-y-0 z-20">
-        <div className="h-20 flex items-center px-6 border-b border-border">
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-background border-r border-border flex flex-col transition-transform duration-300 lg:translate-x-0 ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div className="h-20 flex items-center justify-between px-6 border-b border-border">
           <Link to="/">
             <h1 className="font-heading text-2xl tracking-tight">VMORA<span className="font-accent italic text-primary ml-1 text-xl hover:text-primary luxury-transition">Admin</span></h1>
           </Link>
+          <button className="lg:hidden text-muted-foreground hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-2">
@@ -141,6 +153,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={item.label}
                 to={item.href}
+                onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${
                   isActive 
                     ? "bg-primary/10 text-primary font-medium" 
@@ -166,22 +179,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-64 min-h-screen flex flex-col">
+      <main className="flex-1 lg:ml-64 min-h-screen flex flex-col w-full">
         {/* Topbar */}
-        <header className="h-20 bg-background border-b border-border flex items-center justify-between px-8 sticky top-0 z-10">
-           <h2 className="font-heading text-xl">
-             {navItems.find(item => item.href === location.pathname)?.label || "Administration"}
-           </h2>
+        <header className="h-20 bg-background border-b border-border flex items-center justify-between px-4 lg:px-8 sticky top-0 z-10">
+           <div className="flex items-center gap-3">
+             <button className="lg:hidden text-muted-foreground hover:text-foreground" onClick={() => setMobileMenuOpen(true)}>
+               <Menu className="w-6 h-6" />
+             </button>
+             <h2 className="font-heading text-lg lg:text-xl">
+               {navItems.find(item => item.href === location.pathname)?.label || "Administration"}
+             </h2>
+           </div>
            <div className="flex items-center gap-4">
              <div className="flex items-center gap-2">
                <div className="w-2 h-2 rounded-full bg-green-500" />
-               <span className="text-xs text-muted-foreground uppercase tracking-[0.1em]">System Online</span>
+               <span className="hidden sm:inline text-xs text-muted-foreground uppercase tracking-[0.1em]">System Online</span>
              </div>
            </div>
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 p-8">
+        <div className="flex-1 p-4 lg:p-8 overflow-x-hidden">
           {children}
         </div>
       </main>
