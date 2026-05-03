@@ -142,45 +142,60 @@ const readFileAsDataUrl = (file: File) =>
     reader.readAsDataURL(file);
   });
 
-const compressImage = async (file: File, maxWidth = 1600, quality = 0.8): Promise<Blob> => {
+const compressImage = async (file: File, maxWidth = 2048, initialQuality = 0.9): Promise<Blob> => {
   if (!file.type.startsWith("image/")) return file;
   
-  return new Promise((resolve, reject) => {
+  // Keep original if it's already a reasonable size to preserve maximum detail
+  if (file.size < 1.5 * 1024 * 1024) return file;
+  
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        let width = img.width;
-        let height = img.height;
-
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return reject(new Error("Canvas context failed"));
-        ctx.drawImage(img, 0, 0, width, height);
-
-        canvas.toBlob(
-          (blob) => {
-            if (blob) resolve(blob);
-            else reject(new Error("Compression failed"));
-          },
-          "image/jpeg",
-          quality
-        );
-      };
-      img.onerror = () => reject(new Error("Image load failed"));
+      img.onload = () => resolve(img);
+      img.onerror = reject;
       img.src = e.target?.result as string;
     };
-    reader.onerror = () => reject(new Error("File read failed"));
+    reader.onerror = reject;
     reader.readAsDataURL(file);
   });
-};
+
+  const canvas = document.createElement("canvas");
+  let width = img.width;
+  let height = img.height;
+
+  if (width > maxWidth) {
+    height = Math.round((height * maxWidth) / width);
+    width = maxWidth;
+  }
+
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas context failed");
+  
+  // High-quality smoothing for sharp jewelry details
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(img, 0, 0, width, height);
+
+  let quality = initialQuality;
+  let blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Blob failed"))), "image/jpeg", quality);
+  });
+
+  // Only reduce quality if it's still dangerously close to Vercel's limit
+  let attempts = 0;
+  while (blob.size > 2.5 * 1024 * 1024 && attempts < 2) {
+    quality -= 0.1;
+    if (quality < 0.6) break; // Never go below 0.6 to maintain professional look
+    blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Blob failed"))), "image/jpeg", quality);
+    });
+    attempts++;
+  }
+
+  return blob;
 
 const uploadFileToSupabase = async (file: File | Blob, folder: "images" | "models", originalName?: string) => {
   if (file.size > 4.4 * 1024 * 1024) {
