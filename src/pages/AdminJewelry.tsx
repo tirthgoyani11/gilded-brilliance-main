@@ -226,8 +226,9 @@ const uploadFileToSupabase = async (file: File | Blob, folder: "images" | "model
 
   if (!response.ok) {
     const payload = await response.json().catch(() => null);
+    console.error("Admin API Error Payload:", payload);
     const msg = payload?.message || payload?.error || response.statusText || "Server error";
-    const details = payload?.details || payload?.error || "";
+    const details = payload?.details || payload?.error || payload?.hint || "";
     throw new Error(`${msg}${details ? `: ${details}` : ""}`);
   }
 
@@ -349,8 +350,9 @@ const AdminJewelry = () => {
       }
       if (!response.ok) {
         const payload = await response.json().catch(() => null);
+        console.error("Admin API Error Payload:", payload);
         const msg = payload?.message || payload?.error || response.statusText || "Failed to save jewelry listing.";
-        const details = payload?.details || payload?.error || "";
+        const details = payload?.details || payload?.error || payload?.hint || "";
         setStatus(`${msg}${details ? `: ${details}` : ""}`);
         return;
       }
