@@ -2,7 +2,8 @@ import { useEffect, useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { Link } from "react-router-dom";
 import type { JewelryItem } from "@/types/diamond";
-import { loadJewelryItems, getJewelryMetalImage, categoryToSlug } from "@/lib/jewelry-catalog";
+import { loadJewelryItems, getJewelryMetalImage } from "@/lib/jewelry-catalog";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import ringImg from "@/assets/product-ring.jpg";
 import earringsImg from "@/assets/product-earrings.jpg";
 import necklaceImg from "@/assets/product-necklace.jpg";
@@ -44,6 +45,7 @@ const CategorySection = () => {
       }
       setCategoryImages(imgMap);
       setCategoryCounts(countMap);
+      setTimeout(() => ScrollTrigger.refresh(), 200);
     });
   }, []);
 
