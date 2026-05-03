@@ -67,7 +67,7 @@ const categoryDescriptions: Record<(typeof jewelryCategories)[number], string> =
   Earrings: "Studs, hoops, drops, huggies, solitaire pairs, and occasion earrings.",
 };
 
-const MEDIA_UPLOAD_ENDPOINT = "/api/admin-upload";
+const MEDIA_UPLOAD_ENDPOINT = "/api/admin-router?action=upload";
 
 const parseUrlList = (value: string) =>
   value
@@ -203,7 +203,8 @@ const AdminJewelry = () => {
     setLoading(true);
     setStatus("");
     try {
-      const url = new URL("/api/admin-jewelry", window.location.origin);
+      const url = new URL("/api/admin-router", window.location.origin);
+      url.searchParams.set("action", "jewelry");
       if (categoryFilter !== "All") url.searchParams.set("category", categoryFilter);
       if (statusFilter !== "All") url.searchParams.set("status", statusFilter);
       if (searchFilter.trim()) url.searchParams.set("search", searchFilter.trim());
@@ -265,7 +266,7 @@ const AdminJewelry = () => {
 
     try {
       const exists = items.some((item) => item.id === nextForm.id);
-      const response = await adminFetch("/api/admin-jewelry", {
+      const response = await adminFetch("/api/admin-router?action=jewelry", {
         method: exists ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(nextForm),
@@ -295,7 +296,7 @@ const AdminJewelry = () => {
     if (!window.confirm(`Delete ${item.name}? This cannot be undone.`)) return;
 
     try {
-      const response = await adminFetch(`/api/admin-jewelry?id=${encodeURIComponent(item.id)}`, {
+      const response = await adminFetch(`/api/admin-router?action=jewelry&id=${encodeURIComponent(item.id)}`, {
         method: "DELETE",
       });
       if (!response.ok) {
@@ -370,10 +371,13 @@ const AdminJewelry = () => {
   const handleVideoUpload = async (file?: File) => {
     if (!file) return;
     try {
-      const dataUrl = await readFileAsDataUrl(file);
-      setForm((prev) => ({ ...prev, videoUrl: dataUrl }));
+      setStatus("Uploading video...");
+      const uploaded = await uploadFileToSupabase(file, "images");
+      const videoPath = uploaded.url || uploaded.path;
+      setForm((prev) => ({ ...prev, videoUrl: videoPath }));
+      setStatus("");
     } catch {
-      setStatus("Failed to read uploaded video.");
+      setStatus("Failed to upload video.");
     }
   };
 
@@ -387,7 +391,7 @@ const AdminJewelry = () => {
     try {
       setStatus("Uploading 360 model...");
       const uploaded = await uploadFileToSupabase(file, "models");
-      const modelPath = uploaded.path || uploaded.url;
+      const modelPath = uploaded.url || uploaded.path;
       setForm((prev) => ({ ...prev, modelUrl: modelPath }));
       setStatus("");
     } catch {
