@@ -155,7 +155,39 @@ export async function handleUpload(req, res) {
   const bucket = targetFolder === "models" ? SUPABASE_MODEL_BUCKET : SUPABASE_IMAGE_BUCKET;
 
   try {
-    // ── Upload using official Supabase client (bypasses RLS) ──────────
+    // ── Strategy 1: Signed upload URL (bypasses RLS completely) ────────
+    const { data: signedData, error: signedError } = await supabase.storage
+      .from(bucket)
+      .createSignedUploadUrl(key);
+
+    if (signedData?.signedUrl) {
+      // Upload directly to the signed URL — no RLS check
+      const uploadRes = await fetch(signedData.signedUrl, {
+        method: "PUT",
+        headers: { "Content-Type": parsed.contentType || "application/octet-stream" },
+        body: parsed.buffer,
+      });
+
+      if (!uploadRes.ok) {
+        const errText = await uploadRes.text().catch(() => "");
+        console.error("Signed URL upload failed:", errText);
+        return res.status(500).json({
+          message: "Supabase signed upload failed",
+          details: errText,
+        });
+      }
+
+      const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(key);
+      return res.status(200).json({
+        url: publicUrlData?.publicUrl || "",
+        path: key,
+        bucket,
+      });
+    }
+
+    // ── Strategy 2: Direct upload (fallback if signed URL fails) ──────
+    console.warn("Signed URL failed, trying direct upload:", signedError?.message);
+
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(key, parsed.buffer, {
@@ -171,12 +203,9 @@ export async function handleUpload(req, res) {
       });
     }
 
-    // Build public URL
     const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(key);
-    const publicUrl = publicUrlData?.publicUrl || "";
-
     return res.status(200).json({
-      url: publicUrl,
+      url: publicUrlData?.publicUrl || "",
       path: data?.path || key,
       bucket,
     });
