@@ -15,7 +15,7 @@ type JewelryModelViewerProps = {
 };
 
 const DEFAULT_DIAMOND_COLOR = "#ffffff";
-const DEFAULT_ROUGHNESS = 0.18;
+const DEFAULT_ROUGHNESS = 0.06;
 
 const metalOptions = [
   { label: "Silver", color: "#e6e6e6" },
@@ -82,24 +82,24 @@ const JewelryModelViewer = ({ src, title, className = "" }: JewelryModelViewerPr
 
   return (
     <div className={`relative overflow-hidden bg-white ${className}`}>
-        {isLoading ? (
-          <div className="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center">
-            <span className="rounded-full border border-border bg-background/95 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground shadow-sm">
-              Loading 360 view
-            </span>
-          </div>
-        ) : null}
+      {isLoading ? (
+        <div className="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center">
+          <span className="rounded-full border border-border bg-background/95 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground shadow-sm">
+            Loading 360 view
+          </span>
+        </div>
+      ) : null}
 
-        <ErrorBoundary>
-          <Canvas
-            aria-label={title}
-            camera={{ position: [0, 0, 4], fov: 45 }}
-            gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
-            dpr={dpr}
-            style={{ width: "100%", height: "100%" }}
-            className="touch-none"
-          >
-            <color attach="background" args={["#ffffff"]} />
+      <ErrorBoundary>
+        <Canvas
+          aria-label={title}
+          camera={{ position: [0, 0, 4], fov: 45 }}
+          gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
+          dpr={dpr}
+          style={{ width: "100%", height: "100%" }}
+          className="touch-none"
+        >
+          <color attach="background" args={["#ffffff"]} />
           <JewelryEnvironment />
 
           <Suspense fallback={<Loader />}>
@@ -135,9 +135,8 @@ const JewelryModelViewer = ({ src, title, className = "" }: JewelryModelViewerPr
               key={metal.label}
               type="button"
               onClick={() => setSelectedMetal(metal)}
-              className={`flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-full px-2 text-[9px] font-semibold uppercase tracking-[0.04em] transition min-[390px]:text-[10px] ${
-                selectedMetal.label === metal.label ? "bg-foreground text-background" : "text-foreground hover:bg-secondary"
-              }`}
+              className={`flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-full px-2 text-[9px] font-semibold uppercase tracking-[0.04em] transition min-[390px]:text-[10px] ${selectedMetal.label === metal.label ? "bg-foreground text-background" : "text-foreground hover:bg-secondary"
+                }`}
               aria-pressed={selectedMetal.label === metal.label}
             >
               <span className="h-3.5 w-3.5 shrink-0 rounded-full border border-border" style={{ backgroundColor: metal.color }} />
