@@ -32,6 +32,13 @@ const AdminJewelry = lazy(() => import("./pages/AdminJewelry.tsx"));
 const AdminHistory = lazy(() => import("./pages/AdminHistory.tsx"));
 const Compare = lazy(() => import("./pages/Compare.tsx"));
 
+// Policies
+const ShippingPolicy = lazy(() => import("./pages/policies/ShippingPolicy.tsx"));
+const ReturnPolicy = lazy(() => import("./pages/policies/ReturnPolicy.tsx"));
+const PrivacyPolicy = lazy(() => import("./pages/policies/PrivacyPolicy.tsx"));
+const TermsAndConditions = lazy(() => import("./pages/policies/TermsAndConditions.tsx"));
+const ExchangePolicy = lazy(() => import("./pages/policies/ExchangePolicy.tsx"));
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -70,6 +77,14 @@ const App = () => (
               <Route path="/admin/jewelry" element={<AdminJewelry />} />
               <Route path="/admin/history" element={<AdminHistory />} />
               <Route path="/compare" element={<Compare />} />
+              
+              {/* Policies */}
+              <Route path="/shipping-policy" element={<ShippingPolicy />} />
+              <Route path="/return-policy" element={<ReturnPolicy />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+              <Route path="/exchange-policy" element={<ExchangePolicy />} />
+              
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
