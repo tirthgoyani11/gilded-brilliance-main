@@ -12,9 +12,9 @@ export const initCurrency = async (): Promise<void> => {
   if (initialized) return;
   
   try {
-    const ipRes = await fetch("https://ipapi.co/json/");
+    const ipRes = await fetch("https://ipwho.is/");
     const ipData = await ipRes.json();
-    const currency = ipData.currency || "USD";
+    const currency = ipData.currency?.code || "USD";
 
     if (currency === "INR") {
       config = { currency: "INR", rate: 1 };
