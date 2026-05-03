@@ -36,6 +36,8 @@
     { "source": "/api/jewelry", "destination": "/api/catalog-router?action=jewelry" },
     { "source": "/api/content", "destination": "/api/catalog-router?action=content" },
     { "source": "/api/model", "destination": "/api/catalog-router?action=model" },
+    { "source": "/api/drive-proxy", "destination": "/api/catalog-router?action=drive-proxy" },
+    { "source": "/api/user-state", "destination": "/api/catalog-router?action=user-state" },
     {
       "source": "/api/(.*)",
       "destination": "/api/$1"

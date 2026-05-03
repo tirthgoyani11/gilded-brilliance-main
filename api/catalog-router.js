@@ -2,6 +2,8 @@ import { handleDiamonds } from "./_lib/public-handlers/diamonds.js";
 import { handleJewelry } from "./_lib/public-handlers/jewelry.js";
 import { handleContent } from "./_lib/public-handlers/content.js";
 import { handleModel } from "./_lib/public-handlers/model.js";
+import { handleDriveProxy } from "./_lib/public-handlers/drive-proxy.js";
+import { handleUserState } from "./_lib/public-handlers/user-state.js";
 
 export default async function handler(req, res) {
   try {
@@ -22,6 +24,10 @@ export default async function handler(req, res) {
         return await handleContent(req, res);
       case "model":
         return await handleModel(req, res);
+      case "drive-proxy":
+        return await handleDriveProxy(req, res);
+      case "user-state":
+        return await handleUserState(req, res);
       default:
         return res.status(404).json({ message: `Catalog action "${action}" not found` });
     }
