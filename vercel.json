@@ -32,6 +32,10 @@
     { "source": "/api/admin-imports", "destination": "/api/admin-router?action=imports" },
     { "source": "/api/admin-import-revert", "destination": "/api/admin-router?action=import-revert" },
     { "source": "/api/import-diamonds", "destination": "/api/admin-router?action=import-diamonds" },
+    { "source": "/api/diamonds", "destination": "/api/catalog-router?action=diamonds" },
+    { "source": "/api/jewelry", "destination": "/api/catalog-router?action=jewelry" },
+    { "source": "/api/content", "destination": "/api/catalog-router?action=content" },
+    { "source": "/api/model", "destination": "/api/catalog-router?action=model" },
     {
       "source": "/api/(.*)",
       "destination": "/api/$1"

@@ -1,6 +1,6 @@
-import { ensureCoreTables, hasConfiguredDatabase, sql } from "./_lib/db.js";
-import { listLocalJewelryItems } from "./_lib/local-jewelry-store.js";
-import { cachePolicies, setCommonSecurityHeaders, setCorsForRequest } from "./_lib/security.js";
+import { ensureCoreTables, hasConfiguredDatabase, sql } from "../db.js";
+import { listLocalJewelryItems } from "../local-jewelry-store.js";
+import { cachePolicies, setCommonSecurityHeaders, setCorsForRequest } from "../security.js";
 
 const METAL_OPTIONS = ["Silver", "Gold", "Rose Gold"];
 
@@ -90,71 +90,48 @@ const mapLocalItem = (item) => ({
   isActive: item.isActive !== false,
 });
 
-export default async function handler(req, res) {
-  try {
-    setCommonSecurityHeaders(res, { cacheControl: cachePolicies.publicShort });
-    setCorsForRequest(req, res, { allowedMethods: "GET,OPTIONS" });
+export async function handleJewelry(req, res) {
+  setCommonSecurityHeaders(res, { cacheControl: cachePolicies.publicShort });
+  setCorsForRequest(req, res, { allowedMethods: "GET,OPTIONS" });
 
-    if (req.method === "OPTIONS") {
-      return res.status(204).end();
-    }
-
-    if (req.method !== "GET") {
-      return res.status(405).json({ message: "Method not allowed" });
-    }
-
-    const category = String(req.query?.category || "").trim();
-    const search = String(req.query?.search || "").trim();
-
-    if (!hasConfiguredDatabase) {
-      const items = await listLocalJewelryItems({ activeOnly: true, category, search });
-      return res.status(200).json({ items: items.map(mapLocalItem), local: true });
-    }
-
-    await ensureCoreTables();
-
-    const rows = await sql`
-      SELECT
-        id,
-        name,
-        category,
-        subcategory,
-        metal,
-        price,
-        image_url,
-        description,
-        collection,
-        stone_type,
-        diamond_weight,
-        setting,
-        tags,
-        metal_images,
-        gallery_images,
-        video_url,
-        model_url,
-        inventory_status,
-        sort_order,
-        is_featured,
-        is_active
-      FROM jewelry_items
-      WHERE is_active = TRUE
-        AND (${category} = '' OR category = ${category})
-        AND (
-          ${search} = ''
-          OR name ILIKE ${`%${search}%`}
-          OR category ILIKE ${`%${search}%`}
-          OR subcategory ILIKE ${`%${search}%`}
-          OR metal ILIKE ${`%${search}%`}
-          OR collection ILIKE ${`%${search}%`}
-          OR tags ILIKE ${`%${search}%`}
-        )
-      ORDER BY is_featured DESC, sort_order ASC, updated_at DESC;
-    `;
-
-    return res.status(200).json({ items: rows.map(mapRow) });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Failed to fetch jewelry",
-    });
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
   }
+
+  if (req.method !== "GET") {
+    return res.status(405).json({ message: "Method not allowed" });
+  }
+
+  const category = String(req.query?.category || "").trim();
+  const search = String(req.query?.search || "").trim();
+
+  if (!hasConfiguredDatabase) {
+    const items = await listLocalJewelryItems({ activeOnly: true, category, search });
+    return res.status(200).json({ items: items.map(mapLocalItem), local: true });
+  }
+
+  await ensureCoreTables();
+
+  const rows = await sql`
+    SELECT
+      id, name, category, subcategory, metal, price, image_url, description,
+      collection, stone_type, diamond_weight, setting, tags, metal_images,
+      gallery_images, video_url, model_url, inventory_status, sort_order,
+      is_featured, is_active
+    FROM jewelry_items
+    WHERE is_active = TRUE
+      AND (${category} = '' OR category = ${category})
+      AND (
+        ${search} = ''
+        OR name ILIKE ${`%${search}%`}
+        OR category ILIKE ${`%${search}%`}
+        OR subcategory ILIKE ${`%${search}%`}
+        OR metal ILIKE ${`%${search}%`}
+        OR collection ILIKE ${`%${search}%`}
+        OR tags ILIKE ${`%${search}%`}
+      )
+    ORDER BY is_featured DESC, sort_order ASC, updated_at DESC;
+  `;
+
+  return res.status(200).json({ items: rows.map(mapRow) });
 }
