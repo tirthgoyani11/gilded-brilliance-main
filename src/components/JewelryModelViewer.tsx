@@ -18,9 +18,9 @@ const DEFAULT_DIAMOND_COLOR = "#ffffff";
 const DEFAULT_ROUGHNESS = 0.05;
 
 const metalOptions = [
-  { label: "Silver", color: "#C0C0C0" },
-  { label: "Gold", color: "#FFD700" },
-  { label: "Rose Gold", color: "#CC99A1" },
+  { label: "Silver", color: "#e6e6e6" },
+  { label: "Gold", color: "#e3b868" }, // Soft, realistic 18K gold matching the photos
+  { label: "Rose Gold", color: "#d9a092" },
 ];
 
 const getAndroidMajorVersion = () => {
