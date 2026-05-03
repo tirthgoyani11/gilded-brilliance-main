@@ -638,13 +638,6 @@ const AdminJewelry = () => {
                     <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => void handleGalleryUpload(e.target.files)} />
                   </label>
                 </div>
-                <textarea
-                  value={form.galleryImages.join("\n")}
-                  onChange={(e) => setForm((prev) => ({ ...prev, galleryImages: e.target.value.split("\n").map((item) => item.trim()).filter(Boolean) }))}
-                  rows={3}
-                  placeholder="Optional: one extra image URL per line"
-                  className="w-full rounded border border-border bg-background p-3 text-sm"
-                />
                 {form.galleryImages.length > 0 ? (
                   <div className="mt-3 grid grid-cols-3 gap-2">
                     {form.galleryImages.slice(0, 6).map((image, index) => (
