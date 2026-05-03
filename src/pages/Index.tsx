@@ -1,7 +1,6 @@
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import LooseDiamondsCarousel from "@/components/LooseDiamondsCarousel";
-import DiamondSearchPreview from "@/components/DiamondSearchPreview";
 import CustomJewelrySection from "@/components/CustomJewelrySection";
 import EducationSection from "@/components/EducationSection";
 import BrandStory from "@/components/BrandStory";
@@ -10,6 +9,9 @@ import TrustSection from "@/components/TrustSection";
 import GoogleReviewsCarousel from "@/components/GoogleReviewsCarousel";
 import DiamondJourney from "@/components/DiamondJourney";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
+import FeaturedJewelry from "@/components/FeaturedJewelry";
+import TopSellingJewelry from "@/components/TopSellingJewelry";
+import CategorySection from "@/components/CategorySection";
 import { motion } from "framer-motion";
 
 const FadeInReveal = ({ children }: { children: React.ReactNode }) => {
@@ -32,6 +34,11 @@ const Index = () => {
       <main>
         <HeroSection />
         <FadeInReveal>
+          <CategorySection />
+        </FadeInReveal>
+        <FeaturedJewelry />
+        <TopSellingJewelry />
+        <FadeInReveal>
           <LooseDiamondsCarousel />
         </FadeInReveal>
         <FadeInReveal>
@@ -40,9 +47,6 @@ const Index = () => {
         <FadeInReveal>
           <GoogleReviewsCarousel />
         </FadeInReveal>
-        {/* <FadeInReveal>
-          <DiamondSearchPreview />
-        </FadeInReveal> */}
         <FadeInReveal>
           <TrustSection />
         </FadeInReveal>
