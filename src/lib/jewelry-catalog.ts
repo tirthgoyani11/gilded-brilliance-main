@@ -7,9 +7,9 @@ import productNecklace from "@/assets/product-necklace.jpg";
 export const jewelryCategories = ["All", "Rings", "Necklaces", "Bracelets", "Earrings"] as const;
 export const jewelryMetalOptions = ["Silver", "Gold", "Rose Gold"] as const;
 export const jewelryMetalSwatches: Record<(typeof jewelryMetalOptions)[number], string> = {
-  Silver: "#d8dde3",
-  Gold: "#d4a943",
-  "Rose Gold": "#c98c7a",
+  Silver: "#e6e6e6",
+  Gold: "#e3b868",
+  "Rose Gold": "#d9a092",
 };
 
 export const categorySlugMap: Record<string, JewelryItem["category"]> = {
