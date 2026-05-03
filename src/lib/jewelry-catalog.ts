@@ -178,6 +178,40 @@ export const getJewelryMetalImages = (item: JewelryItem, metal: string) => {
 export const getJewelryMetalImage = (item: JewelryItem, metal: string) =>
   getJewelryMetalImages(item, metal)[0] || item.imageUrl || item.galleryImages?.[0] || "";
 
+/** Pick an alternate image for hover — different metal finish or gallery angle */
+export const getJewelryHoverImage = (item: JewelryItem, currentMetal: string): string => {
+  const mainImage = getJewelryMetalImage(item, currentMetal);
+  const candidates: string[] = [];
+
+  // Collect images from other metal finishes
+  const metals = ["Silver", "Gold", "Rose Gold", "White Gold"] as const;
+  for (const m of metals) {
+    if (m === currentMetal) continue;
+    const imgs = getJewelryMetalImages(item, m);
+    for (const img of imgs) {
+      if (img && img !== mainImage) candidates.push(img);
+    }
+  }
+
+  // Add gallery images that aren't the main one
+  if (item.galleryImages) {
+    for (const img of item.galleryImages) {
+      if (img && img !== mainImage && !candidates.includes(img)) candidates.push(img);
+    }
+  }
+
+  // Same-metal alternate angles
+  const sameMetalImgs = getJewelryMetalImages(item, currentMetal);
+  for (const img of sameMetalImgs) {
+    if (img && img !== mainImage && !candidates.includes(img)) candidates.push(img);
+  }
+
+  if (candidates.length === 0) return "";
+  // Pick a deterministic "random" based on item id hash so it doesn't flicker
+  let hash = 0;
+  for (let i = 0; i < item.id.length; i++) hash = (hash * 31 + item.id.charCodeAt(i)) | 0;
+  return candidates[Math.abs(hash) % candidates.length];
+};
 export async function loadJewelryItems() {
   try {
     const response = await fetch("/api/jewelry");
