@@ -662,7 +662,7 @@ const JewelryDetail = () => {
               </div>
             </div>
             <div className="flex snap-x gap-4 overflow-x-auto pb-4 sm:grid sm:grid-cols-3">
-              {jewelryMetalOptions.map((metal) => (
+              {jewelryMetalOptions.filter(m => m !== "White Gold").map((metal) => (
                 <button
                   key={metal}
                   type="button"
