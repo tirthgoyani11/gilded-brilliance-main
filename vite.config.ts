@@ -88,7 +88,18 @@ const localApiMiddleware = () => ({
       }
 
       const requestUrl = new URL(req.url, "http://localhost");
-      const apiName = requestUrl.pathname.replace(/^\/api\//, "");
+      let apiName = requestUrl.pathname.replace(/^\/api\//, "");
+
+      if (apiName.startsWith("admin-") && apiName !== "admin-router") {
+        requestUrl.searchParams.set("action", apiName.replace("admin-", ""));
+        apiName = "admin-router";
+      } else if (apiName === "import-diamonds") {
+        requestUrl.searchParams.set("action", "import-diamonds");
+        apiName = "admin-router";
+      } else if (["diamonds", "jewelry", "content", "model", "drive-proxy", "user-state"].includes(apiName)) {
+        requestUrl.searchParams.set("action", apiName);
+        apiName = "catalog-router";
+      }
 
       if (!apiName || apiName.includes("/") || apiName.startsWith("_")) {
         next();
