@@ -165,18 +165,57 @@ export const formatJewelryPrice = (price: number) => {
   }).format((price || 0) * rate);
 };
 
-export const getJewelryMetalImages = (item: JewelryItem, metal: string) => {
-  let value = item.metalImages?.[metal as keyof NonNullable<JewelryItem["metalImages"]>];
-  if ((!value || (Array.isArray(value) && value.length === 0)) && metal === "White Gold") {
-    value = item.metalImages?.["Silver"];
+export const calculateJewelryPrice = (
+  item: JewelryItem,
+  selectedMetal: string,
+  selectedPurity: string,
+  pricingSettings: { multipliers: Record<string, number>; safetyBuffer: number }
+) => {
+  if (selectedMetal === "Silver") {
+    return item.pricing?.["Silver"] ?? item.price;
   }
-  if (Array.isArray(value)) return value.filter(Boolean);
-  if (typeof value === "string" && value.trim()) return [value.trim()];
+  const comboKey = `${selectedMetal} ${selectedPurity}`;
+  if (item.pricing && typeof item.pricing[comboKey] === "number") {
+    return item.pricing[comboKey];
+  }
+  if (item.pricing && typeof item.pricing[selectedPurity] === "number") {
+    return item.pricing[selectedPurity];
+  }
+  const finalMultiplier = (pricingSettings.multipliers[selectedPurity] || 1) * pricingSettings.safetyBuffer;
+  const baseSilver = item.pricing?.["baseSilver"] ?? item.price;
+  const designCost = item.pricing?.["designCost"] ?? 0;
+  return (baseSilver * finalMultiplier) + designCost;
+};
+
+export const getJewelryMetalImages = (item: JewelryItem, metal: string): string[] => {
+  let value = item.metalImages?.[metal as keyof NonNullable<JewelryItem["metalImages"]>];
+  
+  // Clean up initial value
+  if (Array.isArray(value)) value = value.filter(v => typeof v === "string" && v.trim().length > 0);
+  else if (typeof value === "string" && value.trim()) value = [value.trim()];
+  else value = undefined;
+
+  // Strict fallback to Silver if White Gold is missing
+  if ((!value || value.length === 0) && metal === "White Gold") {
+    let silverValue = item.metalImages?.["Silver"];
+    if (Array.isArray(silverValue)) silverValue = silverValue.filter(v => typeof v === "string" && v.trim().length > 0);
+    else if (typeof silverValue === "string" && silverValue.trim()) silverValue = [silverValue.trim()];
+    else silverValue = undefined;
+    
+    if (silverValue && silverValue.length > 0) return silverValue as string[];
+  }
+
+  if (value && value.length > 0) return value as string[];
   return [];
 };
 
-export const getJewelryMetalImage = (item: JewelryItem, metal: string) =>
-  getJewelryMetalImages(item, metal)[0] || item.imageUrl || item.galleryImages?.[0] || "";
+export const getJewelryMetalImage = (item: JewelryItem, metal: string) => {
+  const imgs = getJewelryMetalImages(item, metal);
+  if (imgs.length > 0) return imgs[0];
+  
+  // If absolutely no metal image is found, gracefully fallback to the main image
+  return item.imageUrl || item.galleryImages?.[0] || "";
+};
 
 /** Pick an alternate image for hover — different metal finish or gallery angle */
 export const getJewelryHoverImage = (item: JewelryItem, currentMetal: string): string => {

@@ -12,6 +12,7 @@ import {
   collectionCopy,
   fallbackJewelryItems,
   formatJewelryPrice,
+  calculateJewelryPrice,
   getJewelryMetalImage,
   getJewelryHoverImage,
   jewelryMetalOptions,
@@ -19,6 +20,7 @@ import {
   jewelryCategories,
   loadJewelryItems,
 } from "@/lib/jewelry-catalog";
+import { usePricingSettings } from "@/hooks/usePricingSettings";
 
 const fionaEase = [0.3, 1, 0.3, 1] as const;
 
@@ -32,13 +34,16 @@ const sortOptions = [
 const ProductCard = ({ 
   item, 
   selectedMetal, 
-  onMetalChange 
+  onMetalChange,
+  pricingSettings,
 }: { 
   item: JewelryItem; 
   selectedMetal?: string;
   onMetalChange: (metal: string) => void;
+  pricingSettings: { multipliers: Record<string, number>; safetyBuffer: number };
 }) => {
   const metal = selectedMetal || item.metal || "Silver";
+  const displayPrice = calculateJewelryPrice(item, metal, "10K", pricingSettings);
   const mainImg = getJewelryMetalImage(item, metal);
   const hoverImg = getJewelryHoverImage(item, metal);
   const hasAlt = Boolean(hoverImg && hoverImg !== mainImg);
@@ -89,7 +94,7 @@ const ProductCard = ({
                   id: item.id,
                   title: item.name,
                   type: "jewelry",
-                  price: item.price,
+                  price: displayPrice,
                   imageUrl: mainImg,
                 });
               }}
@@ -130,7 +135,7 @@ const ProductCard = ({
             {item.name}
           </h3>
         </Link>
-        <p className="text-sm font-bold tabular-nums text-[#0A0A0A]">{formatJewelryPrice(item.price)}</p>
+        <p className="text-sm font-bold tabular-nums text-[#0A0A0A]">{formatJewelryPrice(displayPrice)}</p>
       </div>
     </div>
   );
@@ -152,6 +157,7 @@ const Jewelry = () => {
   const [search, setSearch] = useState("");
   const [selectedMetals, setSelectedMetals] = useState<Record<string, string>>({});
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const { settings: pricingSettings } = usePricingSettings();
 
   useEffect(() => {
     let active = true;
@@ -361,6 +367,7 @@ const Jewelry = () => {
                         item={item} 
                         selectedMetal={selectedMetals[item.id]} 
                         onMetalChange={(metal) => setSelectedMetals(p => ({ ...p, [item.id]: metal }))} 
+                        pricingSettings={pricingSettings}
                       />
                     </motion.div>
                   ))}

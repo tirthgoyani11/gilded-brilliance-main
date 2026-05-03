@@ -158,6 +158,7 @@ export default defineConfig(() => ({
           "vendor-react": ["react", "react-dom", "react-router-dom"],
           "vendor-ui": ["framer-motion", "lucide-react"],
           "vendor-query": ["@tanstack/react-query"],
+          "vendor-three": ["three", "@react-three/fiber", "@react-three/drei"],
         },
       },
     },

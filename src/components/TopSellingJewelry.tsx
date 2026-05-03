@@ -3,7 +3,8 @@ import { motion, useInView } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Heart, TrendingUp, ArrowRight, ShoppingBag } from "lucide-react";
 import type { JewelryItem } from "@/types/diamond";
-import { loadJewelryItems, formatJewelryPrice, getJewelryMetalImage, getJewelryHoverImage, fallbackJewelryItems } from "@/lib/jewelry-catalog";
+import { loadJewelryItems, formatJewelryPrice, calculateJewelryPrice, getJewelryMetalImage, getJewelryHoverImage, fallbackJewelryItems } from "@/lib/jewelry-catalog";
+import { usePricingSettings } from "@/hooks/usePricingSettings";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 const fionaEase = [0.3, 1, 0.3, 1] as const;
@@ -15,10 +16,11 @@ const pickTopSelling = (all: JewelryItem[]) => {
 };
 
 /** Fiona-inspired small product card */
-const SmallCard = ({ item }: { item: JewelryItem }) => {
+const SmallCard = ({ item, pricingSettings }: { item: JewelryItem; pricingSettings: any }) => {
   const mainImg = getJewelryMetalImage(item, item.metal);
   const hoverImg = getJewelryHoverImage(item, item.metal);
   const hasAlt = Boolean(hoverImg && hoverImg !== mainImg);
+  const displayPrice = calculateJewelryPrice(item, item.metal, "10K", pricingSettings);
 
   return (
     <Link to={`/jewelry/product/${item.id}`} className="group block">
@@ -57,7 +59,7 @@ const SmallCard = ({ item }: { item: JewelryItem }) => {
         <h3 className="line-clamp-1 text-[12px] font-semibold leading-snug text-[#0A0A0A] transition-colors duration-300 group-hover:text-[#a97a3a] sm:text-[13px]">
           {item.name}
         </h3>
-        <p className="text-xs font-bold tabular-nums text-[#0A0A0A] sm:text-sm">{formatJewelryPrice(item.price)}</p>
+        <p className="text-xs font-bold tabular-nums text-[#0A0A0A] sm:text-sm">{formatJewelryPrice(displayPrice)}</p>
       </div>
     </Link>
   );
@@ -67,6 +69,7 @@ const TopSellingJewelry = () => {
   const [items, setItems] = useState<JewelryItem[]>(() => pickTopSelling(fallbackJewelryItems));
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-80px" });
+  const { settings: pricingSettings } = usePricingSettings();
 
   useEffect(() => {
     loadJewelryItems().then((all) => {
@@ -82,6 +85,7 @@ const TopSellingJewelry = () => {
   const heroMainImg = getJewelryMetalImage(heroItem, heroItem.metal);
   const heroHoverImg = getJewelryHoverImage(heroItem, heroItem.metal);
   const heroHasAlt = Boolean(heroHoverImg && heroHoverImg !== heroMainImg);
+  const heroDisplayPrice = calculateJewelryPrice(heroItem, heroItem.metal, "10K", pricingSettings);
 
   return (
     <section ref={sectionRef} className="relative overflow-hidden bg-[#F7F2EA] py-16 lg:py-20">
@@ -163,7 +167,7 @@ const TopSellingJewelry = () => {
                     <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-[#516971]">{heroItem.category}</p>
                     <p className="mt-1 text-[15px] font-semibold text-[#0A0A0A]">{heroItem.name}</p>
                     <div className="mt-2 flex items-center justify-between">
-                      <p className="text-base font-bold tabular-nums text-[#0A0A0A]">{formatJewelryPrice(heroItem.price)}</p>
+                      <p className="text-base font-bold tabular-nums text-[#0A0A0A]">{formatJewelryPrice(heroDisplayPrice)}</p>
                       <div className="flex h-8 items-center rounded-[10rem] bg-black px-4 text-white transition-colors duration-300 hover:bg-[#072835]">
                         <span className="text-[10px] font-semibold tracking-[0.04em]">View Details</span>
                         <ArrowRight className="ml-1.5 h-3 w-3" />
@@ -177,7 +181,7 @@ const TopSellingJewelry = () => {
               <div className="mt-3 px-0.5 lg:hidden">
                 <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-[#516971]">{heroItem.category}</p>
                 <h3 className="text-[13px] font-semibold text-[#0A0A0A]">{heroItem.name}</h3>
-                <p className="text-sm font-bold tabular-nums text-[#0A0A0A]">{formatJewelryPrice(heroItem.price)}</p>
+                <p className="text-sm font-bold tabular-nums text-[#0A0A0A]">{formatJewelryPrice(heroDisplayPrice)}</p>
               </div>
             </Link>
           </motion.div>
@@ -191,7 +195,7 @@ const TopSellingJewelry = () => {
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.7, ease: fionaEase, delay: 0.25 + i * 0.08 }}
               >
-                <SmallCard item={item} />
+                <SmallCard item={item} pricingSettings={pricingSettings} />
               </motion.div>
             ))}
           </div>

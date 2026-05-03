@@ -3,7 +3,8 @@ import { motion, useInView } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Heart, ArrowRight, Sparkles, ShoppingBag } from "lucide-react";
 import type { JewelryItem } from "@/types/diamond";
-import { loadJewelryItems, formatJewelryPrice, getJewelryMetalImage, getJewelryHoverImage, fallbackJewelryItems } from "@/lib/jewelry-catalog";
+import { loadJewelryItems, formatJewelryPrice, calculateJewelryPrice, getJewelryMetalImage, getJewelryHoverImage, fallbackJewelryItems } from "@/lib/jewelry-catalog";
+import { usePricingSettings } from "@/hooks/usePricingSettings";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 const luxuryEase = [0.16, 1, 0.3, 1] as const;
@@ -19,10 +20,11 @@ const pickFeatured = (all: JewelryItem[]) => {
 };
 
 /** Fiona-inspired product card with crossfade hover, pill badges, and bold pricing */
-const ProductCard = ({ item, badge }: { item: JewelryItem; badge?: string }) => {
+const ProductCard = ({ item, badge, pricingSettings }: { item: JewelryItem; badge?: string; pricingSettings: any }) => {
   const mainImg = getJewelryMetalImage(item, item.metal);
   const hoverImg = getJewelryHoverImage(item, item.metal);
   const hasAlt = Boolean(hoverImg && hoverImg !== mainImg);
+  const displayPrice = calculateJewelryPrice(item, item.metal, "10K", pricingSettings);
 
   return (
     <Link to={`/jewelry/product/${item.id}`} className="group block">
@@ -83,7 +85,7 @@ const ProductCard = ({ item, badge }: { item: JewelryItem; badge?: string }) => 
           {item.name}
         </h3>
         {/* Price — Fiona uses font-weight: 700 for prices */}
-        <p className="text-sm font-bold tabular-nums text-[#0A0A0A]">{formatJewelryPrice(item.price)}</p>
+        <p className="text-sm font-bold tabular-nums text-[#0A0A0A]">{formatJewelryPrice(displayPrice)}</p>
       </div>
     </Link>
   );
@@ -93,6 +95,7 @@ const FeaturedJewelry = () => {
   const [items, setItems] = useState<JewelryItem[]>(() => pickFeatured(fallbackJewelryItems));
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-80px" });
+  const { settings: pricingSettings } = usePricingSettings();
 
   useEffect(() => {
     loadJewelryItems().then((all) => {
@@ -156,7 +159,7 @@ const FeaturedJewelry = () => {
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.7, ease: fionaEase, delay: 0.1 + i * 0.08 }}
             >
-              <ProductCard item={item} badge={i === 0 ? "Featured" : undefined} />
+              <ProductCard item={item} badge={i === 0 ? "Featured" : undefined} pricingSettings={pricingSettings} />
             </motion.div>
           ))}
         </div>
@@ -171,7 +174,7 @@ const FeaturedJewelry = () => {
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.7, ease: fionaEase, delay: 0.4 + i * 0.08 }}
               >
-                <ProductCard item={item} />
+                <ProductCard item={item} pricingSettings={pricingSettings} />
               </motion.div>
             ))}
           </div>
