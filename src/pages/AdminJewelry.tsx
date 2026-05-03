@@ -745,7 +745,7 @@ const AdminJewelry = () => {
             <div className="grid gap-3">
               <input value={form.id} onChange={(e) => setForm((prev) => ({ ...prev, id: e.target.value }))} placeholder="Listing ID, auto-generated when blank" className="h-10 rounded border border-border bg-background px-3 text-sm" />
               <input value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Product name" className="h-10 rounded border border-border bg-background px-3 text-sm" />
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <select value={form.category} onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value as JewelryForm["category"] }))} className="h-10 rounded border border-border bg-background px-3 text-sm">
                   {jewelryCategories.map((category) => <option key={category}>{category}</option>)}
                 </select>
@@ -1035,8 +1035,8 @@ const AdminJewelry = () => {
                 <option>All</option>
                 {inventoryStatuses.map((item) => <option key={item}>{item}</option>)}
               </select>
-              <div className="flex gap-2 lg:col-span-3">
-                <Button type="button" onClick={() => void loadJewelry({ category: selectedCategory, inventoryStatus: selectedStatus, query: search })} className="h-10">Apply Filters</Button>
+              <div className="flex flex-col sm:flex-row gap-2 lg:col-span-3">
+                <Button type="button" onClick={() => void loadJewelry({ category: selectedCategory, inventoryStatus: selectedStatus, query: search })} className="h-10 w-full sm:w-auto">Apply Filters</Button>
                 <Button
                   type="button"
                   variant="outline"
@@ -1046,7 +1046,7 @@ const AdminJewelry = () => {
                     setSelectedStatus("All");
                     void loadJewelry({ category: "All", inventoryStatus: "All", query: "" });
                   }}
-                  className="h-10"
+                  className="h-10 w-full sm:w-auto"
                 >
                   Reset
                 </Button>
