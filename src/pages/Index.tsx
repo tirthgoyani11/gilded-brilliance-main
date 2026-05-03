@@ -33,9 +33,7 @@ const Index = () => {
       <Navbar />
       <main>
         <HeroSection />
-        <FadeInReveal>
-          <CategorySection />
-        </FadeInReveal>
+        <CategorySection />
         <FeaturedJewelry />
         <TopSellingJewelry />
         <FadeInReveal>

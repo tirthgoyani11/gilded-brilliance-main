@@ -81,12 +81,14 @@ const CategorySection = () => {
   };
 
   return (
-    <section ref={sectionRef} className="relative overflow-hidden bg-background py-20 lg:py-28">
-      {/* Subtle radial highlight */}
+    <section ref={sectionRef} className="relative -mt-24 overflow-hidden pt-6 pb-20 lg:pt-8 lg:pb-28">
+      {/* Gradient that transitions from the hero's bottom fade to the page background */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#FAFAFA] via-background to-background" />
+      {/* Subtle gold radial highlight */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(198,168,125,0.04),transparent_70%)]" />
 
       <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-12">
-        <div className="mb-14 text-center">
+        <div className="mb-10 text-center">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
