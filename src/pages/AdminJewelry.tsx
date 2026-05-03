@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BadgeCheck, Copy, Edit3, Eye, EyeOff, Plus, RotateCcw, Search, Sparkles, Trash2, Upload } from "lucide-react";
+import { toast } from "sonner";
 import AdminLayout from "@/components/AdminLayout";
 import { adminFetch } from "@/lib/admin";
 import { Button } from "@/components/ui/button";
@@ -496,12 +497,19 @@ const AdminJewelry = () => {
     };
 
     if (!nextForm.name.trim()) {
-      setStatus("Product name is required.");
+      const msg = "Product name is required.";
+      setStatus(msg);
+      toast.error(msg);
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
-    if (metals.some((metal) => !nextForm.metalImages[metal]?.length)) {
-      setStatus("Please add an image for Silver, Gold, and Rose Gold.");
+    const hasAnyImage = metals.some((metal) => nextForm.metalImages[metal]?.length > 0) || nextForm.imageUrl;
+    if (!hasAnyImage) {
+      const msg = "Please add at least one product image.";
+      setStatus(msg);
+      toast.error(msg);
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -560,16 +568,25 @@ const AdminJewelry = () => {
         console.error("Admin API Error Payload:", payload);
         const msg = payload?.message || payload?.error || response.statusText || "Failed to save jewelry listing.";
         const details = payload?.details || payload?.error || payload?.hint || "";
-        setStatus(`${msg}${details ? `: ${details}` : ""}`);
+        const fullMsg = `${msg}${details ? `: ${details}` : ""}`;
+        setStatus(fullMsg);
+        toast.error(fullMsg);
+        window.scrollTo({ top: 0, behavior: "smooth" });
         return;
       }
 
       setForm(emptyForm);
       setPendingUploads(new Map());
-      setStatus(exists ? "Jewelry listing updated." : "Jewelry listing created.");
+      const successMsg = exists ? "Jewelry listing updated." : "Jewelry listing created.";
+      setStatus(successMsg);
+      toast.success(successMsg);
+      window.scrollTo({ top: 0, behavior: "smooth" });
       await loadJewelry({ category: selectedCategory, inventoryStatus: selectedStatus, query: search });
     } catch (err) {
-      setStatus(err instanceof Error ? err.message : "Failed to save jewelry listing.");
+      const errMsg = err instanceof Error ? err.message : "Failed to save jewelry listing.";
+      setStatus(errMsg);
+      toast.error(errMsg);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setSaving(false);
       setUploadProgress("");
