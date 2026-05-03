@@ -294,13 +294,21 @@ const uploadFileToSupabase = async (file: File | Blob, folder: "images" | "model
   return { url, path, bucket };
 };
 
+type PendingUpload = {
+  file: Blob;
+  folder: "images" | "models";
+  originalName: string;
+};
+
 const AdminJewelry = () => {
   const [items, setItems] = useState<JewelryItem[]>([]);
   const [form, setForm] = useState<JewelryForm>(emptyForm);
+  const [pendingUploads, setPendingUploads] = useState<Map<string, PendingUpload>>(new Map());
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
+  const [uploadProgress, setUploadProgress] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -358,7 +366,9 @@ const AdminJewelry = () => {
 
   const resetForm = () => {
     setForm(emptyForm);
+    setPendingUploads(new Map());
     setStatus("");
+    setUploadProgress("");
   };
 
   const saveJewelry = async () => {
@@ -385,8 +395,43 @@ const AdminJewelry = () => {
 
     setSaving(true);
     setStatus("");
+    setUploadProgress("");
 
     try {
+      // 1. Process all pending uploads before saving the database record
+      if (pendingUploads.size > 0) {
+        const uploadedUrls = new Map<string, string>();
+        let currentUpload = 0;
+        
+        for (const [localBlobUrl, uploadData] of pendingUploads.entries()) {
+          currentUpload++;
+          setUploadProgress(`Uploading file ${currentUpload} of ${pendingUploads.size}...`);
+          try {
+            const res = await uploadFileToSupabase(uploadData.file, uploadData.folder, uploadData.originalName);
+            uploadedUrls.set(localBlobUrl, res.url);
+          } catch (err) {
+            throw new Error(`Failed to upload ${uploadData.originalName}: ${err instanceof Error ? err.message : "Unknown error"}`);
+          }
+        }
+
+        // Helper to replace local blob URLs with real Supabase URLs
+        const replaceUrl = (url: string) => uploadedUrls.get(url) || url;
+
+        nextForm.metalImages = {
+          Silver: nextForm.metalImages.Silver.map(replaceUrl),
+          Gold: nextForm.metalImages.Gold.map(replaceUrl),
+          "Rose Gold": nextForm.metalImages["Rose Gold"].map(replaceUrl),
+        };
+        nextForm.galleryImages = nextForm.galleryImages.map(replaceUrl);
+        nextForm.videoUrl = replaceUrl(nextForm.videoUrl);
+        nextForm.modelUrl = replaceUrl(nextForm.modelUrl);
+        nextForm.imageUrl = replaceUrl(nextForm.imageUrl);
+        
+        setPendingUploads(new Map());
+        setUploadProgress("");
+      }
+
+      // 2. Save to database
       const exists = items.some((item) => item.id === nextForm.id);
       const response = await adminFetch("/api/admin-router?action=jewelry", {
         method: exists ? "PUT" : "POST",
@@ -408,12 +453,14 @@ const AdminJewelry = () => {
       }
 
       setForm(emptyForm);
+      setPendingUploads(new Map());
       setStatus(exists ? "Jewelry listing updated." : "Jewelry listing created.");
       await loadJewelry({ category: selectedCategory, inventoryStatus: selectedStatus, query: search });
-    } catch {
-      setStatus("Failed to save jewelry listing.");
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Failed to save jewelry listing.");
     } finally {
       setSaving(false);
+      setUploadProgress("");
     }
   };
 
@@ -452,18 +499,27 @@ const AdminJewelry = () => {
     void loadJewelry({ category: selectedCategory, inventoryStatus: selectedStatus, query: search });
   };
 
+  const queueUpload = (file: Blob, folder: "images" | "models", originalName: string) => {
+    const url = URL.createObjectURL(file);
+    setPendingUploads((prev) => {
+      const next = new Map(prev);
+      next.set(url, { file, folder, originalName });
+      return next;
+    });
+    return url;
+  };
+
   const handleMetalImageUpload = async (metal: (typeof metals)[number], files?: FileList | null) => {
     if (!files || files.length === 0) return;
 
-    setStatus("Compressing and uploading...");
     try {
-      const uploaded = await Promise.all([...files].map(async (file) => {
+      const newUrls = await Promise.all([...files].map(async (file) => {
         const compressed = file.type.startsWith("image/") ? await compressImage(file) : file;
-        return uploadFileToSupabase(compressed, "images", file.name);
+        return queueUpload(compressed, "images", file.name);
       }));
-      const urls = uploaded.map((item) => item.url).filter(Boolean);
+      
       setForm((prev) => {
-        const nextImages = [...prev.metalImages[metal], ...urls].filter(Boolean);
+        const nextImages = [...prev.metalImages[metal], ...newUrls].filter(Boolean);
         return {
           ...prev,
           imageUrl: metal === "Silver" ? nextImages[0] || prev.imageUrl : prev.imageUrl,
@@ -473,42 +529,36 @@ const AdminJewelry = () => {
           },
         };
       });
-      setStatus("");
     } catch (err) {
-      setStatus(err instanceof Error ? err.message : "Failed to upload metal images.");
+      setStatus(err instanceof Error ? err.message : "Failed to process metal images.");
     }
   };
 
   const handleGalleryUpload = async (files?: FileList | null) => {
     if (!files || files.length === 0) return;
 
-    setStatus("Compressing and uploading...");
     try {
-      const uploaded = await Promise.all([...files].map(async (file) => {
+      const newUrls = await Promise.all([...files].map(async (file) => {
         const compressed = file.type.startsWith("image/") ? await compressImage(file) : file;
-        return uploadFileToSupabase(compressed, "images", file.name);
+        return queueUpload(compressed, "images", file.name);
       }));
-      const urls = uploaded.map((item) => item.url).filter(Boolean);
+      
       setForm((prev) => ({
         ...prev,
-        galleryImages: [...prev.galleryImages, ...urls],
+        galleryImages: [...prev.galleryImages, ...newUrls],
       }));
-      setStatus("");
     } catch (err) {
-      setStatus(err instanceof Error ? err.message : "Failed to upload gallery images.");
+      setStatus(err instanceof Error ? err.message : "Failed to process gallery images.");
     }
   };
 
   const handleVideoUpload = async (file?: File) => {
     if (!file) return;
     try {
-      setStatus("Uploading video...");
-      const uploaded = await uploadFileToSupabase(file, "images");
-      const videoPath = uploaded.url || uploaded.path;
+      const videoPath = queueUpload(file, "images", file.name);
       setForm((prev) => ({ ...prev, videoUrl: videoPath }));
-      setStatus("");
     } catch (err) {
-      setStatus(err instanceof Error ? err.message : "Failed to upload video.");
+      setStatus(err instanceof Error ? err.message : "Failed to process video.");
     }
   };
 
@@ -516,17 +566,14 @@ const AdminJewelry = () => {
     if (!file) return;
     const ext = file.name.split(".").pop()?.toLowerCase();
     if (ext !== "glb" && ext !== "gltf") {
-      setStatus("Please upload a .glb or .gltf jewelry model.");
+      setStatus("Please select a .glb or .gltf jewelry model.");
       return;
     }
     try {
-      setStatus("Uploading 360 model...");
-      const uploaded = await uploadFileToSupabase(file, "models");
-      const modelPath = uploaded.url || uploaded.path;
+      const modelPath = queueUpload(file, "models", file.name);
       setForm((prev) => ({ ...prev, modelUrl: modelPath }));
-      setStatus("");
     } catch (err) {
-      setStatus(err instanceof Error ? err.message : "Failed to upload 360 model.");
+      setStatus(err instanceof Error ? err.message : "Failed to process 360 model.");
     }
   };
 
@@ -556,7 +603,11 @@ const AdminJewelry = () => {
           </div>
         </div>
 
-        {status ? <p className="rounded border border-border bg-secondary/30 p-3 text-sm text-primary">{status}</p> : null}
+        {status || uploadProgress ? (
+          <p className="rounded border border-border bg-secondary/30 p-3 text-sm text-primary">
+            {uploadProgress || status}
+          </p>
+        ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {jewelryCategories.map((category) => (
@@ -750,8 +801,8 @@ const AdminJewelry = () => {
                 </label>
               </div>
               <div className="flex gap-2 pt-2">
-                <Button onClick={() => void saveJewelry()} disabled={saving} className="flex-1">
-                  {saving ? "Saving..." : isEditing ? "Update Listing" : "Create Listing"}
+                <Button variant="luxury" onClick={() => void saveJewelry()} disabled={saving}>
+                  {saving ? "Processing..." : isEditing ? "Update Listing" : "Save Listing"}
                 </Button>
                 <Button variant="outline" onClick={resetForm}>Clear</Button>
               </div>

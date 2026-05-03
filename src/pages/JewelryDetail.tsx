@@ -50,6 +50,8 @@ type GalleryMedia = {
 
 const RECENTLY_VIEWED_KEY = "vmora_recent_jewelry";
 
+const purityOptions = ["14K", "18K", "22K"] as const;
+
 const estimatedDelivery = (item: JewelryItem) => {
   if (item.inventoryStatus === "In Stock") return "Ships in 2-4 business days";
   if (item.inventoryStatus === "Reserved") return "Concierge confirmation required";
@@ -71,9 +73,10 @@ const JewelryDetail = () => {
   const { addToCart, toggleWishlist, isWishlisted } = useStore();
   const [items, setItems] = useState<JewelryItem[]>(fallbackJewelryItems);
   const [quantity, setQuantity] = useState(1);
-  const [selectedMetal, setSelectedMetal] = useState(
-    requestedMetal === "Gold" || requestedMetal === "Rose Gold" || requestedMetal === "Silver" ? requestedMetal : "Silver",
+  const [selectedMetal, setSelectedMetal] = useState<(typeof jewelryMetalOptions)[number]>(
+    (requestedMetal as any) || "Gold",
   );
+  const [selectedPurity, setSelectedPurity] = useState<(typeof purityOptions)[number]>("18K");
   const [selectedMedia, setSelectedMedia] = useState<GalleryMedia | null>(null);
   const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>([]);
 
@@ -171,10 +174,11 @@ const JewelryDetail = () => {
   };
 
   const openWhatsApp = () => {
+    const purityText = selectedMetal !== "Silver" ? ` (${selectedPurity})` : "";
     const message = encodeURIComponent(
       `Hello VMORA Team,\n\n` +
         `I want details for ${product.name} (${product.id}).\n` +
-        `Metal: ${selectedMetal}\n` +
+        `Metal: ${selectedMetal}${purityText}\n` +
         `Quantity: ${quantity}\n` +
         `Price: ${formatJewelryPrice(product.price)}\n` +
         `Image: ${activeImage}\n` +
@@ -199,9 +203,9 @@ const JewelryDetail = () => {
     {
       key: "metal",
       title: "Metal and Craftsmanship",
-      copy: `Hand finished by VMORA artisans in ${selectedMetal}, with polished surfaces and refined gallery detailing.`,
+      copy: `Hand finished by VMORA artisans in ${selectedMetal}${selectedMetal !== "Silver" ? ` (${selectedPurity})` : ""}, with polished surfaces and refined gallery detailing.`,
       rows: [
-        ["Metal", selectedMetal],
+        ["Metal", `${selectedMetal}${selectedMetal !== "Silver" ? ` ${selectedPurity}` : ""}`],
         ["Collection", product.collection || "VMORA Fine Jewelry"],
         ["Finish", "High polish VMORA finish"],
       ],
@@ -408,6 +412,26 @@ const JewelryDetail = () => {
                   ))}
                 </div>
               </div>
+
+              {selectedMetal !== "Silver" && (
+                <div className="mt-4">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Metal Purity</p>
+                  <div className="flex gap-2">
+                    {purityOptions.map((purity) => (
+                      <button
+                        key={purity}
+                        type="button"
+                        onClick={() => setSelectedPurity(purity)}
+                        className={`flex h-10 w-[70px] items-center justify-center rounded-[8px] border text-xs font-semibold transition ${
+                          selectedPurity === purity ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/60"
+                        }`}
+                      >
+                        {purity}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
                 {trustItems.map((item) => (
