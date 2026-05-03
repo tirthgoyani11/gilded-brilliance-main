@@ -47,7 +47,7 @@ const LooseDiamondsCarousel = () => {
   };
 
   return (
-    <section className="py-24 bg-white relative overflow-hidden border-b border-border/40">
+    <section className="py-14 bg-white relative overflow-hidden border-b border-border/40">
       
       {/* Background Decorative */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">

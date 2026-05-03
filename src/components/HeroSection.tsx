@@ -1,16 +1,10 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Diamond } from "lucide-react";
 import { useRef } from "react";
 
-const luxuryTransition = {
-  duration: 1.2,
-  ease: [0.16, 1, 0.3, 1] as const,
-};
-
-const heroVideoUrl =
-  "https://cdn.pixabay.com/vimeo/345110515/diamond-24892.mp4?width=1280&hash=01bc724c965e6abefce4a123f15c7e84af314d3b";
+const luxuryEase = [0.16, 1, 0.3, 1] as const;
 
 const trustBadges = [
   { iconImage: "/icons/logo_only_IGI.png", label: "Independently Certified" },
@@ -19,52 +13,25 @@ const trustBadges = [
 ];
 
 const FloatingDiamonds = () => {
+  const diamonds = [
+    { src: "/shapes/round-Diamond.png", pos: "top-[12%] left-[8%]", size: "w-14 h-14 md:w-20 md:h-20", blur: "blur-[1.5px]", opacity: "opacity-25", anim: { y: [0, -30, 0], x: [0, 15, 0], rotate: [0, 8, -8, 0] }, dur: 14 },
+    { src: "/shapes/cushion-Diamond.png", pos: "top-[55%] left-[3%]", size: "w-16 h-16 md:w-28 md:h-28", blur: "blur-[3px]", opacity: "opacity-15", anim: { y: [0, -40, 0], x: [0, -10, 0], rotate: [0, -12, 8, 0] }, dur: 18, delay: 2 },
+    { src: "/shapes/emerald-Diamond.png", pos: "top-[18%] right-[6%]", size: "w-12 h-12 md:w-16 md:h-16", blur: "blur-[1px]", opacity: "opacity-30", anim: { y: [0, 20, 0], x: [0, -15, 0], rotate: [0, 15, -5, 0] }, dur: 16, delay: 1 },
+    { src: "/shapes/pear-Diamond.png", pos: "bottom-[15%] right-[12%]", size: "w-20 h-20 md:w-28 md:h-28", blur: "blur-[4px]", opacity: "opacity-10", anim: { y: [0, -35, 0], x: [0, 20, 0], rotate: [0, -8, 12, 0] }, dur: 20, delay: 3 },
+    { src: "/shapes/oval-Diamond.png", pos: "top-[40%] right-[25%]", size: "w-10 h-10 md:w-14 md:h-14", blur: "blur-[2px]", opacity: "opacity-20 hidden md:block", anim: { y: [0, -25, 0], rotate: [0, 20, 0] }, dur: 12, delay: 4 },
+  ];
+
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      {/* Diamond 1 */}
-      <motion.img
-        src="/shapes/round-Diamond.png"
-        className="absolute top-[15%] left-[10%] w-16 h-16 md:w-24 md:h-24 opacity-30 object-contain drop-shadow-2xl blur-[2px]"
-        animate={{
-          y: [0, -40, 0],
-          x: [0, 20, 0],
-          rotate: [0, 10, -10, 0],
-        }}
-        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-      />
-      {/* Diamond 2 */}
-      <motion.img
-        src="/shapes/cushion-Diamond.png"
-        className="absolute top-[60%] left-[5%] w-20 h-20 md:w-32 md:h-32 opacity-20 object-contain drop-shadow-2xl blur-[4px]"
-        animate={{
-          y: [0, -60, 0],
-          x: [0, -15, 0],
-          rotate: [0, -15, 10, 0],
-        }}
-        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-      />
-      {/* Diamond 3 */}
-      <motion.img
-        src="/shapes/emerald-Diamond.png"
-        className="absolute top-[20%] right-[8%] w-14 h-14 md:w-20 md:h-20 opacity-40 object-contain drop-shadow-lg blur-[1px]"
-        animate={{
-          y: [0, 30, 0],
-          x: [0, -20, 0],
-          rotate: [0, 20, -5, 0],
-        }}
-        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-      />
-      {/* Diamond 4 */}
-      <motion.img
-        src="/shapes/pear-Diamond.png"
-        className="absolute bottom-[10%] right-[15%] w-24 h-24 md:w-36 md:h-36 opacity-15 object-contain drop-shadow-xl blur-[5px]"
-        animate={{
-          y: [0, -50, 0],
-          x: [0, 30, 0],
-          rotate: [0, -10, 15, 0],
-        }}
-        transition={{ duration: 22, repeat: Infinity, ease: "easeInOut", delay: 3 }}
-      />
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]">
+      {diamonds.map((d, i) => (
+        <motion.img
+          key={i}
+          src={d.src}
+          className={`absolute ${d.pos} ${d.size} ${d.blur} ${d.opacity} object-contain drop-shadow-2xl`}
+          animate={d.anim}
+          transition={{ duration: d.dur, repeat: Infinity, ease: "easeInOut", delay: d.delay || 0 }}
+        />
+      ))}
     </div>
   );
 };
@@ -76,116 +43,129 @@ const HeroSection = () => {
     offset: ["start start", "end start"],
   });
 
-  // Parallax transformations
-  const imageY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
-  const imageScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
-  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+  const imageY = useTransform(scrollYProgress, [0, 1], ["0%", "15%"]);
+  const imageScale = useTransform(scrollYProgress, [0, 1], [1, 1.08]);
+  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
   return (
-    <section ref={containerRef} className="relative h-screen min-h-[700px] max-h-[1000px] flex items-center overflow-hidden bg-[#FAFAFA]">
-      {/* Image background with parallax & slow zoom effect */}
-      <motion.div 
-        className="absolute inset-0 overflow-hidden bg-white"
+    <section
+      ref={containerRef}
+      className="relative flex min-h-[100svh] items-center overflow-hidden bg-[#FAFAFA]"
+    >
+      {/* Background image with parallax */}
+      <motion.div
+        className="absolute inset-0 overflow-hidden"
         style={{ y: imageY, scale: imageScale }}
       >
         <img
           src="/hero-vmora.png"
           alt="VMORA Luxury Diamond"
-          className="w-full h-full object-cover animate-[pulse_30s_ease-in-out_infinite_alternate]"
+          className="h-full w-full object-cover"
         />
+        {/* Light overlay for text readability */}
         <div className="hero-video-overlay-light absolute inset-0" />
       </motion.div>
 
-      {/* Floating 3D Diamonds layer */}
+      {/* Floating diamonds */}
       <FloatingDiamonds />
 
       {/* Sparkle overlay */}
-      <div className="sparkle-overlay-light absolute inset-0 pointer-events-none" />
+      <div className="sparkle-overlay-light absolute inset-0 pointer-events-none z-[2]" />
 
-      {/* Content */}
-      <motion.div 
-        className="relative z-10 container mx-auto px-6 lg:px-12"
+      {/* Main content */}
+      <motion.div
+        className="relative z-10 container mx-auto px-5 sm:px-6 lg:px-12"
         style={{ y: contentY, opacity: contentOpacity }}
       >
         <div className="max-w-2xl">
+          {/* Accent line + tagline */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ ...luxuryTransition, delay: 0.3 }}
-            className="mb-6 flex items-center"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 1.2, ease: luxuryEase, delay: 0.3 }}
+            className="mb-5 flex items-center gap-4"
           >
-            <span className="inline-block h-[2px] w-12 bg-[#C6A87D] mr-4" />
-            <span className="font-accent italic text-[#C6A87D] text-lg lg:text-xl tracking-widest font-medium">
+            <motion.span
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 1, ease: luxuryEase, delay: 0.5 }}
+              className="inline-block h-[1.5px] w-10 origin-left bg-primary sm:w-14"
+            />
+            <span className="font-accent text-sm italic tracking-[0.15em] text-primary sm:text-base lg:text-lg">
               Luxury Without Intermediaries
             </span>
           </motion.div>
 
+          {/* Brand name */}
           <motion.h1
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ ...luxuryTransition, delay: 0.5 }}
-            className="font-heading text-6xl md:text-7xl lg:text-[5.5rem] text-foreground leading-[1.05] mb-2 tracking-tighter"
+            transition={{ duration: 1.4, ease: luxuryEase, delay: 0.5 }}
+            className="font-heading text-[3.5rem] leading-[1] tracking-tight text-foreground sm:text-7xl lg:text-[5.5rem]"
           >
             VMORA
           </motion.h1>
 
+          {/* Subtitle */}
           <motion.p
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ ...luxuryTransition, delay: 0.65 }}
-            className="font-accent italic text-muted-foreground text-3xl md:text-4xl mb-8 tracking-wide"
+            transition={{ duration: 1.2, ease: luxuryEase, delay: 0.7 }}
+            className="mt-1 font-accent text-2xl italic tracking-wide text-muted-foreground sm:text-3xl lg:text-4xl"
           >
             Crafted Brilliance
           </motion.p>
 
+          {/* Description */}
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ ...luxuryTransition, delay: 0.8 }}
-            className="font-body text-foreground/70 text-sm md:text-base leading-relaxed mb-10 max-w-lg"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, ease: luxuryEase, delay: 0.9 }}
+            className="mt-6 max-w-lg text-[13px] leading-relaxed text-foreground/60 sm:mt-8 sm:text-sm lg:text-base"
           >
-            Direct Access to Certified Diamonds. Sculpted jewelry and custom creations — sourced directly, delivered globally. No middlemen. Just mastery.
+            Direct access to certified diamonds & sculpted jewelry. Custom creations sourced directly, delivered globally. No middlemen. Just mastery.
           </motion.p>
 
-          {/* 3 Entry CTAs */}
+          {/* CTA Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ ...luxuryTransition, delay: 1.0 }}
-            className="flex flex-wrap gap-4 mb-16"
+            transition={{ duration: 1.2, ease: luxuryEase, delay: 1.1 }}
+            className="mt-8 flex flex-wrap gap-3 sm:mt-10 sm:gap-4"
           >
             <Button
               asChild
               variant="luxury"
               size="xl"
-              className="bg-foreground text-background hover:bg-[#C6A87D] hover:text-white border-0 group"
+              className="bg-foreground text-background border-0 group hover:bg-primary hover:text-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_30px_-4px_rgba(198,168,125,0.4)] transition-all duration-500"
             >
               <Link to="/diamonds">
+                <Diamond className="w-4 h-4 mr-2" />
                 Shop Diamonds
-                <ArrowRight className="w-4 h-4 ml-2 luxury-transition group-hover:translate-x-1" />
+                <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
             </Button>
             <Button
               asChild
               variant="luxury-outline"
               size="xl"
-              className="border-border text-foreground hover:bg-foreground hover:text-background group"
-            >
-              <Link to="/custom-jewelry-generator">
-                Create Your Ring
-                <ArrowRight className="w-4 h-4 ml-2 opacity-0 luxury-transition group-hover:opacity-100 group-hover:translate-x-1" />
-              </Link>
-            </Button>
-            <Button
-              asChild
-              variant="luxury-outline"
-              size="xl"
-              className="border-border text-foreground hover:bg-foreground hover:text-background group hidden sm:flex"
+              className="border-foreground/20 text-foreground backdrop-blur-sm group hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-500"
             >
               <Link to="/jewelry">
                 Explore Jewelry
-                <ArrowRight className="w-4 h-4 ml-2 opacity-0 luxury-transition group-hover:opacity-100 group-hover:translate-x-1" />
+                <ArrowRight className="w-4 h-4 ml-2 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1" />
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant="luxury-outline"
+              size="xl"
+              className="border-foreground/20 text-foreground backdrop-blur-sm group hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-500 hidden sm:flex"
+            >
+              <Link to="/custom-jewelry-generator">
+                Create Your Ring
+                <ArrowRight className="w-4 h-4 ml-2 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1" />
               </Link>
             </Button>
           </motion.div>
@@ -194,31 +174,52 @@ const HeroSection = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ ...luxuryTransition, delay: 1.3 }}
-            className="flex flex-wrap items-center gap-6"
+            transition={{ duration: 1, ease: luxuryEase, delay: 1.5 }}
+            className="mt-12 sm:mt-16"
           >
-            {trustBadges.map((badge, i) => (
-              <div key={badge.label} className="flex items-center gap-2.5 group">
-                <img
-                  src={badge.iconImage}
-                  alt={`${badge.label} icon`}
-                  className="w-4 h-4 object-contain luxury-transition group-hover:scale-110"
-                  loading="lazy"
-                />
-                <span className="text-[10px] md:text-[11px] uppercase tracking-[0.15em] font-body text-foreground/70 font-medium">
-                  {badge.label}
-                </span>
-                {i < trustBadges.length - 1 && (
-                  <span className="hidden sm:block w-px h-4 bg-border ml-4" />
-                )}
-              </div>
-            ))}
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+              {trustBadges.map((badge, i) => (
+                <div key={badge.label} className="flex items-center gap-2 group">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full border border-foreground/8 bg-foreground/[0.03] transition-all duration-300 group-hover:border-primary/20 group-hover:bg-primary/5 sm:h-8 sm:w-8">
+                    <img
+                      src={badge.iconImage}
+                      alt={`${badge.label} icon`}
+                      className="w-3.5 h-3.5 object-contain transition-transform duration-300 group-hover:scale-110 sm:w-4 sm:h-4"
+                      loading="lazy"
+                    />
+                  </div>
+                  <span className="text-[9px] font-medium uppercase tracking-[0.12em] text-foreground/50 transition-colors duration-300 group-hover:text-foreground/70 sm:text-[10px] sm:tracking-[0.15em]">
+                    {badge.label}
+                  </span>
+                  {i < trustBadges.length - 1 && (
+                    <span className="hidden h-4 w-px bg-foreground/8 sm:block sm:ml-2" />
+                  )}
+                </div>
+              ))}
+            </div>
           </motion.div>
         </div>
       </motion.div>
 
-      {/* Bottom gradient fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#FAFAFA] to-transparent" />
+      {/* Bottom gradient fade — blends into CategorySection */}
+      <div className="absolute bottom-0 left-0 right-0 h-40 z-[11] bg-gradient-to-t from-[#FAFAFA] via-[#FAFAFA]/60 to-transparent pointer-events-none" />
+
+      {/* Scroll indicator */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 2, duration: 1 }}
+        className="absolute bottom-12 left-1/2 z-[12] hidden -translate-x-1/2 flex-col items-center gap-2 md:flex"
+      >
+        <motion.div
+          animate={{ y: [0, 8, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="flex flex-col items-center gap-2"
+        >
+          <span className="text-[8px] font-medium uppercase tracking-[0.3em] text-foreground/40">Scroll</span>
+          <div className="h-10 w-[1.5px] rounded-full bg-gradient-to-b from-foreground/30 via-foreground/10 to-transparent" />
+        </motion.div>
+      </motion.div>
     </section>
   );
 };

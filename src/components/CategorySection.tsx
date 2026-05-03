@@ -189,7 +189,7 @@ const CategorySection = () => {
   };
 
   return (
-    <section ref={sectionRef} className="relative -mt-16 overflow-hidden pb-20 lg:pb-28">
+    <section ref={sectionRef} className="relative -mt-16 overflow-hidden pb-10 lg:pb-14">
       {/* Seamless gradient from hero (#FAFAFA) into page background */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#FAFAFA] via-[#FAFAFA]/50 to-background" />
       {/* Luxury gold radial glow */}

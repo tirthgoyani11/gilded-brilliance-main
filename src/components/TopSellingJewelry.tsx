@@ -76,7 +76,7 @@ const TopSellingJewelry = () => {
   const heroHasAlt = Boolean(heroHoverImg && heroHoverImg !== heroMainImg);
 
   return (
-    <section ref={sectionRef} className="relative overflow-hidden bg-[#F7F2EA] py-20 lg:py-28">
+    <section ref={sectionRef} className="relative overflow-hidden bg-[#F7F2EA] py-12 lg:py-16">
       {/* Marble texture */}
       <div
         className="pointer-events-none absolute inset-0 opacity-30 mix-blend-multiply"

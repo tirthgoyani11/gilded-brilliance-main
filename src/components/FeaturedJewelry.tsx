@@ -87,7 +87,7 @@ const FeaturedJewelry = () => {
   if (items.length === 0) return null;
 
   return (
-    <section ref={sectionRef} className="relative overflow-hidden bg-background py-20 lg:py-28">
+    <section ref={sectionRef} className="relative overflow-hidden bg-background pt-10 pb-10 lg:pt-14 lg:pb-14">
       {/* Decorative gradient orbs */}
       <div className="pointer-events-none absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary/[0.03] blur-3xl" />
       <div className="pointer-events-none absolute -bottom-40 -left-40 h-[400px] w-[400px] rounded-full bg-primary/[0.04] blur-3xl" />
