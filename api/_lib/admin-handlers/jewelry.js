@@ -206,6 +206,106 @@ export async function handleJewelry(req, res) {
     return;
   }
 
+  if (!hasConfiguredDatabase && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+    const supabaseUrl = SUPABASE_URL.replace(/\/$/, "");
+    const headers = {
+      "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      "apikey": SUPABASE_SERVICE_ROLE_KEY,
+      "Content-Type": "application/json",
+      "Prefer": "return=representation"
+    };
+
+    if (req.method === "GET") {
+      const category = String(req.query?.category || "").trim();
+      const search = String(req.query?.search || "").trim();
+      let url = `${supabaseUrl}/rest/v1/jewelry_items?select=*&order=is_featured.desc,sort_order.asc,updated_at.desc`;
+      if (category) url += `&category=eq.${encodeURIComponent(category)}`;
+      if (search) url += `&or=(name.ilike.*${encodeURIComponent(search)}*,tags.ilike.*${encodeURIComponent(search)}*)`;
+      
+      const response = await fetch(url, { headers });
+      const rows = await response.json().catch(() => []);
+      return res.status(200).json({ items: rows.map(mapRow) });
+    }
+
+    if (req.method === "POST" || req.method === "PUT") {
+      const item = normalizeItemPayload(req.body ?? {});
+      if (!isValidItem(item)) return res.status(400).json({ message: "Missing or invalid jewelry fields" });
+      
+      const payload = {
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        subcategory: item.subcategory,
+        metal: item.metal,
+        price: item.price,
+        image_url: item.imageUrl,
+        description: item.description,
+        collection: item.collection,
+        stone_type: item.stoneType,
+        diamond_weight: item.diamondWeight,
+        setting: item.setting,
+        tags: item.tags,
+        metal_images: item.metalImages,
+        gallery_images: item.galleryImages,
+        video_url: item.videoUrl,
+        model_url: item.modelUrl,
+        inventory_status: item.inventoryStatus,
+        sort_order: item.sortOrder,
+        is_featured: item.isFeatured,
+        is_active: item.isActive,
+        updated_at: new Date().toISOString()
+      };
+
+      const url = req.method === "POST" ? `${supabaseUrl}/rest/v1/jewelry_items` : `${supabaseUrl}/rest/v1/jewelry_items?id=eq.${encodeURIComponent(item.id)}`;
+      const response = await fetch(url, {
+        method: req.method,
+        headers,
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        return res.status(500).json({ message: "Supabase DB error", details: err });
+      }
+      const [saved] = await response.json().catch(() => [payload]);
+      return res.status(req.method === "POST" ? 201 : 200).json({ item: mapRow(saved) });
+    }
+
+    if (req.method === "DELETE") {
+      const id = String(req.query?.id || "").trim();
+      if (!id) return res.status(400).json({ message: "Missing item id" });
+
+      // Clean up Supabase Storage first
+      const getUrl = `${supabaseUrl}/rest/v1/jewelry_items?id=eq.${encodeURIComponent(id)}&select=*`;
+      const itemResp = await fetch(getUrl, { headers });
+      const [item] = await itemResp.json().catch(() => []);
+      
+      if (item) {
+        const metalImages = normalizeMetalImages(item.metal_images, item.image_url);
+        const galleryImages = normalizeGalleryImages(parseJsonField(item.gallery_images, []));
+        const filesToDelete = [
+          ...Object.values(metalImages).flat(),
+          ...galleryImages,
+          item.video_url,
+          item.model_url
+        ].filter(Boolean);
+
+        for (const fileUrl of filesToDelete) {
+          const path = extractSupabasePath(fileUrl);
+          if (path) {
+            const isModel = path.startsWith("models/");
+            await deleteSupabaseFile(path, isModel ? SUPABASE_MODEL_BUCKET : SUPABASE_IMAGE_BUCKET);
+          }
+        }
+      }
+
+      const response = await fetch(`${supabaseUrl}/rest/v1/jewelry_items?id=eq.${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        headers
+      });
+      return res.status(200).json({ deleted: true, id });
+    }
+  }
+
   if (!hasConfiguredDatabase) {
     if (req.method === "GET") {
       const items = await listLocalJewelryItems({

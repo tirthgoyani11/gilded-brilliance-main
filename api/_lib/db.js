@@ -7,7 +7,8 @@ export const hasConfiguredDatabase = Boolean(connectionString);
 export const sql = hasConfiguredDatabase
   ? neon(connectionString)
   : async () => {
-      throw new Error("Missing DATABASE_URL. Set it in Vercel project environment variables.");
+      console.warn("SQL called but DATABASE_URL is missing. Returning empty result.");
+      return [];
     };
 
 export async function ensureDiamondsTable() {
