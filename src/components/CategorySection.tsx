@@ -10,11 +10,12 @@ import necklaceImg from "@/assets/product-necklace.jpg";
 import braceletImg from "@/assets/product-bracelet.jpg";
 import looseDiamondsImg from "@/assets/product-loose-diamonds.jpg";
 
-const fallbackImages: Record<string, string> = {
-  Rings: ringImg,
-  Earrings: earringsImg,
-  Necklaces: necklaceImg,
-  Bracelets: braceletImg,
+const fallbackImages: Record<string, [string, string]> = {
+  Rings: [ringImg, earringsImg],
+  Earrings: [earringsImg, ringImg],
+  Necklaces: [necklaceImg, braceletImg],
+  Bracelets: [braceletImg, necklaceImg],
+  "Loose Diamonds": [looseDiamondsImg, looseDiamondsImg],
 };
 
 const staticCategories = [
@@ -26,7 +27,8 @@ const staticCategories = [
 ];
 
 const CategorySection = () => {
-  const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
+  // [main, hover] image pairs per category
+  const [catImages, setCatImages] = useState<Record<string, [string, string]>>({});
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-80px" });
@@ -34,24 +36,48 @@ const CategorySection = () => {
   useEffect(() => {
     loadJewelryItems().then((all) => {
       const active = all.filter((i) => i.isActive !== false);
-      const imgMap: Record<string, string> = {};
+      const pairMap: Record<string, [string, string]> = {};
       const countMap: Record<string, number> = {};
+
       for (const cat of ["Rings", "Earrings", "Necklaces", "Bracelets"]) {
         const inCat = active.filter((i) => i.category === cat);
         countMap[cat] = inCat.length;
-        if (inCat.length > 0) {
-          imgMap[cat] = getJewelryMetalImage(inCat[0], inCat[0].metal);
+
+        if (inCat.length >= 2) {
+          // Two different products → use each as main/hover
+          pairMap[cat] = [
+            getJewelryMetalImage(inCat[0], inCat[0].metal),
+            getJewelryMetalImage(inCat[1], inCat[1].metal),
+          ];
+        } else if (inCat.length === 1) {
+          const item = inCat[0];
+          const main = getJewelryMetalImage(item, item.metal);
+          // Try to find an alternate metal image
+          let alt = "";
+          const metals = ["Gold", "Rose Gold", "Silver", "White Gold"];
+          for (const m of metals) {
+            if (m === item.metal) continue;
+            const img = getJewelryMetalImage(item, m);
+            if (img && img !== main) { alt = img; break; }
+          }
+          // Or try a gallery image
+          if (!alt && item.galleryImages) {
+            for (const g of item.galleryImages) {
+              if (g && g !== main) { alt = g; break; }
+            }
+          }
+          pairMap[cat] = [main, alt || main];
         }
       }
-      setCategoryImages(imgMap);
+
+      setCatImages(pairMap);
       setCategoryCounts(countMap);
       setTimeout(() => ScrollTrigger.refresh(), 200);
     });
   }, []);
 
-  const getImage = (name: string) => {
-    if (name === "Loose Diamonds") return looseDiamondsImg;
-    return categoryImages[name] || fallbackImages[name] || ringImg;
+  const getImages = (name: string): [string, string] => {
+    return catImages[name] || fallbackImages[name] || [ringImg, ringImg];
   };
 
   return (
@@ -75,41 +101,58 @@ const CategorySection = () => {
         </div>
 
         <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-5 lg:gap-6">
-          {staticCategories.map((cat, i) => (
-            <motion.div
-              key={cat.name}
-              initial={{ opacity: 0, y: 18, scale: 0.96 }}
-              animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
-              transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1], delay: 0.12 + i * 0.08 }}
-            >
-              <Link to={cat.href} className="group block">
-                <div className="relative aspect-[4/5] overflow-hidden rounded-2xl shadow-[0_4px_16px_-6px_rgba(0,0,0,0.1)] transition-shadow duration-500 group-hover:shadow-[0_16px_40px_-14px_rgba(0,0,0,0.2)]">
-                  <img
-                    src={getImage(cat.name)}
-                    alt={cat.name}
-                    className="h-full w-full object-cover brightness-[1.08] contrast-[1.03] transition-all duration-500 ease-out group-hover:brightness-[1.15]"
-                    loading="lazy"
-                  />
-                  {/* Dark gradient */}
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-transparent" />
-                  {/* Bottom label */}
-                  <div className="absolute inset-x-0 bottom-0 p-4">
-                    <p className="text-sm font-semibold uppercase tracking-[0.1em] text-white drop-shadow-lg sm:text-base">
-                      {cat.name}
-                    </p>
-                    <p className="mt-1 text-[10px] text-white/60 transition-all duration-300 group-hover:text-white/90">
-                      {categoryCounts[cat.name] > 0 && (
-                        <span className="inline group-hover:hidden">{categoryCounts[cat.name]} {categoryCounts[cat.name] === 1 ? "piece" : "pieces"}</span>
-                      )}
-                      <span className={`uppercase tracking-[0.15em] ${categoryCounts[cat.name] > 0 ? "hidden group-hover:inline" : ""}`}>View Collection →</span>
-                    </p>
+          {staticCategories.map((cat, i) => {
+            const [mainImg, hoverImg] = getImages(cat.name);
+            const hasAlt = hoverImg && hoverImg !== mainImg;
+            const isWide = cat.name === "Loose Diamonds";
+
+            return (
+              <motion.div
+                key={cat.name}
+                initial={{ opacity: 0, y: 18, scale: 0.96 }}
+                animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
+                transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1], delay: 0.12 + i * 0.08 }}
+                className={isWide ? "col-span-2 md:col-span-1 lg:col-span-1" : ""}
+              >
+                <Link to={cat.href} className="group block">
+                  <div className={`relative overflow-hidden rounded-2xl shadow-[0_4px_16px_-6px_rgba(0,0,0,0.1)] transition-shadow duration-500 group-hover:shadow-[0_16px_40px_-14px_rgba(0,0,0,0.2)] ${isWide ? "aspect-[3/1] sm:aspect-[3/1] md:aspect-[4/5]" : "aspect-[4/5]"}`}>
+                    {/* Main image */}
+                    <img
+                      src={mainImg}
+                      alt={cat.name}
+                      className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${hasAlt ? "group-hover:opacity-0" : ""}`}
+                      loading="lazy"
+                    />
+                    {/* Hover crossfade image */}
+                    {hasAlt && (
+                      <img
+                        src={hoverImg}
+                        alt={`${cat.name} – alternate`}
+                        className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                        loading="lazy"
+                      />
+                    )}
+                    {/* Dark gradient */}
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-transparent" />
+                    {/* Bottom label */}
+                    <div className="absolute inset-x-0 bottom-0 p-4">
+                      <p className="text-sm font-semibold uppercase tracking-[0.1em] text-white drop-shadow-lg sm:text-base">
+                        {cat.name}
+                      </p>
+                      <p className="mt-1 text-[10px] text-white/60 transition-all duration-300 group-hover:text-white/90">
+                        {categoryCounts[cat.name] > 0 && (
+                          <span className="inline group-hover:hidden">{categoryCounts[cat.name]} {categoryCounts[cat.name] === 1 ? "piece" : "pieces"}</span>
+                        )}
+                        <span className={`uppercase tracking-[0.15em] ${categoryCounts[cat.name] > 0 ? "hidden group-hover:inline" : ""}`}>View Collection →</span>
+                      </p>
+                    </div>
+                    {/* Gold border on hover */}
+                    <div className="pointer-events-none absolute inset-0 rounded-2xl border-[1.5px] border-transparent transition-colors duration-500 group-hover:border-primary/35" />
                   </div>
-                  {/* Gold border on hover */}
-                  <div className="pointer-events-none absolute inset-0 rounded-2xl border-[1.5px] border-transparent transition-colors duration-500 group-hover:border-primary/35" />
-                </div>
-              </Link>
-            </motion.div>
-          ))}
+                </Link>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>
