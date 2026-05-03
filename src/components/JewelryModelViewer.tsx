@@ -27,6 +27,22 @@ const getAndroidMajorVersion = () => {
   return match ? Number.parseInt(match[1], 10) : null;
 };
 
+const normalizeModelUrl = (url: string) => {
+  if (!url) return url;
+
+  const driveFileMatch = url.match(/drive\.google\.com\/file\/d\/([^/]+)/i);
+  if (driveFileMatch?.[1]) {
+    return `https://drive.google.com/uc?export=download&id=${driveFileMatch[1]}`;
+  }
+
+  const driveIdMatch = url.match(/[?&]id=([^&]+)/i);
+  if (url.includes("drive.google.com") && driveIdMatch?.[1]) {
+    return `https://drive.google.com/uc?export=download&id=${driveIdMatch[1]}`;
+  }
+
+  return url;
+};
+
 const Loader = () => (
   <Html center>
     <div className="rounded-full border border-border bg-background/95 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground shadow-sm">
@@ -40,7 +56,8 @@ const JewelryModelViewer = ({ src, title, className = "" }: JewelryModelViewerPr
   const [selectedMetal, setSelectedMetal] = useState(metalOptions[1]);
   const [isOldAndroid, setIsOldAndroid] = useState(false);
 
-  const model = useMemo<LoadedModel>(() => ({ meshes: [], type: "glb", url: src }), [src]);
+  const modelUrl = useMemo(() => normalizeModelUrl(src), [src]);
+  const model = useMemo<LoadedModel>(() => ({ meshes: [], type: "glb", url: modelUrl }), [modelUrl]);
   const dpr = isOldAndroid ? 1 : 1.5;
 
   useEffect(() => {

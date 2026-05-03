@@ -39,9 +39,9 @@ export interface JewelryItem {
   setting?: string;
   tags?: string;
   metalImages?: {
-    Silver?: string;
-    Gold?: string;
-    "Rose Gold"?: string;
+    Silver?: string[];
+    Gold?: string[];
+    "Rose Gold"?: string[];
   };
   galleryImages?: string[];
   videoUrl?: string;

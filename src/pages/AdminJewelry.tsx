@@ -22,7 +22,7 @@ type JewelryForm = JewelryItem & {
   diamondWeight: string;
   setting: string;
   tags: string;
-  metalImages: Record<(typeof metals)[number], string>;
+  metalImages: Record<(typeof metals)[number], string[]>;
   galleryImages: string[];
   videoUrl: string;
   modelUrl: string;
@@ -47,9 +47,9 @@ const emptyForm: JewelryForm = {
   setting: "",
   tags: "",
   metalImages: {
-    Silver: "",
-    Gold: "",
-    "Rose Gold": "",
+    Silver: [],
+    Gold: [],
+    "Rose Gold": [],
   },
   galleryImages: [],
   videoUrl: "",
@@ -67,6 +67,27 @@ const categoryDescriptions: Record<(typeof jewelryCategories)[number], string> =
   Earrings: "Studs, hoops, drops, huggies, solitaire pairs, and occasion earrings.",
 };
 
+const MEDIA_UPLOAD_ENDPOINT = "/api/admin-upload";
+
+const parseUrlList = (value: string) =>
+  value
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+const toUrlArray = (value: unknown, fallback = "") => {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed ? [trimmed] : fallback ? [fallback] : [];
+  }
+  return fallback ? [fallback] : [];
+};
+
+const pickPrimaryImage = (images: string[]) => images.find(Boolean) || "";
+
 const toForm = (item: JewelryItem): JewelryForm => ({
   ...emptyForm,
   ...item,
@@ -78,9 +99,9 @@ const toForm = (item: JewelryItem): JewelryForm => ({
   setting: item.setting || "",
   tags: item.tags || "",
   metalImages: {
-    Silver: item.metalImages?.Silver || item.imageUrl || "",
-    Gold: item.metalImages?.Gold || item.imageUrl || "",
-    "Rose Gold": item.metalImages?.["Rose Gold"] || item.imageUrl || "",
+    Silver: toUrlArray(item.metalImages?.Silver, item.imageUrl),
+    Gold: toUrlArray(item.metalImages?.Gold, item.imageUrl),
+    "Rose Gold": toUrlArray(item.metalImages?.["Rose Gold"], item.imageUrl),
   },
   galleryImages: Array.isArray(item.galleryImages) ? item.galleryImages : [],
   videoUrl: item.videoUrl || "",
@@ -120,6 +141,36 @@ const readFileAsDataUrl = (file: File) =>
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(file);
   });
+
+const uploadFileToSupabase = async (file: File, folder: "images" | "models") => {
+  const dataUrl = await readFileAsDataUrl(file);
+  const response = await adminFetch(MEDIA_UPLOAD_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      dataUrl,
+      fileName: file.name,
+      contentType: file.type,
+      folder,
+    }),
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null);
+    throw new Error(payload?.message || "Supabase upload failed");
+  }
+
+  const payload = await response.json();
+  const url = payload?.url ? String(payload.url) : "";
+  const path = payload?.path ? String(payload.path) : "";
+  const bucket = payload?.bucket ? String(payload.bucket) : "";
+
+  if (!url && !path) {
+    throw new Error("Supabase response missing URL");
+  }
+
+  return { url, path, bucket };
+};
 
 const AdminJewelry = () => {
   const [items, setItems] = useState<JewelryItem[]>([]);
@@ -188,12 +239,15 @@ const AdminJewelry = () => {
   };
 
   const saveJewelry = async () => {
+    const primarySilver = pickPrimaryImage(form.metalImages.Silver);
+    const primaryGold = pickPrimaryImage(form.metalImages.Gold);
+    const primaryRose = pickPrimaryImage(form.metalImages["Rose Gold"]);
     const nextForm = {
       ...form,
       id: form.id.trim() || createListingId(form.name, form.category),
       price: Number(form.price) || 0,
       sortOrder: Number(form.sortOrder) || 0,
-      imageUrl: form.metalImages.Silver || form.metalImages.Gold || form.metalImages["Rose Gold"] || form.imageUrl,
+      imageUrl: primarySilver || primaryGold || primaryRose || form.imageUrl,
     };
 
     if (!nextForm.name.trim()) {
@@ -201,7 +255,7 @@ const AdminJewelry = () => {
       return;
     }
 
-    if (metals.some((metal) => !nextForm.metalImages[metal]?.trim())) {
+    if (metals.some((metal) => !nextForm.metalImages[metal]?.length)) {
       setStatus("Please add an image for Silver, Gold, and Rose Gold.");
       return;
     }
@@ -272,33 +326,44 @@ const AdminJewelry = () => {
     void loadJewelry({ category: selectedCategory, inventoryStatus: selectedStatus, query: search });
   };
 
-  const handleMetalImageUpload = async (metal: (typeof metals)[number], file?: File) => {
-    if (!file) return;
+  const handleMetalImageUpload = async (metal: (typeof metals)[number], files?: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    setStatus("Uploading metal images...");
     try {
-      const dataUrl = await readFileAsDataUrl(file);
-      setForm((prev) => ({
-        ...prev,
-        imageUrl: metal === "Silver" ? dataUrl : prev.imageUrl,
-        metalImages: {
-          ...prev.metalImages,
-          [metal]: dataUrl,
-        },
-      }));
+      const uploaded = await Promise.all([...files].map((file) => uploadFileToSupabase(file, "images")));
+      const urls = uploaded.map((item) => item.url).filter(Boolean);
+      setForm((prev) => {
+        const nextImages = [...prev.metalImages[metal], ...urls].filter(Boolean);
+        return {
+          ...prev,
+          imageUrl: metal === "Silver" ? nextImages[0] || prev.imageUrl : prev.imageUrl,
+          metalImages: {
+            ...prev.metalImages,
+            [metal]: nextImages,
+          },
+        };
+      });
+      setStatus("");
     } catch {
-      setStatus("Failed to read uploaded image.");
+      setStatus("Failed to upload metal images.");
     }
   };
 
   const handleGalleryUpload = async (files?: FileList | null) => {
     if (!files || files.length === 0) return;
+
+    setStatus("Uploading gallery images...");
     try {
-      const uploaded = await Promise.all([...files].map(readFileAsDataUrl));
+      const uploaded = await Promise.all([...files].map((file) => uploadFileToSupabase(file, "images")));
+      const urls = uploaded.map((item) => item.url).filter(Boolean);
       setForm((prev) => ({
         ...prev,
-        galleryImages: [...prev.galleryImages, ...uploaded],
+        galleryImages: [...prev.galleryImages, ...urls],
       }));
+      setStatus("");
     } catch {
-      setStatus("Failed to read gallery images.");
+      setStatus("Failed to upload gallery images.");
     }
   };
 
@@ -320,10 +385,13 @@ const AdminJewelry = () => {
       return;
     }
     try {
-      const dataUrl = await readFileAsDataUrl(file);
-      setForm((prev) => ({ ...prev, modelUrl: dataUrl }));
+      setStatus("Uploading 360 model...");
+      const uploaded = await uploadFileToSupabase(file, "models");
+      const modelPath = uploaded.path || uploaded.url;
+      setForm((prev) => ({ ...prev, modelUrl: modelPath }));
+      setStatus("");
     } catch {
-      setStatus("Failed to read uploaded 360 model.");
+      setStatus("Failed to upload 360 model.");
     }
   };
 
@@ -409,33 +477,58 @@ const AdminJewelry = () => {
                         <span className="h-4 w-4 rounded-full border border-border" style={{ backgroundColor: metalSwatches[metal] }} />
                         <p className="text-sm font-medium">{metal}</p>
                       </div>
-                      <div className="flex gap-2">
-                        <input
-                          value={form.metalImages[metal]}
+                      <div className="grid gap-2">
+                        <textarea
+                          value={form.metalImages[metal].join("\n")}
                           onChange={(e) => {
-                            const image = e.target.value;
+                            const images = parseUrlList(e.target.value);
                             setForm((prev) => ({
                               ...prev,
-                              imageUrl: metal === "Silver" ? image : prev.imageUrl,
-                              metalImages: { ...prev.metalImages, [metal]: image },
+                              imageUrl: metal === "Silver" ? images[0] || prev.imageUrl : prev.imageUrl,
+                              metalImages: { ...prev.metalImages, [metal]: images },
                             }));
                           }}
-                          placeholder={`${metal} image URL or uploaded file`}
-                          className="h-10 min-w-0 flex-1 rounded border border-border bg-background px-3 text-sm"
+                          rows={2}
+                          placeholder={`${metal} image URLs (one per line) or upload files`}
+                          className="min-h-[80px] w-full rounded border border-border bg-background px-3 py-2 text-sm"
                         />
-                        <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded border border-border px-3 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground">
+                        <label className="inline-flex h-10 w-fit cursor-pointer items-center gap-2 rounded border border-border px-3 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground">
                           <Upload className="h-4 w-4" />
                           Upload
                           <input
                             type="file"
                             accept="image/*"
+                            multiple
                             className="hidden"
-                            onChange={(e) => void handleMetalImageUpload(metal, e.target.files?.[0])}
+                            onChange={(e) => void handleMetalImageUpload(metal, e.target.files)}
                           />
                         </label>
                       </div>
-                      {form.metalImages[metal] ? (
-                        <img src={form.metalImages[metal]} alt={`${metal} preview`} className="mt-2 h-20 w-full rounded border border-border object-cover" />
+                      {form.metalImages[metal].length > 0 ? (
+                        <div className="mt-2 grid grid-cols-3 gap-2">
+                          {form.metalImages[metal].map((image, index) => (
+                            <div key={`${image}-${index}`} className="group relative">
+                              <img src={image} alt={`${metal} ${index + 1}`} className="h-20 w-full rounded border border-border object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setForm((prev) => {
+                                    const nextImages = prev.metalImages[metal].filter((_, idx) => idx !== index);
+                                    return {
+                                      ...prev,
+                                      imageUrl: metal === "Silver" ? nextImages[0] || prev.imageUrl : prev.imageUrl,
+                                      metalImages: { ...prev.metalImages, [metal]: nextImages },
+                                    };
+                                  });
+                                }}
+                                className="absolute right-1 top-1 rounded-full bg-background/80 p-1 text-muted-foreground opacity-0 transition group-hover:opacity-100"
+                                aria-label={`Remove ${metal} image ${index + 1}`}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       ) : null}
                     </div>
                   ))}

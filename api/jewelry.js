@@ -16,12 +16,23 @@ const parseJsonField = (value, fallback) => {
   return value;
 };
 
+const normalizeMetalImageList = (value, fallbackImage = "") => {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed ? [trimmed] : fallbackImage ? [fallbackImage] : [];
+  }
+  return fallbackImage ? [fallbackImage] : [];
+};
+
 const normalizeMetalImages = (value, fallbackImage = "") => {
   const source = parseJsonField(value, {});
   const images = {};
   for (const metal of METAL_OPTIONS) {
-    const image = String(source?.[metal] || fallbackImage || "").trim();
-    if (image) images[metal] = image;
+    const list = normalizeMetalImageList(source?.[metal], fallbackImage);
+    if (list.length) images[metal] = list;
   }
   return images;
 };

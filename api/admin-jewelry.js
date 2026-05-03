@@ -19,15 +19,28 @@ const parseJsonField = (value, fallback) => {
   return value;
 };
 
+const normalizeMetalImageList = (value, fallbackImage = "") => {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed ? [trimmed] : fallbackImage ? [fallbackImage] : [];
+  }
+  return fallbackImage ? [fallbackImage] : [];
+};
+
 const normalizeMetalImages = (value, fallbackImage = "") => {
   const source = parseJsonField(value, {});
   const images = {};
   for (const metal of METAL_OPTIONS) {
-    const image = String(source?.[metal] || fallbackImage || "").trim();
-    if (image) images[metal] = image;
+    const list = normalizeMetalImageList(source?.[metal], fallbackImage);
+    if (list.length) images[metal] = list;
   }
   return images;
 };
+
+const pickPrimaryImage = (images = []) => (Array.isArray(images) ? images.find(Boolean) || "" : "");
 
 const normalizeGalleryImages = (value) =>
   Array.isArray(value)
@@ -103,7 +116,12 @@ const normalizeItemPayload = (body) => {
   const galleryImages = normalizeGalleryImages(body.galleryImages);
   const videoUrl = String(body.videoUrl || "").trim();
   const modelUrl = String(body.modelUrl || "").trim();
-  imageUrl = imageUrl || metalImages.Silver || metalImages.Gold || metalImages["Rose Gold"] || "";
+  imageUrl =
+    imageUrl ||
+    pickPrimaryImage(metalImages.Silver) ||
+    pickPrimaryImage(metalImages.Gold) ||
+    pickPrimaryImage(metalImages["Rose Gold"]) ||
+    "";
   const inventoryStatus = String(body.inventoryStatus || "In Stock").trim();
   const sortOrder = Number.parseInt(String(body.sortOrder ?? 0), 10);
   const price = Number(body.price);
@@ -139,7 +157,7 @@ const isValidItem = (item) =>
   item.id &&
   item.name &&
   JEWELRY_CATEGORIES.has(item.category) &&
-  METAL_OPTIONS.every((metal) => item.metalImages?.[metal]) &&
+  METAL_OPTIONS.every((metal) => Array.isArray(item.metalImages?.[metal]) && item.metalImages[metal].length > 0) &&
   Number.isFinite(item.price) &&
   item.price >= 0 &&
   INVENTORY_STATUSES.has(item.inventoryStatus);

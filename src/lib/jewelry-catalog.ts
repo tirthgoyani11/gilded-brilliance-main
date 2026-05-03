@@ -64,9 +64,9 @@ export const fallbackJewelryItems: JewelryItem[] = [
     diamondWeight: "1.00 ctw",
     setting: "Prong",
     metalImages: {
-      Silver: productRing,
-      Gold: productRing,
-      "Rose Gold": productRing,
+      Silver: [productRing],
+      Gold: [productRing],
+      "Rose Gold": [productRing],
     },
     galleryImages: [productRing],
     videoUrl: "",
@@ -89,9 +89,9 @@ export const fallbackJewelryItems: JewelryItem[] = [
     diamondWeight: "0.70 ctw",
     setting: "Bezel",
     metalImages: {
-      Silver: productNecklace,
-      Gold: productNecklace,
-      "Rose Gold": productNecklace,
+      Silver: [productNecklace],
+      Gold: [productNecklace],
+      "Rose Gold": [productNecklace],
     },
     galleryImages: [productNecklace],
     videoUrl: "",
@@ -114,9 +114,9 @@ export const fallbackJewelryItems: JewelryItem[] = [
     diamondWeight: "3.00 ctw",
     setting: "Shared Prong",
     metalImages: {
-      Silver: productBracelet,
-      Gold: productBracelet,
-      "Rose Gold": productBracelet,
+      Silver: [productBracelet],
+      Gold: [productBracelet],
+      "Rose Gold": [productBracelet],
     },
     galleryImages: [productBracelet],
     videoUrl: "",
@@ -139,9 +139,9 @@ export const fallbackJewelryItems: JewelryItem[] = [
     diamondWeight: "1.20 ctw",
     setting: "Basket",
     metalImages: {
-      Silver: productEarrings,
-      Gold: productEarrings,
-      "Rose Gold": productEarrings,
+      Silver: [productEarrings],
+      Gold: [productEarrings],
+      "Rose Gold": [productEarrings],
     },
     galleryImages: [productEarrings],
     videoUrl: "",
@@ -159,11 +159,15 @@ export const formatJewelryPrice = (price: number) =>
     maximumFractionDigits: 0,
   }).format(price || 0);
 
+export const getJewelryMetalImages = (item: JewelryItem, metal: string) => {
+  const value = item.metalImages?.[metal as keyof NonNullable<JewelryItem["metalImages"]>];
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (typeof value === "string" && value.trim()) return [value.trim()];
+  return [];
+};
+
 export const getJewelryMetalImage = (item: JewelryItem, metal: string) =>
-  item.metalImages?.[metal as keyof NonNullable<JewelryItem["metalImages"]>] ||
-  item.imageUrl ||
-  item.galleryImages?.[0] ||
-  "";
+  getJewelryMetalImages(item, metal)[0] || item.imageUrl || item.galleryImages?.[0] || "";
 
 export async function loadJewelryItems() {
   try {

@@ -33,6 +33,7 @@ import {
   categoryToSlug,
   fallbackJewelryItems,
   formatJewelryPrice,
+  getJewelryMetalImages,
   getJewelryMetalImage,
   jewelryMetalOptions,
   jewelryMetalSwatches,
@@ -143,7 +144,7 @@ const JewelryDetail = () => {
   const delivery = estimatedDelivery(product);
   const wishlisted = isWishlisted(product.id);
   const galleryImages = [
-    ...jewelryMetalOptions.map((metal) => getJewelryMetalImage(product, metal)),
+    ...jewelryMetalOptions.flatMap((metal) => getJewelryMetalImages(product, metal)),
     ...(product.galleryImages || []),
   ].filter((image, index, all) => image && all.indexOf(image) === index);
   const galleryMedia: GalleryMedia[] = [
