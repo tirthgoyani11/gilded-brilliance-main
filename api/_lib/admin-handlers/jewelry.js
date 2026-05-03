@@ -413,7 +413,7 @@ export async function handleJewelry(req, res) {
       ].filter(Boolean);
 
       for (const fileUrl of filesToDelete) {
-        const path = extractSupabasePath(fileUrl);
+        const path = extractStoragePath(fileUrl);
         if (path) {
           const isModel = path.startsWith("models/");
           await deleteSupabaseFile(path, isModel ? SUPABASE_MODEL_BUCKET : SUPABASE_IMAGE_BUCKET);
