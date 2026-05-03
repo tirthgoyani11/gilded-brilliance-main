@@ -47,7 +47,8 @@ const ProductCard = ({
   const mainImg = getJewelryMetalImage(item, metal);
   const hoverImg = getJewelryHoverImage(item, metal);
   const hasAlt = Boolean(hoverImg && hoverImg !== mainImg);
-  const { addToCart } = useStore();
+  const { addToCart, toggleWishlist, isWishlisted } = useStore();
+  const wishlisted = isWishlisted(item.id);
 
   return (
     <div className="group block">
@@ -75,14 +76,15 @@ const ProductCard = ({
           )}
 
           <button
-            className="absolute right-2.5 top-2.5 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white opacity-0 shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-all duration-300 hover:scale-110 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] group-hover:opacity-100"
+            className={`absolute right-2.5 top-2.5 z-20 flex h-8 w-8 items-center justify-center rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-all duration-300 hover:scale-110 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] group-hover:opacity-100 ${wishlisted ? "bg-primary text-white opacity-100" : "bg-white text-[#072835] opacity-0"}`}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              // handle wishlist logic here
+              toggleWishlist(item.id);
             }}
+            aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
           >
-            <Heart className="h-3.5 w-3.5 text-[#072835]" />
+            <Heart className={`h-3.5 w-3.5 ${wishlisted ? "fill-current" : ""}`} />
           </button>
 
           <div className="absolute inset-x-3 bottom-3 z-20 translate-y-3 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.3,1,0.3,1)] group-hover:translate-y-0 group-hover:opacity-100">

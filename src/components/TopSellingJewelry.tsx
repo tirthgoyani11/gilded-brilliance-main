@@ -5,6 +5,7 @@ import { Heart, TrendingUp, ArrowRight, ShoppingBag } from "lucide-react";
 import type { JewelryItem } from "@/types/diamond";
 import { loadJewelryItems, formatJewelryPrice, calculateJewelryPrice, getJewelryMetalImage, getJewelryHoverImage, fallbackJewelryItems } from "@/lib/jewelry-catalog";
 import { usePricingSettings } from "@/hooks/usePricingSettings";
+import { useStore } from "@/contexts/StoreContext";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 const fionaEase = [0.3, 1, 0.3, 1] as const;
@@ -17,10 +18,12 @@ const pickTopSelling = (all: JewelryItem[]) => {
 
 /** Fiona-inspired small product card */
 const SmallCard = ({ item, pricingSettings }: { item: JewelryItem; pricingSettings: any }) => {
+  const { toggleWishlist, isWishlisted } = useStore();
   const mainImg = getJewelryMetalImage(item, item.metal);
   const hoverImg = getJewelryHoverImage(item, item.metal);
   const hasAlt = Boolean(hoverImg && hoverImg !== mainImg);
   const displayPrice = calculateJewelryPrice(item, item.metal, "10K", pricingSettings);
+  const wishlisted = isWishlisted(item.id);
 
   return (
     <Link to={`/jewelry/product/${item.id}`} className="group block">
@@ -40,10 +43,15 @@ const SmallCard = ({ item, pricingSettings }: { item: JewelryItem; pricingSettin
           />
         )}
         <button
-          className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white opacity-0 shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-all duration-300 hover:scale-110 group-hover:opacity-100"
-          onClick={(e) => e.preventDefault()}
+          className={`absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-all duration-300 hover:scale-110 group-hover:opacity-100 ${wishlisted ? "bg-primary text-white opacity-100" : "bg-white text-[#072835] opacity-0"}`}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleWishlist(item.id);
+          }}
+          aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
         >
-          <Heart className="h-3 w-3 text-[#072835]" />
+          <Heart className={`h-3 w-3 ${wishlisted ? "fill-current" : ""}`} />
         </button>
         {/* Quick view pill */}
         <div className="absolute inset-x-2 bottom-2 z-10 translate-y-2 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.3,1,0.3,1)] group-hover:translate-y-0 group-hover:opacity-100">
@@ -156,10 +164,15 @@ const TopSellingJewelry = () => {
                 )}
                 {/* Wishlist */}
                 <button
-                  className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white opacity-0 shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-all duration-300 hover:scale-110 group-hover:opacity-100"
-                  onClick={(e) => e.preventDefault()}
+                  className={`absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-all duration-300 hover:scale-110 group-hover:opacity-100 ${isWishlisted(heroItem.id) ? "bg-primary text-white opacity-100" : "bg-white text-[#072835] opacity-0"}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleWishlist(heroItem.id);
+                  }}
+                  aria-label={isWishlisted(heroItem.id) ? "Remove from wishlist" : "Add to wishlist"}
                 >
-                  <Heart className="h-4 w-4 text-[#072835]" />
+                  <Heart className={`h-4 w-4 ${isWishlisted(heroItem.id) ? "fill-current" : ""}`} />
                 </button>
                 {/* Bottom info bar on hover — glass card */}
                 <div className="absolute inset-x-3 bottom-3 z-10 translate-y-3 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.3,1,0.3,1)] group-hover:translate-y-0 group-hover:opacity-100">

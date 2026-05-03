@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
+import { useStore } from "@/contexts/StoreContext";
 import { Link } from "react-router-dom";
 import ringImg from "@/assets/product-ring.jpg";
 import earringsImg from "@/assets/product-earrings.jpg";
@@ -14,6 +15,7 @@ const products = [
 ];
 
 const BestSellers = () => {
+  const { toggleWishlist, isWishlisted } = useStore();
   return (
     <section className="py-24 lg:py-32 relative overflow-hidden bg-[#FAFAFA]">
       {/* Marble Background Texture */}
@@ -73,8 +75,15 @@ const BestSellers = () => {
                   loading="lazy"
                 />
                 {/* Wishlist */}
-                <button className="absolute top-3 right-3 w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 luxury-transition hover:bg-white hover:scale-110 z-10 shadow-sm border border-border/50">
-                  <Heart className="w-3.5 h-3.5 text-foreground" />
+                <button 
+                  className={`absolute top-3 right-3 w-9 h-9 backdrop-blur-sm rounded-full flex items-center justify-center luxury-transition hover:scale-110 z-10 shadow-sm border border-border/50 group-hover:opacity-100 ${isWishlisted(product.name) ? "bg-primary text-white opacity-100" : "bg-white/80 text-foreground opacity-0 hover:bg-white"}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    toggleWishlist(product.name);
+                  }}
+                  aria-label={isWishlisted(product.name) ? "Remove from wishlist" : "Add to wishlist"}
+                >
+                  <Heart className={`w-3.5 h-3.5 ${isWishlisted(product.name) ? "fill-current" : ""}`} />
                 </button>
                 {/* Overlay for depth */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/40 to-transparent opacity-0 group-hover:opacity-100 luxury-transition pointer-events-none" />

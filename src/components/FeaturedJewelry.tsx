@@ -5,6 +5,7 @@ import { Heart, ArrowRight, Sparkles, ShoppingBag } from "lucide-react";
 import type { JewelryItem } from "@/types/diamond";
 import { loadJewelryItems, formatJewelryPrice, calculateJewelryPrice, getJewelryMetalImage, getJewelryHoverImage, fallbackJewelryItems } from "@/lib/jewelry-catalog";
 import { usePricingSettings } from "@/hooks/usePricingSettings";
+import { useStore } from "@/contexts/StoreContext";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 const luxuryEase = [0.16, 1, 0.3, 1] as const;
@@ -21,10 +22,12 @@ const pickFeatured = (all: JewelryItem[]) => {
 
 /** Fiona-inspired product card with crossfade hover, pill badges, and bold pricing */
 const ProductCard = ({ item, badge, pricingSettings }: { item: JewelryItem; badge?: string; pricingSettings: any }) => {
+  const { toggleWishlist, isWishlisted } = useStore();
   const mainImg = getJewelryMetalImage(item, item.metal);
   const hoverImg = getJewelryHoverImage(item, item.metal);
   const hasAlt = Boolean(hoverImg && hoverImg !== mainImg);
   const displayPrice = calculateJewelryPrice(item, item.metal, "10K", pricingSettings);
+  const wishlisted = isWishlisted(item.id);
 
   return (
     <Link to={`/jewelry/product/${item.id}`} className="group block">
@@ -56,10 +59,15 @@ const ProductCard = ({ item, badge, pricingSettings }: { item: JewelryItem; badg
 
         {/* Wishlist button — appears on hover */}
         <button
-          className="absolute right-2.5 top-2.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white opacity-0 shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-all duration-300 hover:scale-110 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] group-hover:opacity-100"
-          onClick={(e) => e.preventDefault()}
+          className={`absolute right-2.5 top-2.5 z-10 flex h-8 w-8 items-center justify-center rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-all duration-300 hover:scale-110 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] group-hover:opacity-100 ${wishlisted ? "bg-primary text-white opacity-100" : "bg-white text-[#072835] opacity-0"}`}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleWishlist(item.id);
+          }}
+          aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
         >
-          <Heart className="h-3.5 w-3.5 text-[#072835]" />
+          <Heart className={`h-3.5 w-3.5 ${wishlisted ? "fill-current" : ""}`} />
         </button>
 
         {/* Quick add button — slides up on hover (Fiona pattern) */}
