@@ -217,19 +217,15 @@ export const getJewelryMetalImage = (item: JewelryItem, metal: string) => {
   return item.imageUrl || item.galleryImages?.[0] || "";
 };
 
-/** Pick an alternate image for hover — different metal finish or gallery angle */
+/** Pick an alternate image for hover — same metal finish or gallery angle */
 export const getJewelryHoverImage = (item: JewelryItem, currentMetal: string): string => {
   const mainImage = getJewelryMetalImage(item, currentMetal);
   const candidates: string[] = [];
 
-  // Collect images from other metal finishes
-  const metals = ["Silver", "Gold", "Rose Gold", "White Gold"] as const;
-  for (const m of metals) {
-    if (m === currentMetal) continue;
-    const imgs = getJewelryMetalImages(item, m);
-    for (const img of imgs) {
-      if (img && img !== mainImage) candidates.push(img);
-    }
+  // Same-metal alternate angles
+  const sameMetalImgs = getJewelryMetalImages(item, currentMetal);
+  for (const img of sameMetalImgs) {
+    if (img && img !== mainImage && !candidates.includes(img)) candidates.push(img);
   }
 
   // Add gallery images that aren't the main one
@@ -237,12 +233,6 @@ export const getJewelryHoverImage = (item: JewelryItem, currentMetal: string): s
     for (const img of item.galleryImages) {
       if (img && img !== mainImage && !candidates.includes(img)) candidates.push(img);
     }
-  }
-
-  // Same-metal alternate angles
-  const sameMetalImgs = getJewelryMetalImages(item, currentMetal);
-  for (const img of sameMetalImgs) {
-    if (img && img !== mainImage && !candidates.includes(img)) candidates.push(img);
   }
 
   if (candidates.length === 0) return "";

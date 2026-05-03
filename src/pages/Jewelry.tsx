@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { Heart, Search, ShoppingBag, SlidersHorizontal, ChevronDown } from "lucide-react";
+import { Heart, Search, ShoppingBag, SlidersHorizontal, ChevronDown, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import SiteLayout from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
@@ -289,26 +289,26 @@ const Jewelry = () => {
                     
                     {/* Search */}
                     <div className="relative mb-6">
-                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#516971]" />
+                      <Search className="absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-[#0A0A0A]" />
                       <input
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search collection..."
-                        className="h-10 w-full rounded-md border border-black/[0.08] bg-[#FAFAFA] pl-9 pr-3 text-[13px] outline-none transition-colors focus:border-[#a97a3a] focus:ring-1 focus:ring-[#a97a3a]"
+                        className="h-10 w-full border-b border-black/[0.1] bg-transparent pl-8 pr-3 text-[13px] outline-none transition-all focus:border-[#a97a3a] placeholder:text-[#516971]"
                       />
                     </div>
                   </div>
 
                   {/* Metal Filter */}
                   <div className="border-t border-black/[0.04] pt-6">
-                    <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#516971]">Metal Tone</h3>
+                    <h3 className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#0A0A0A]">Metal Tone</h3>
                     <div className="space-y-3">
                       {metals.map((metal) => (
                         <label key={metal} className="flex items-center gap-3 cursor-pointer group">
-                          <div className={`flex h-4 w-4 items-center justify-center rounded-sm border transition-colors ${metalFilter === metal ? "border-[#a97a3a] bg-[#a97a3a]" : "border-black/20 group-hover:border-[#a97a3a]"}`}>
-                            {metalFilter === metal && <div className="h-1.5 w-1.5 rounded-sm bg-white" />}
+                          <div className={`flex h-[14px] w-[14px] items-center justify-center border transition-colors ${metalFilter === metal ? "border-[#a97a3a] bg-[#a97a3a]" : "border-black/20 group-hover:border-[#0A0A0A]"}`}>
+                            {metalFilter === metal && <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />}
                           </div>
-                          <span className={`text-[13px] transition-colors ${metalFilter === metal ? "text-[#0A0A0A] font-medium" : "text-[#516971] group-hover:text-[#0A0A0A]"}`}>{metal}</span>
+                          <span className={`text-[12px] uppercase tracking-[0.05em] transition-colors ${metalFilter === metal ? "text-[#0A0A0A] font-semibold" : "text-[#516971] group-hover:text-[#0A0A0A]"}`}>{metal}</span>
                         </label>
                       ))}
                     </div>
@@ -316,12 +316,12 @@ const Jewelry = () => {
 
                   {/* Availability */}
                   <div className="border-t border-black/[0.04] pt-6">
-                    <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#516971]">Availability</h3>
+                    <h3 className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#0A0A0A]">Availability</h3>
                     <div className="space-y-3">
                       {["In Stock", "Made To Order"].map((status) => (
                         <label key={status} className="flex items-center gap-3 cursor-pointer group">
-                          <div className="flex h-4 w-4 items-center justify-center rounded-sm border border-black/20 group-hover:border-[#a97a3a] transition-colors" />
-                          <span className="text-[13px] text-[#516971] group-hover:text-[#0A0A0A] transition-colors">{status}</span>
+                          <div className="flex h-[14px] w-[14px] items-center justify-center border border-black/20 group-hover:border-[#0A0A0A] transition-colors" />
+                          <span className="text-[12px] uppercase tracking-[0.05em] text-[#516971] group-hover:text-[#0A0A0A] transition-colors">{status}</span>
                         </label>
                       ))}
                     </div>
