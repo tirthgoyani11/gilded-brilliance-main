@@ -20,6 +20,10 @@ import {
   Truck,
   Wrench,
   RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 import SiteLayout from "@/components/SiteLayout";
 import MobileVideoPip from "@/components/MobileVideoPip";
@@ -79,6 +83,7 @@ const JewelryDetail = () => {
   const [selectedPurity, setSelectedPurity] = useState<(typeof purityOptions)[number]>("18K");
   const [selectedMedia, setSelectedMedia] = useState<GalleryMedia | null>(null);
   const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>([]);
+  const [zoomLevel, setZoomLevel] = useState(1);
 
   useEffect(() => {
     let active = true;
@@ -160,6 +165,27 @@ const JewelryDetail = () => {
     .map((id) => items.find((item) => item.id === id) || fallbackJewelryItems.find((item) => item.id === id))
     .filter((item): item is JewelryItem => Boolean(item))
     .slice(0, 4);
+
+  const activeMediaIndex = useMemo(() => {
+    const idx = galleryMedia.findIndex((m) => m.src === activeMedia.src && m.type === activeMedia.type);
+    return Math.max(0, idx);
+  }, [galleryMedia, activeMedia]);
+
+  const handlePrevMedia = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    e?.preventDefault();
+    const nextIndex = activeMediaIndex <= 0 ? galleryMedia.length - 1 : activeMediaIndex - 1;
+    setSelectedMedia(galleryMedia[nextIndex]);
+    setZoomLevel(1);
+  };
+
+  const handleNextMedia = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    e?.preventDefault();
+    const nextIndex = activeMediaIndex >= galleryMedia.length - 1 ? 0 : activeMediaIndex + 1;
+    setSelectedMedia(galleryMedia[nextIndex]);
+    setZoomLevel(1);
+  };
 
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i += 1) {
@@ -265,44 +291,73 @@ const JewelryDetail = () => {
                   ))}
                 </div>
 
+                <button onClick={handlePrevMedia} aria-label="Previous image" className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-background/80 p-2 text-foreground shadow backdrop-blur transition hover:bg-background opacity-0 group-hover:opacity-100 sm:left-4">
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button onClick={handleNextMedia} aria-label="Next image" className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-background/80 p-2 text-foreground shadow backdrop-blur transition hover:bg-background opacity-0 group-hover:opacity-100 sm:right-4">
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+
                 {activeMedia.type === "model" ? (
                   <Suspense
                     fallback={
-                      <div className="flex aspect-square max-h-[400px] h-full w-full items-center justify-center bg-[#f5f2ec] text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:max-h-none">
+                      <div className="flex aspect-square max-h-[500px] h-full w-full items-center justify-center bg-[#f5f2ec] text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:max-h-[600px]">
                         Loading 360 view
                       </div>
                     }
                   >
-                    <JewelryModelViewer src={activeMedia.src} title={`${product.name} 360 view`} className="aspect-square max-h-[400px] h-full w-full sm:max-h-none" />
+                    <JewelryModelViewer src={activeMedia.src} title={`${product.name} 360 view`} className="aspect-square max-h-[500px] h-full w-full sm:max-h-[600px]" />
                   </Suspense>
                 ) : activeMedia.type === "video" ? (
-                  <video src={activeMedia.src} autoPlay muted loop playsInline className="aspect-square max-h-[400px] h-full w-full bg-black object-contain sm:max-h-none" />
+                  <video src={activeMedia.src} autoPlay muted loop playsInline className="aspect-square max-h-[500px] h-full w-full bg-black object-contain sm:max-h-[600px]" />
                 ) : (
-                  <Dialog>
+                  <Dialog onOpenChange={(open) => { if (!open) setZoomLevel(1); }}>
                     <DialogTrigger asChild>
-                      <button type="button" className="group block w-full cursor-zoom-in" aria-label="Zoom product image">
+                      <button type="button" className="group/btn block w-full cursor-zoom-in" aria-label="Zoom product image">
                         <img
                           src={activeMedia.src}
                           alt={product.name}
-                          className="aspect-square max-h-[400px] h-full w-full object-contain p-4 transition duration-700 group-hover:scale-[1.04] sm:max-h-none sm:p-6"
+                          className="aspect-square max-h-[500px] h-full w-full object-contain p-4 transition duration-700 group-hover/btn:scale-[1.04] sm:max-h-[600px] sm:p-6"
                         />
                         <span className="absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-background/90 text-foreground shadow-md backdrop-blur">
                           <Search className="h-4 w-4" />
                         </span>
                       </button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-4xl border-border p-3 sm:p-5">
-                      <DialogHeader>
-                        <DialogTitle className="font-heading text-2xl">{product.name}</DialogTitle>
-                        <DialogDescription>{selectedMetal} preview</DialogDescription>
-                      </DialogHeader>
-                      <img src={activeMedia.src} alt={product.name} className="max-h-[75vh] w-full rounded-[8px] object-contain" />
+                    <DialogContent className="max-w-5xl border-border p-0 overflow-hidden bg-background/95 backdrop-blur-xl">
+                      <div className="flex items-center justify-between border-b border-border/50 p-4">
+                        <DialogHeader className="p-0">
+                          <DialogTitle className="font-heading text-xl">{product.name}</DialogTitle>
+                          <DialogDescription className="text-xs">{activeMedia.label}</DialogDescription>
+                        </DialogHeader>
+                        <div className="flex items-center gap-2 pr-8">
+                           <button onClick={() => setZoomLevel(z => Math.max(1, z - 0.5))} className="rounded-full bg-secondary/50 p-2 hover:bg-secondary"><ZoomOut className="h-4 w-4" /></button>
+                           <span className="w-12 text-center text-xs font-semibold">{Math.round(zoomLevel * 100)}%</span>
+                           <button onClick={() => setZoomLevel(z => Math.min(3, z + 0.5))} className="rounded-full bg-secondary/50 p-2 hover:bg-secondary"><ZoomIn className="h-4 w-4" /></button>
+                        </div>
+                      </div>
+                      <div className="relative h-[80vh] w-full overflow-auto bg-black/5" style={{ cursor: zoomLevel > 1 ? 'grab' : 'default' }}>
+                        <button onClick={handlePrevMedia} className="fixed left-4 top-1/2 z-50 -translate-y-1/2 rounded-full bg-background/90 p-3 shadow-lg hover:bg-background">
+                          <ChevronLeft className="h-6 w-6" />
+                        </button>
+                        <button onClick={handleNextMedia} className="fixed right-4 top-1/2 z-50 -translate-y-1/2 rounded-full bg-background/90 p-3 shadow-lg hover:bg-background">
+                          <ChevronRight className="h-6 w-6" />
+                        </button>
+                        <div className="flex min-h-full w-full items-center justify-center p-4">
+                          <img 
+                            src={activeMedia.src} 
+                            alt={product.name} 
+                            style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center' }}
+                            className="max-h-[75vh] w-auto max-w-none transition-transform duration-200 ease-out" 
+                          />
+                        </div>
+                      </div>
                     </DialogContent>
                   </Dialog>
                 )}
               </div>
 
-              <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/50">
                 {galleryMedia.map((media, index) => (
                   <button
                     key={`${media.type}-${media.src}-${index}`}
@@ -338,7 +393,7 @@ const JewelryDetail = () => {
                         setSelectedMetal(metal);
                         setSelectedMedia({ type: "image", src: getJewelryMetalImage(product, metal), label: metal });
                       }}
-                      className={`w-[110px] shrink-0 snap-center overflow-hidden rounded-[8px] border bg-background p-1.5 text-left transition sm:w-auto sm:p-2 ${
+                      className={`w-[110px] shrink-0 snap-center overflow-hidden rounded-[8px] border bg-background p-1.5 text-left transition sm:w-[130px] sm:p-2 ${
                         selectedMetal === metal ? "border-primary shadow-sm" : "border-border hover:border-primary/60"
                       }`}
                     >
