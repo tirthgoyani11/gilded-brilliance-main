@@ -196,6 +196,7 @@ const compressImage = async (file: File, maxWidth = 2048, initialQuality = 0.9):
   }
 
   return blob;
+};
 
 const uploadFileToSupabase = async (file: File | Blob, folder: "images" | "models", originalName?: string) => {
   if (file.size > 4.4 * 1024 * 1024) {
