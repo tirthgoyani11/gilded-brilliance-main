@@ -33,20 +33,24 @@ const Cart = () => {
               </div>
             ) : null}
             {cart.map((item) => (
-              <div key={item.id} className="rounded-2xl border border-border p-4 flex items-center gap-4 group luxury-transition hover:border-primary/15">
-                <img src={item.imageUrl} alt={item.title} className="w-20 h-20 rounded-xl object-cover" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-heading text-sm truncate">{item.title}</p>
-                  <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-body mt-0.5">Qty: {item.quantity}</p>
+              <div key={item.id} className="rounded-2xl border border-border p-4 flex flex-col sm:flex-row sm:items-center gap-4 group luxury-transition hover:border-primary/15">
+                <div className="flex items-center gap-4 flex-1 min-w-0">
+                  <img src={item.imageUrl} alt={item.title} className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-heading text-sm sm:text-base leading-tight line-clamp-2 sm:truncate mb-1">{item.title}</p>
+                    <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-body">Qty: {item.quantity}</p>
+                  </div>
                 </div>
-                <p className="font-heading text-base tabular-nums whitespace-nowrap">{currency(item.price * item.quantity)}</p>
-                <button
-                  className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 luxury-transition"
-                  onClick={() => removeFromCart(item.id)}
-                  aria-label="Remove"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                <div className="flex items-center justify-between sm:justify-end gap-4 border-t border-border/50 sm:border-0 pt-3 sm:pt-0">
+                  <p className="font-heading text-base tabular-nums whitespace-nowrap">{currency(item.price * item.quantity)}</p>
+                  <button
+                    className="w-8 h-8 rounded-lg bg-secondary flex shrink-0 items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 luxury-transition"
+                    onClick={() => removeFromCart(item.id)}
+                    aria-label="Remove"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

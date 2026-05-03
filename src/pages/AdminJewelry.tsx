@@ -4,6 +4,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { adminFetch } from "@/lib/admin";
 import { Button } from "@/components/ui/button";
 import type { JewelryItem } from "@/types/diamond";
+import { formatJewelryPrice } from "@/lib/jewelry-catalog";
 
 const jewelryCategories = ["Rings", "Necklaces", "Bracelets", "Earrings"] as const;
 const inventoryStatuses = ["In Stock", "Made To Order", "Reserved", "Sold Out"] as const;
@@ -106,7 +107,9 @@ const toForm = (item: JewelryItem): JewelryForm => ({
     Silver: toUrlArray(item.metalImages?.Silver, item.imageUrl),
     Gold: toUrlArray(item.metalImages?.Gold, item.imageUrl),
     "Rose Gold": toUrlArray(item.metalImages?.["Rose Gold"], item.imageUrl),
+    "White Gold": toUrlArray(item.metalImages?.["White Gold"], item.imageUrl),
   },
+  pricing: item.pricing || {},
   galleryImages: Array.isArray(item.galleryImages) ? item.galleryImages : [],
   videoUrl: item.videoUrl || "",
   modelUrl: item.modelUrl || "",
@@ -125,12 +128,7 @@ const createListingId = (name: string, category: string) => {
   return `${base || "jewelry"}-${Date.now().toString(36)}`;
 };
 
-const formatPrice = (price: number) =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(price || 0);
+const formatPrice = (price: number) => formatJewelryPrice(price);
 
 type LoadJewelryOptions = {
   category?: string;
